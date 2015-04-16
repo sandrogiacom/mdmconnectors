@@ -1,0 +1,11 @@
+#Thu Apr 16 00:53:40 BRT 2015
+vl=How many times the 'Finish' button pressed during the day
+l=Wizard class name
+ct=jbt
+d=1429156420897
+c=0
+cmp=usage
+a=finishWizard
+cl=org.eclipse.egit.ui.internal.repository.tree.command.ResetCommand$1
+v=2.0.1
+s=1

@@ -1,0 +1,131 @@
+package com.totvslabs.mdm.restclient;
+
+import java.util.Map;
+import java.util.Set;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import com.google.gson.Gson;
+import com.totvslabs.mdm.restclient.command.CommandPostStagingC;
+import com.totvslabs.mdm.restclient.command.ICommand;
+import com.totvslabs.mdm.restclient.vo.EnvelopeVO;
+
+public class MDMRestConnection {
+	private Client client;
+	private String mdmURL;
+
+	public MDMRestConnection(String mdmURL) {
+		this.client = ClientBuilder.newClient();
+		client.register(GZipReaderInterceptor.class);
+		client.register(GZipWriterInterceptor.class);
+		this.mdmURL = mdmURL;
+
+		this.disableCertificates();
+	}
+
+	public EnvelopeVO executeCommand(ICommand command) {
+		Gson gson = new Gson();
+
+		Map<String, String> parametersHeader = command.getParametersHeader();
+		Map<String, String> parameterPath = command.getParameterPath();
+
+		Set<String> keySetPath = parameterPath != null ? parameterPath.keySet() : null;
+		Set<String> keySetHeader = parametersHeader != null ? parametersHeader.keySet() : null;
+
+		WebTarget webResource = client.target(mdmURL + command.getCommandURL());
+
+		if(keySetPath != null) {
+			for (String string : keySetPath) {
+				webResource = webResource.queryParam(string, parameterPath.get(string));
+			}
+		}
+
+		Builder request = webResource.request(MediaType.APPLICATION_JSON);
+
+		if(keySetHeader != null) {
+			for (String string : keySetHeader) {
+				request = request.header(string, parametersHeader.get(string));
+			}
+		}
+
+		if(command instanceof CommandPostStagingC) {
+			request = request.header("HttpHeaders.ACCEPT_ENCODING", "gzip");
+		}
+
+		Response response = null;
+
+		switch(command.getType()) {
+			case GET:
+				response = request.accept(MediaType.APPLICATION_JSON).get();
+				break;
+
+			case POST:
+				if(command instanceof CommandPostStagingC) {
+					request.header(HttpHeaders.ACCEPT_ENCODING, "gzip");
+				}
+
+				long initialTimeConvertJson = System.currentTimeMillis();
+				String string = command.getData().toString();
+				System.out.println("Time to convert the OBJECT to JSON: " + (System.currentTimeMillis() - initialTimeConvertJson) );
+				long initialTime = System.currentTimeMillis();
+				System.out.println("Time BEFORE send the data: " + System.currentTimeMillis());
+				response = request.accept(MediaType.APPLICATION_JSON).post(Entity.entity(string, MediaType.APPLICATION_JSON));
+				System.out.println("Time AFTER send the data: " + System.currentTimeMillis());
+				System.out.println("Time to execute the service ('" + command.getCommandURL() + "'): " + (System.currentTimeMillis() - initialTime) );
+				break;
+		}
+
+		if (response.getStatus() != 200) {
+			System.out.println(command.getData().toString());
+			throw new RuntimeException("Failed : HTTP error code : " + response.getStatus());
+		}
+
+//		Object envelopeResult = response.getEntity();
+//		JsonObject jsonObject = (JsonObject) new JsonParser().parse(envelopeResult);
+		EnvelopeVO envelopeVO = gson.fromJson(response.readEntity(String.class), EnvelopeVO.class);
+//		Type mapType = new TypeToken<List<GenericVO>>() {}.getType();
+//		List<GenericVO> genericVO = gson.fromJson(jsonObject.get("hits"), mapType);
+
+		return envelopeVO;
+	}
+
+	private void disableCertificates() {
+		TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+
+			@Override
+			public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+				return null;
+			}
+
+			@Override
+			public void checkClientTrusted(
+					java.security.cert.X509Certificate[] certs, String authType) {
+			}
+
+			@Override
+			public void checkServerTrusted(
+					java.security.cert.X509Certificate[] certs, String authType) {
+			}
+		} };
+
+		// Install the all-trusting trust manager
+		try {
+			SSLContext sc = SSLContext.getInstance("SSL");
+			sc.init(null, trustAllCerts, new java.security.SecureRandom());
+			HttpsURLConnection
+					.setDefaultSSLSocketFactory(sc.getSocketFactory());
+		} catch (Exception e) {
+		}
+	}
+}

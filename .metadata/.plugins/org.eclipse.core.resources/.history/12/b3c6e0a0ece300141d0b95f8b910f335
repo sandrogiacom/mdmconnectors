@@ -1,0 +1,131 @@
+package com.totvs.hcm.tsa.markgenerator.ui.threads;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.totvs.hcm.tsa.markgenerator.pojo.InstanceTypeEnum;
+import com.totvs.hcm.tsa.markgenerator.pojo.MasterConfigurationData;
+import com.totvs.hcm.tsa.markgenerator.pojo.SlaveIP;
+import com.totvs.hcm.tsa.markgenerator.ui.PanelSystemInformation;
+import com.totvs.hcm.tsa.markgenerator.ui.events.InstanceTypeEvent;
+import com.totvs.hcm.tsa.markgenerator.ui.events.InstanceTypeListener;
+
+public class ThreadCommunicationManagement extends ThreadGenericCommunication implements Runnable, InstanceTypeListener {
+	private PanelSystemInformation panelSystemInformation;
+	private Map<String, ThreadMasterCommunication> masterCommunicationMap = new HashMap<String, ThreadMasterCommunication>();
+	private ThreadSlaveCommunication slaveCommunication;
+	private InstanceTypeEnum actualInstanceType;
+
+	public ThreadCommunicationManagement(PanelSystemInformation panelSystemInformation, MasterConfigurationData masterConfigurationData) {
+		super(masterConfigurationData);
+		this.panelSystemInformation = panelSystemInformation;
+	}
+
+	@Override
+	public void run() {
+		this.stop = Boolean.FALSE;
+
+		while(!this.stop) {
+			if(this.actualInstanceType != null) {
+				if(this.actualInstanceType.equals(InstanceTypeEnum.MASTER)) {
+					List<SlaveIP> slaves = this.panelSystemInformation.getListaData();
+
+					for (SlaveIP slave : slaves) {
+						if(!slave.getMasterInstance()) {
+							ThreadMasterCommunication threadMasterCommunicationActual = this.masterCommunicationMap.get(slave.getIpAddress());
+
+							if(threadMasterCommunicationActual == null || !threadMasterCommunicationActual.getSlaveIP().getConnected()) {
+								ThreadMasterCommunication tmc = new ThreadMasterCommunication(slave.getIpAddress(), slave, this.masterConfigurationData);
+								tmc.setMasterConfigurationData(this.masterConfigurationData);
+								Thread t = new Thread(tmc);
+								t.start();
+
+								System.out.println("Iniciou nova Thread de comunicação com o Slave: " + slave.getIpAddress());
+
+								this.masterCommunicationMap.put(slave.getIpAddress(), tmc);
+								this.panelSystemInformation.updateList();
+							}
+						}
+					}
+
+					Collection<ThreadMasterCommunication> values = this.masterCommunicationMap.values();
+
+					for (ThreadMasterCommunication threadMasterCommunication : values) {
+						SlaveIP slaveIP = threadMasterCommunication.getSlaveIP();
+
+						if(!slaves.contains(slaveIP)) {
+							System.out.println("Dispositivo removido da lista de SLAVES, comuniação será encerrada: " + slaveIP);
+
+							threadMasterCommunication.setStop(Boolean.TRUE);
+							this.masterCommunicationMap.remove(threadMasterCommunication.getSlaveIP().getIpAddress());
+						}
+					}
+				}
+				else if(this.actualInstanceType.equals(InstanceTypeEnum.SLAVE)) {
+					if(this.slaveCommunication == null || this.slaveCommunication.getStop()) {
+						this.slaveCommunication = new ThreadSlaveCommunication(this.masterConfigurationData);
+						Thread thread = new Thread(this.slaveCommunication);
+						thread.start();
+					}
+				}
+			}
+
+			try {
+				Thread.sleep(3000);
+			} catch (InterruptedException e) {
+			}
+		}
+
+		Collection<ThreadMasterCommunication> masters = this.masterCommunicationMap.values();
+
+		for (ThreadMasterCommunication masterCommunication : masters) {
+			masterCommunication.setStop(Boolean.TRUE);
+			masterCommunication = null;
+		}
+
+		this.panelSystemInformation.updateList();
+	}
+
+	@Override
+	public void setMasterConfigurationData(MasterConfigurationData masterConfigurationData) {
+		super.setMasterConfigurationData(masterConfigurationData);
+
+		if(this.actualInstanceType != null && this.actualInstanceType.equals(InstanceTypeEnum.MASTER)) {
+			Collection<ThreadMasterCommunication> masterCommunications = this.masterCommunicationMap.values();
+			System.out.println("masterConfigurationData: " + masterConfigurationData);
+			
+			for (ThreadMasterCommunication threadMasterCommunication : masterCommunications) {
+				if(threadMasterCommunication != null && threadMasterCommunication.getSlaveIP().getConnected()) {
+					threadMasterCommunication.setMasterConfigurationData(masterConfigurationData);
+				}
+			}
+		}
+		else if(this.actualInstanceType.equals(InstanceTypeEnum.SLAVE)) {
+			this.slaveCommunication.setMasterConfigurationData(masterConfigurationData);
+		}
+	}
+
+	@Override
+	public void onChangeInstanceType(InstanceTypeEvent event) {
+		if(event.getInstanceTypeEnum().equals(InstanceTypeEnum.SLAVE)) {
+			this.actualInstanceType = InstanceTypeEnum.SLAVE;
+
+			Collection<ThreadMasterCommunication> values = this.masterCommunicationMap.values();
+			
+			for (ThreadMasterCommunication threadMasterCommunication : values) {
+				threadMasterCommunication.setStop(Boolean.TRUE);
+				this.masterCommunicationMap.remove(threadMasterCommunication.getSlaveIP().getIpAddress());
+			}
+		}
+		else {
+			this.actualInstanceType = InstanceTypeEnum.MASTER;
+
+			if(this.slaveCommunication != null) {
+				this.slaveCommunication.setStop(Boolean.TRUE);
+				this.slaveCommunication = null;
+			}
+		}
+	}
+}

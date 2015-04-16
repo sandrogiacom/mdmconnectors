@@ -1,0 +1,19 @@
+package com.totvs.hcm.tsa.markgenerator.ui.events;
+
+import com.totvs.hcm.tsa.markgenerator.pojo.MasterConfigurationData;
+
+public class MasterConfigurationDataReceivedEvent {
+	private MasterConfigurationData masterConfigurationData;
+
+	public MasterConfigurationDataReceivedEvent(MasterConfigurationData masterConfigurationData) {
+		this.masterConfigurationData = masterConfigurationData;
+	}
+
+	public MasterConfigurationData getMasterConfigurationData() {
+		return masterConfigurationData;
+	}
+
+	public void setMasterConfigurationData(MasterConfigurationData masterConfigurationData) {
+		this.masterConfigurationData = masterConfigurationData;
+	}
+}

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy element &apos;CommandPostStaging.java&apos; to &apos;com.totvslabs.mdm.restclient.command.CommandPostStaging.java&apos;&#x0A;- Original project: &apos;mdm-rest-client&apos;&#x0A;- Destination element: &apos;com.totvslabs.mdm.restclient.command.CommandPostStaging.java&apos;&#x0A;- Original element: &apos;com.totvslabs.mdm.restclient.command.CommandPostStaging.java&apos;" description="Copy compilation unit" destination="/src\/main\/java&lt;com.totvslabs.mdm.restclient.command{CommandPostStaging.java" element1="/src\/main\/java&lt;com.totvslabs.mdm.restclient.command{CommandPostStaging.java" files="0" flags="589830" folders="0" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyResources" stamp="1428470537384" units="1" version="1.0"/>
+</session>

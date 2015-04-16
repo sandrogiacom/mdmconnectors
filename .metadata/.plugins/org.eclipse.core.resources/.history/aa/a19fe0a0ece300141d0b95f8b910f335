@@ -1,0 +1,61 @@
+package com.totvs.hcm.tsa.markgenerator.ui.events;
+
+public class TSAServerStateChangedEvent {
+	public static final int STATE_CONNECT = 0;
+	public static final int STATE_DISCONNECT = 1;
+	public static final int STATE_REFRSH_DATA = 2;
+
+	private int stateChanged;
+	private String hostName;
+	private Integer portNumber;
+	private String userName;
+	private String password;
+
+	public TSAServerStateChangedEvent(int state, String hostName, Integer portNumber, String userName, String password) {
+		this.stateChanged = state;
+		this.hostName = hostName;
+		this.portNumber = portNumber;
+		this.userName = userName;
+		this.password = password;
+	}
+
+	public int getStateChanged() {
+		return stateChanged;
+	}
+
+	public void setStateChanged(int stateChanged) {
+		this.stateChanged = stateChanged;
+	}
+
+	public String getHostName() {
+		return hostName;
+	}
+
+	public void setHostName(String hostName) {
+		this.hostName = hostName;
+	}
+
+	public Integer getPortNumber() {
+		return portNumber;
+	}
+
+	public void setPortNumber(Integer portNumber) {
+		this.portNumber = portNumber;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+}

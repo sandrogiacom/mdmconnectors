@@ -1,0 +1,5 @@
+package com.totvs.hcm.tsa.markgenerator.ui.events;
+
+public interface SimulateProcessListener {
+	public void onSimulateProcessEvent(SimulateProcessEvent event);
+}

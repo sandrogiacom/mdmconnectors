@@ -1,0 +1,119 @@
+package com.totvs.hcm.tsa.markgenerator.ui.threads;
+
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.StringTokenizer;
+
+import com.totvs.hcm.tsa.markgenerator.pojo.MasterConfigurationData;
+import com.totvs.hcm.tsa.markgenerator.pojo.SlaveIP;
+
+public class ThreadMasterCommunication extends ThreadGenericCommunication implements Runnable {
+	private String hostName;
+	private Integer portNumber;
+	private SlaveIP slaveIP;
+
+	public ThreadMasterCommunication(String hostName, SlaveIP slaveIP, MasterConfigurationData masterConfigurationData) {
+		super(masterConfigurationData);
+
+		this.hostName = hostName;
+		this.portNumber = 2112;
+		this.slaveIP = slaveIP;
+
+		if(hostName.indexOf(":") > 0) {
+			StringTokenizer st = new StringTokenizer(hostName, ":");
+			int cont = 0;
+
+			while(st.hasMoreElements()) {
+				if(cont == 0) {
+					this.hostName = (String) st.nextElement();
+				}
+				else if(cont == 1) {
+					String portStr = (String) st.nextElement();
+
+					try {
+						this.portNumber = Integer.parseInt(portStr);
+					}
+					catch(Exception e) {
+					}
+				}
+			}
+		}
+	}
+
+	@Override
+	public void run() {
+		try {
+			this.socket = new Socket(this.hostName, this.portNumber);
+			this.socket.setSoTimeout(1000);
+			this.slaveIP.setConnected(true);
+
+			this.setStop(Boolean.FALSE);
+
+			OutputStream outputStream = this.socket.getOutputStream();
+			this.oos = new ObjectOutputStream(outputStream);
+
+			while(!this.stop) {
+				this.listen();
+				this.send();
+
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+				}
+			}
+		} catch (UnknownHostException e) {
+			System.err.println("Erro na tentativa de conexão ao endereço: " + hostName + ":" + this.portNumber + ". Erro: " + e.getMessage());
+			this.setStop(Boolean.TRUE);
+			this.slaveIP.setConnected(false);
+		} catch (IOException e) {
+			System.err.println("Erro na comunicação com o endereço: " + hostName + ":" + this.portNumber + ". Erro: " + e.getMessage());
+			this.setStop(Boolean.TRUE);
+			this.slaveIP.setConnected(false);
+		}
+		finally {
+			if(this.socket != null) {
+				try {
+					this.socket.close();
+				} catch (IOException e) {
+				}
+			}
+		}
+	}
+
+	public MasterConfigurationData listen() throws IOException {
+		MasterConfigurationData masterConfigurationData = super.listen();
+
+		if(masterConfigurationData != null) {
+			/**
+			 * TODO: Implementar mensagem...
+			 */
+
+			System.out.println("Vamos tratar esses dados e juntar com o LOG inteiro de todas as instancias, aqui temos um PEPINO!!!");
+		}
+
+		return masterConfigurationData;
+	}
+
+	public SlaveIP getSlaveIP() {
+		return slaveIP;
+	}
+
+	public void setMasterConfigurationData(MasterConfigurationData masterConfigurationData) {
+		this.masterConfigurationData = masterConfigurationData;
+		this.masterConfigurationData.setInstanceIpAddress(this.hostName);
+	}
+
+	public void setSlaveIP(SlaveIP slaveIP) {
+		this.slaveIP = slaveIP;
+	}
+
+	@Override
+	public void setStop(Boolean stop) {
+		super.setStop(stop);
+
+		this.slaveIP.setConnected(!stop);
+	}
+}

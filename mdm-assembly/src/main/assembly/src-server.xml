@@ -1,0 +1,35 @@
+<assembly>
+	<id>server</id>
+
+	<formats>
+		<format>zip</format>
+	</formats>
+
+	<includeBaseDirectory>true</includeBaseDirectory>
+	<baseDirectory>server</baseDirectory>
+
+	<fileSets>
+        <fileSet>
+            <directory>${basedir}/src/main/resources/bats</directory>
+            <outputDirectory>/</outputDirectory>
+            <filtered>true</filtered>
+            <includes>
+                <include>*.*</include>
+            </includes>
+        </fileSet>
+		<fileSet>
+			<directory>${basedir}/src/main/resources/lib</directory>
+			<outputDirectory>/lib</outputDirectory>
+			<includes>
+				<include>*.*</include>
+			</includes>
+		</fileSet>
+	</fileSets>
+
+	<dependencySets>
+		<dependencySet>
+			<outputDirectory>/lib</outputDirectory>
+			<useTransitiveFiltering>true</useTransitiveFiltering>
+		</dependencySet>
+	</dependencySets>
+</assembly>

@@ -1,0 +1,290 @@
+package com.totvs.hcm.tsa.markgenerator.ui;
+
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFormattedTextField;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JTextField;
+
+import com.totvs.hcm.tsa.markgenerator.pojo.InstanceTypeEnum;
+import com.totvs.hcm.tsa.markgenerator.pojo.MasterConfigurationData;
+import com.totvs.hcm.tsa.markgenerator.pojo.MarkDeviceTypeEnum;
+import com.totvs.hcm.tsa.markgenerator.pojo.MarkHourTypeEnum;
+import com.totvs.hcm.tsa.markgenerator.ui.events.ThreadsSlavesDevicesChangedDispatcher;
+import com.totvs.hcm.tsa.markgenerator.ui.events.ThreadsSlavesDevicesChangedEvent;
+
+public class PanelMark extends PanelAbstract {
+	private static final long serialVersionUID = 1L;
+
+	private JLabel labelDeviceQuantity;
+	private JTextField textDeviceQuantity;
+	private JPanel panelDeviceQuantity;
+	private JButton buttonRefreshDeviceQuantity;
+
+	private JLabel labelMarkType;
+	private JRadioButton radioMarkREP;
+	private JRadioButton radioMarkAccess;
+	private JRadioButton radioMarkAll;
+	private ButtonGroup radioGroup;
+
+	private JLabel labelMarkDateInitial;
+	private JTextField textMarkDateInitial;
+	private JLabel labelMarkDateEnd;
+	private JTextField textMarkDateEnd;
+	private JLabel labelMarkTimeType;
+	private JRadioButton radioMarkTimeTypeInformed;
+	private JRadioButton radioMarkTimeTypeWorkTurn;
+	private ButtonGroup radioGroupMarkTimeType;
+	private JLabel labelMarkTimeInitial;
+	private JTextField textMarkTimeInitial;
+	private JLabel labelMarkTimeEnd;
+	private JTextField textMarkTimeEnd;
+
+	private InstanceTypeEnum actualInstanceType;
+
+	public PanelMark(){
+		super(3, 14, " Marcações ");
+
+		this.labelDeviceQuantity = new JLabel("Dispositivos Ativos: ");
+		this.textDeviceQuantity = new JTextField("0", 20);
+		this.enableDisableField(this.labelDeviceQuantity, false);
+		this.enableDisableField(this.textDeviceQuantity, false);
+
+		this.panelDeviceQuantity = new JPanel(new BorderLayout());
+		this.buttonRefreshDeviceQuantity = new JButton("Atualizar");
+		this.buttonRefreshDeviceQuantity.addActionListener(new DeviceRefreshQuanity());
+
+		this.radioMarkAll = new JRadioButton("Ambos", true);
+		this.radioMarkREP = new JRadioButton("REP");
+		this.radioMarkAccess = new JRadioButton("Acesso");
+		this.radioGroup = new ButtonGroup();
+
+		this.labelMarkType = new JLabel("Tipo Marcação: ");
+		this.radioGroup.add(this.radioMarkAll);
+		this.radioGroup.add(this.radioMarkREP);
+		this.radioGroup.add(this.radioMarkAccess);
+
+		this.labelMarkDateInitial = new JLabel("Data Inicial: ");
+		this.textMarkDateInitial = new JFormattedTextField(PanelAbstract.getMaskFormatter("##/##/####"));
+		this.labelMarkDateEnd = new JLabel("Data Final: ");
+		this.textMarkDateEnd = new JFormattedTextField(PanelAbstract.getMaskFormatter("##/##/####"));
+		this.labelMarkTimeType = new JLabel("Forma Horário: ");
+		this.radioMarkTimeTypeWorkTurn = new JRadioButton("Jornada");
+		this.radioMarkTimeTypeInformed = new JRadioButton("Informado");
+		this.radioGroupMarkTimeType = new ButtonGroup();
+		this.radioGroupMarkTimeType.add(this.radioMarkTimeTypeInformed);
+		this.radioGroupMarkTimeType.add(this.radioMarkTimeTypeWorkTurn);
+		this.labelMarkTimeInitial = new JLabel("Horário Inicial: ");
+		this.textMarkTimeInitial = new JFormattedTextField(PanelAbstract.getMaskFormatter("##:##"));
+		this.labelMarkTimeEnd = new JLabel("Horário Final: ");
+		this.textMarkTimeEnd = new JFormattedTextField(PanelAbstract.getMaskFormatter("##:##"));
+
+		MarkTimeTypeRefresh mttr = new MarkTimeTypeRefresh();
+
+		this.radioMarkTimeTypeInformed.addItemListener(mttr);
+		this.radioMarkTimeTypeWorkTurn.addItemListener(mttr);
+
+		DeviceRefreshQuanity drq = new DeviceRefreshQuanity();
+		this.radioMarkAll.addItemListener(drq);
+		this.radioMarkAccess.addItemListener(drq);
+		this.radioMarkREP.addItemListener(drq);
+
+		DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
+		Calendar calendar = Calendar.getInstance();
+		calendar.add(Calendar.MONTH, -1);
+		calendar.set(Calendar.DAY_OF_MONTH, 1);
+
+		this.textMarkDateInitial.setText(df.format(calendar.getTime()));
+
+		calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+
+		this.textMarkDateEnd.setText(df.format(calendar.getTime()));
+		this.textMarkTimeInitial.setText("00:00");
+		this.textMarkTimeEnd.setText("23:59");
+
+		this.radioMarkTimeTypeInformed.setSelected(true);
+		this.enableDisableField(this.radioMarkTimeTypeWorkTurn, false);
+
+		this.initializeLayout();
+	}
+
+	public void initializeLayout() {
+		this.panelDeviceQuantity.add(this.textDeviceQuantity, BorderLayout.CENTER);
+		this.panelDeviceQuantity.add(this.buttonRefreshDeviceQuantity, BorderLayout.EAST);
+
+		this.add(this.labelDeviceQuantity);
+		this.add(this.panelDeviceQuantity);
+		this.add(this.labelMarkType); //, this.cc.xyw(2, 2, 3)
+		this.add(new JComponent[] {this.radioMarkAll, this.radioMarkREP, this.radioMarkAccess});
+		this.add(this.labelMarkDateInitial);
+		this.add(this.textMarkDateInitial);
+		this.add(this.labelMarkDateEnd);
+		this.add(this.textMarkDateEnd);
+		this.add(this.labelMarkTimeType);
+		this.add(new JComponent[] {this.radioMarkTimeTypeInformed, this.radioMarkTimeTypeWorkTurn});
+		this.add(this.labelMarkTimeInitial);
+		this.add(this.textMarkTimeInitial);
+		this.add(this.labelMarkTimeEnd);
+		this.add(this.textMarkTimeEnd);
+	}
+
+	private final int FORMAT_DATE = 0;
+	private final int FORMAT_TIME = 1;
+
+	public Date parseDate(String dateStr, int type) {
+		DateFormat df = null;
+
+		if(type == FORMAT_DATE) {
+			df = new SimpleDateFormat("dd/MM/yyyy");
+		}
+		else if(type == FORMAT_TIME) {
+			df = new SimpleDateFormat("hh:mm");
+		}
+
+		Date date = null;
+
+		try {
+			date = df.parse(dateStr);
+		} catch (ParseException e) {
+		}
+
+		return date;
+	}
+
+	public String parseDate(Date date, int type) {
+		DateFormat df = null;
+
+		if(type == FORMAT_DATE) {
+			df = new SimpleDateFormat("dd/MM/yyyy");
+		}
+		else if(type == FORMAT_TIME) {
+			df = new SimpleDateFormat("H:m");
+		}
+
+		String dateStr = "";
+
+		if(date != null) {
+			dateStr = df.format(date);
+		}
+
+		return dateStr;
+	}
+
+	@Override
+	public void fillData(MasterConfigurationData masterConfigurationData) {
+		if(masterConfigurationData != null) {
+			this.actualInstanceType = InstanceTypeEnum.MASTER;
+
+			Date markDateEnd = parseDate(this.textMarkDateEnd.getText(), FORMAT_DATE);
+			Date markDateInitial = parseDate(this.textMarkDateInitial.getText(), FORMAT_DATE);
+			Date markTimeEnd = parseDate(this.textMarkTimeEnd.getText(), FORMAT_TIME);
+			Date markTimeInitial = parseDate(this.textMarkTimeInitial.getText(), FORMAT_TIME);
+
+			masterConfigurationData.setDeviceActiveQuantity((this.textDeviceQuantity.getText().length() > 0) ? Integer.parseInt(this.textDeviceQuantity.getText()) : null);
+			masterConfigurationData.setMarkDeviceTypeEnum(this.radioMarkAll.isSelected() ? MarkDeviceTypeEnum.BOTH : (this.radioMarkAccess.isSelected() ? MarkDeviceTypeEnum.ACCESS : (this.radioMarkREP.isSelected() ? MarkDeviceTypeEnum.REP : null)));
+			masterConfigurationData.setMarkEndDate(markDateEnd);
+			masterConfigurationData.setMarkInitialDate(markDateInitial);
+			masterConfigurationData.setMarkHourTypeEnum(this.radioMarkTimeTypeInformed.isSelected() ? MarkHourTypeEnum.INFORMED : (this.radioMarkTimeTypeWorkTurn.isSelected() ? MarkHourTypeEnum.WORK_TURN : null));
+			masterConfigurationData.setMarkEndTime(markTimeEnd);
+			masterConfigurationData.setMarkInitialTime(markTimeInitial);
+		}
+	}
+
+	@Override
+	public void fillComponents(MasterConfigurationData masterConfigurationData) {
+		if(masterConfigurationData != null) {
+			this.actualInstanceType = InstanceTypeEnum.SLAVE;
+
+			this.textMarkDateEnd.setText(parseDate(masterConfigurationData.getMarkEndDate(), FORMAT_DATE));
+			this.textMarkDateInitial.setText(parseDate(masterConfigurationData.getMarkInitialDate(), FORMAT_DATE));
+			this.textMarkTimeEnd.setText(parseDate(masterConfigurationData.getMarkEndTime(), FORMAT_TIME));
+			this.textMarkTimeInitial.setText(parseDate(masterConfigurationData.getMarkInitialTime(), FORMAT_TIME));
+			this.textDeviceQuantity.setText(masterConfigurationData.getDeviceActiveQuantity() != null ? Integer.toString((masterConfigurationData.getDeviceActiveQuantity())) : "");
+
+			if(masterConfigurationData.getMarkDeviceTypeEnum() != null) {
+				switch(masterConfigurationData.getMarkDeviceTypeEnum()) {
+				case ACCESS:
+					this.radioMarkAccess.setSelected(true);
+					break;
+				case BOTH:
+					this.radioMarkAll.setSelected(true);
+					break;
+				case REP:
+					this.radioMarkREP.setSelected(true);
+					break;
+				}
+			}
+			else {
+				this.radioMarkREP.setSelected(false);
+				this.radioMarkAll.setSelected(false);
+				this.radioMarkAccess.setSelected(false);
+			}
+
+			if(masterConfigurationData.getMarkHourTypeEnum() != null) {
+				switch(masterConfigurationData.getMarkHourTypeEnum()) {
+				case INFORMED:
+					this.radioMarkTimeTypeInformed.setSelected(true);
+					break;
+				case WORK_TURN:
+					this.radioMarkTimeTypeWorkTurn.setSelected(true);
+					break;
+				}
+			}
+			else {
+				this.radioMarkTimeTypeWorkTurn.setSelected(false);
+				this.radioMarkTimeTypeInformed.setSelected(false);
+			}
+		}
+	}
+
+	public JTextField getTextDeviceQuantity() {
+		return textDeviceQuantity;
+	}
+
+	public class DeviceRefreshQuanity implements ActionListener, ItemListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			ThreadsSlavesDevicesChangedDispatcher.getInstance().fireThreadsSlavesDevicesChangedEvent(new ThreadsSlavesDevicesChangedEvent());
+		}
+		@Override
+		public void itemStateChanged(ItemEvent e) {
+			if(radioMarkAll.isSelected() || radioMarkAccess.isSelected() || radioMarkREP.isSelected()) {
+				ThreadsSlavesDevicesChangedDispatcher.getInstance().fireThreadsSlavesDevicesChangedEvent(new ThreadsSlavesDevicesChangedEvent());
+			}
+		}
+	}
+
+	public class MarkTimeTypeRefresh implements ItemListener {
+		@Override
+		public void itemStateChanged(ItemEvent e) {
+			if(actualInstanceType == null || actualInstanceType.equals(InstanceTypeEnum.MASTER)) {
+				if(radioMarkTimeTypeInformed.isSelected()) {
+					enableDisableField(labelMarkTimeInitial, true);
+					enableDisableField(labelMarkTimeEnd, true);
+					enableDisableField(textMarkTimeInitial, true);
+					enableDisableField(textMarkTimeEnd, true);
+				}
+				else if(radioMarkTimeTypeWorkTurn.isSelected()) {
+					enableDisableField(labelMarkTimeInitial, false);
+					enableDisableField(labelMarkTimeEnd, false);
+					enableDisableField(textMarkTimeInitial, false);
+					enableDisableField(textMarkTimeEnd, false);
+				}
+			}
+		}
+	}
+}

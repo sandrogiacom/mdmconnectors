@@ -1,0 +1,34 @@
+package com.totvs.hcm.tsa.markgenerator.ui.events;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class ThreadsSlavesDevicesChangedDispatcher {
+	private static ThreadsSlavesDevicesChangedDispatcher instance;
+	private List<ThreadsSlavesDevicesChangedListener> listeners = new ArrayList<ThreadsSlavesDevicesChangedListener>();
+
+	private ThreadsSlavesDevicesChangedDispatcher() {
+	}
+
+	public static ThreadsSlavesDevicesChangedDispatcher getInstance() {
+		if(ThreadsSlavesDevicesChangedDispatcher.instance == null) {
+			ThreadsSlavesDevicesChangedDispatcher.instance = new ThreadsSlavesDevicesChangedDispatcher();
+		}
+
+		return ThreadsSlavesDevicesChangedDispatcher.instance;
+	}
+
+	public void fireThreadsSlavesDevicesChangedEvent(ThreadsSlavesDevicesChangedEvent event) {
+		for (ThreadsSlavesDevicesChangedListener listener : this.listeners) {
+			listener.onThreadsSlavesDevicesChanged(event);
+		}
+	}
+
+	public void addThreadsSlavesDevicesChangedListener(ThreadsSlavesDevicesChangedListener listener) {
+		this.listeners.add(listener);
+	}
+
+	public void removeThreadsSlavesDevicesChangedListener(ThreadsSlavesDevicesChangedListener listener) {
+		this.listeners.remove(listener);
+	}
+}

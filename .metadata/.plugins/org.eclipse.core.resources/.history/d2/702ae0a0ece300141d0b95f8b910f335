@@ -1,0 +1,5 @@
+package com.totvs.hcm.tsa.markgenerator.ui.events;
+
+public interface DataChangedListener {
+	public void onDataChangedOccur(DataChangedEvent event);
+}

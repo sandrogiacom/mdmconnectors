@@ -1,0 +1,34 @@
+package com.totvs.hcm.tsa.markgenerator.ui.events;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class SimulateProcessDispatcher {
+	private static SimulateProcessDispatcher instance;
+	private List<SimulateProcessListener> listeners = new ArrayList<SimulateProcessListener>();
+
+	private SimulateProcessDispatcher() {
+	}
+
+	public static SimulateProcessDispatcher getInstance() {
+		if(SimulateProcessDispatcher.instance == null) {
+			SimulateProcessDispatcher.instance = new SimulateProcessDispatcher();
+		}
+
+		return SimulateProcessDispatcher.instance;
+	}
+
+	public void fireSimulateProcessEvent(SimulateProcessEvent event) {
+		for (SimulateProcessListener listener : this.listeners) {
+			listener.onSimulateProcessEvent(event);
+		}
+	}
+
+	public void addSimulateProcessListener(SimulateProcessListener listener) {
+		this.listeners.add(listener);
+	}
+
+	public void removeSimulateProcessListener(SimulateProcessListener listener) {
+		this.listeners.remove(listener);
+	}
+}

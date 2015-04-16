@@ -1,0 +1,88 @@
+package com.totvs.hcm.tsa.markgenerator.ui.threads;
+
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+
+import com.totvs.hcm.tsa.markgenerator.pojo.MasterConfigurationData;
+import com.totvs.hcm.tsa.markgenerator.ui.events.MasterConfigurationDataReceivedDispatcher;
+import com.totvs.hcm.tsa.markgenerator.ui.events.MasterConfigurationDataReceivedEvent;
+
+public class ThreadSlaveCommunication extends ThreadGenericCommunication implements Runnable {
+	private ServerSocket serverSocket;
+
+	public ThreadSlaveCommunication(MasterConfigurationData masterConfigurationData) {
+		super(masterConfigurationData);
+	}
+
+	@Override
+	public void run() {
+		String portStr = System.getProperty("tsa.performanceTeste.port");
+		Integer port = 2112;
+
+		try {
+			port = Integer.parseInt(portStr);
+		}
+		catch(NumberFormatException e) {
+		}
+
+		try {
+			this.serverSocket = new ServerSocket(port);
+			this.serverSocket.setSoTimeout(0);
+
+			this.stop = Boolean.FALSE;
+			socket = this.serverSocket.accept();
+			socket.setSoTimeout(1000);
+
+			OutputStream outputStream = socket.getOutputStream();
+			this.oos = new ObjectOutputStream(outputStream);
+
+			while(!this.stop) {
+				this.listen();
+				this.send();
+
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+				}
+			}
+		} catch (IOException e) {
+			System.err.println("Ocorreu o seguinte evento durante a comunicação: " + e.getMessage());
+		}
+		finally {
+			try {
+				if(socket != null)
+					socket.close();
+				if(this.ois != null)
+					this.ois.close();
+				if(this.oos != null)
+					this.oos.close();
+				if(this.serverSocket != null)
+					this.serverSocket.close();
+			}
+			catch(Exception e) {
+			}
+		}
+	}
+
+	public MasterConfigurationData listen() throws IOException {
+		MasterConfigurationData masterConfigurationData = super.listen();
+
+		if(masterConfigurationData != null) {
+			MasterConfigurationDataReceivedDispatcher.getInstance().fireMasterConfigurationDataReceived(new MasterConfigurationDataReceivedEvent(masterConfigurationData));
+		}
+
+		return masterConfigurationData;
+	}
+
+	public void setStop(Boolean stop) {
+		super.setStop(stop);
+
+		try {
+			if(this.serverSocket != null)
+				this.serverSocket.close();
+		} catch (IOException e) {
+		}
+	}
+}

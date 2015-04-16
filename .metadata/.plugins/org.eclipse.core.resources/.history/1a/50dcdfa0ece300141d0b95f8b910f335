@@ -1,0 +1,492 @@
+package com.totvs.hcm.tsa.markgenerator.ui;
+
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.totvs.hcm.tsa.markgenerator.pojo.DeviceSimple;
+import com.totvs.hcm.tsa.markgenerator.pojo.InstanceTypeEnum;
+import com.totvs.hcm.tsa.markgenerator.pojo.MarkDeviceTypeEnum;
+import com.totvs.hcm.tsa.markgenerator.pojo.MasterConfigurationData;
+import com.totvs.hcm.tsa.markgenerator.pojo.MasterConfigurationDataStageEnum;
+import com.totvs.hcm.tsa.markgenerator.pojo.SlaveIP;
+import com.totvs.hcm.tsa.markgenerator.pojo.UserSimple;
+import com.totvs.hcm.tsa.markgenerator.ui.events.DataChangedEvent;
+import com.totvs.hcm.tsa.markgenerator.ui.events.DataChangedListener;
+import com.totvs.hcm.tsa.markgenerator.ui.events.ExecutionSimulationDispatcher;
+import com.totvs.hcm.tsa.markgenerator.ui.events.ExecutionSimulationEvent;
+import com.totvs.hcm.tsa.markgenerator.ui.events.ExecutionSimulationListener;
+import com.totvs.hcm.tsa.markgenerator.ui.events.InstanceTypeEvent;
+import com.totvs.hcm.tsa.markgenerator.ui.events.InstanceTypeListener;
+import com.totvs.hcm.tsa.markgenerator.ui.events.MasterConfigurationDataReceivedDispatcher;
+import com.totvs.hcm.tsa.markgenerator.ui.events.MasterConfigurationDataReceivedEvent;
+import com.totvs.hcm.tsa.markgenerator.ui.events.MasterConfigurationDataReceivedListener;
+import com.totvs.hcm.tsa.markgenerator.ui.events.SimulateProcessDispatcher;
+import com.totvs.hcm.tsa.markgenerator.ui.events.SimulateProcessEvent;
+import com.totvs.hcm.tsa.markgenerator.ui.events.SimulateProcessListener;
+import com.totvs.hcm.tsa.markgenerator.ui.events.TSAServerStateChangedEvent;
+import com.totvs.hcm.tsa.markgenerator.ui.events.TSAServerStateChangedListener;
+import com.totvs.hcm.tsa.markgenerator.ui.events.TSAServerStatusException;
+import com.totvs.hcm.tsa.markgenerator.ui.events.ThreadsSlavesDevicesChangedDispatcher;
+import com.totvs.hcm.tsa.markgenerator.ui.events.ThreadsSlavesDevicesChangedEvent;
+import com.totvs.hcm.tsa.markgenerator.ui.events.ThreadsSlavesDevicesChangedListener;
+import com.totvs.hcm.tsa.markgenerator.ui.events.SimulateProcessEvent.SimulateProcessType;
+import com.totvs.hcm.tsa.markgenerator.ui.threads.ThreadCommunicationManagement;
+import com.totvs.hcm.tsa.markgenerator.ui.threads.ThreadSimulateManagement;
+import com.totvs.tsa.business.dao.TSABusinessRemoteObjectSingleton;
+import com.totvs.tsa.businessgroup.BusinessGroupVO;
+import com.totvs.tsa.device.DeviceVO;
+import com.totvs.tsa.legalperson.LegalPersonVO;
+import com.totvs.tsa.model.ModelVO;
+import com.totvs.tsa.server.ServerIntegrationService;
+import com.totvs.tsa.userrolebadge.UserRoleBadgeVO;
+
+public class PanelGeneral extends JFrame implements InstanceTypeListener, DataChangedListener, TSAServerStateChangedListener, ThreadsSlavesDevicesChangedListener, MasterConfigurationDataReceivedListener, SimulateProcessListener, ExecutionSimulationListener {
+	private static final long serialVersionUID = 1L;
+
+	public static final String EXECUTE_OK = "Executar";
+	public static final String EXECUTE_CANCEL = "Cancelar";
+	public static final String EXECUTE_CANCELING = "Cancelando";
+
+	private JPanel mainPanel = new JPanel();
+	private PanelConfiguration panelConfiguration = new PanelConfiguration();
+	private PanelMark panelMark = new PanelMark();
+	private PanelSystemInformation panelSystemInformation = new PanelSystemInformation();
+	private JButton buttonPrepareData = new JButton("Preparar Dados");
+	private JButton buttonExecute = new JButton(EXECUTE_OK);
+	private JButton buttonExit = new JButton("Sair");
+
+	private MasterConfigurationData masterConfigurationData;
+	private ThreadCommunicationManagement masterCommunicationManagement;
+	private ThreadSimulateManagement simulateManagement;
+
+	private InstanceTypeEnum actualInstanceType;
+	private List<DeviceVO> devices;
+
+	private ServerIntegrationService tsaInstance;
+
+	public PanelGeneral(){
+		this.setTitle("Programa geração marcações");
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.getContentPane().add(this.mainPanel);
+//		this.setLayout(new BorderLayout());
+//		this.mainPanel.setLayout(new GridLayout(0, 1));
+		this.setResizable(false);
+
+		this.panelConfiguration.addInstanceTypeListener(this);
+		this.panelConfiguration.addDataChangedListener(this);
+		this.panelMark.addDataChangedListener(this);
+		this.panelSystemInformation.addDataChangedListener(this);
+		this.panelSystemInformation.addTSAServerStateChangedListener(this);
+		ThreadsSlavesDevicesChangedDispatcher.getInstance().addThreadsSlavesDevicesChangedListener(this);
+		ExecutionSimulationDispatcher.getInstance().addExecutionSimulationListener(this);
+		MasterConfigurationDataReceivedDispatcher.getInstance().addMasterConfigurationDataReceivedListener(this);
+
+		this.initializeLayout();
+
+		this.buttonExecute.setEnabled(Boolean.FALSE);
+
+		this.masterCommunicationManagement = new ThreadCommunicationManagement(this.panelSystemInformation, fillData());
+		Thread thread = new Thread(masterCommunicationManagement);
+		thread.start();
+		this.panelConfiguration.addInstanceTypeListener(this.masterCommunicationManagement);
+
+		this.pack();
+		this.setSize(714, 955);
+		this.setVisible(true);
+	}
+
+	public MasterConfigurationData fillData() {
+		Component[] components = this.mainPanel.getComponents();
+		MasterConfigurationData masterConfigurationData = new MasterConfigurationData();
+
+		for (Component component : components) {
+			if(component instanceof PanelAbstract) {
+				((PanelAbstract) component).fillData(masterConfigurationData);
+			}
+		}
+
+		return masterConfigurationData;
+	}
+
+	public void fillComponents(MasterConfigurationData masterConfigurationData) {
+		Component[] components = this.mainPanel.getComponents();
+
+		for (Component component : components) {
+			if(component instanceof PanelAbstract) {
+				((PanelAbstract) component).fillComponents(masterConfigurationData);
+			}
+		}
+	}
+
+	public void initializeLayout() {
+		this.buttonPrepareData.addActionListener(new PrepareData());
+		this.buttonExecute.addActionListener(new ExecuteStress(this));
+		this.buttonExit.addActionListener(new ExitApplication());
+
+		this.mainPanel.add(this.panelConfiguration);
+		this.mainPanel.add(this.panelSystemInformation);
+		this.mainPanel.add(this.panelMark);
+		this.mainPanel.add(this.buttonPrepareData);
+		this.mainPanel.add(this.buttonExecute);
+		this.mainPanel.add(this.buttonExit);
+	}
+
+	@Override
+	public void onChangeInstanceType(InstanceTypeEvent event) {
+		Component[] components = this.mainPanel.getComponents();
+
+		for (Component component : components) {
+			if(component instanceof PanelAbstract) {
+				if(event.getInstanceTypeEnum().equals(InstanceTypeEnum.MASTER)) {
+					((PanelAbstract) component).enableFields();
+					this.buttonPrepareData.setEnabled(Boolean.TRUE);
+					this.buttonExecute.setEnabled(Boolean.FALSE);
+					this.buttonExit.setEnabled(Boolean.TRUE);
+				}
+				else if(event.getInstanceTypeEnum().equals(InstanceTypeEnum.SLAVE)) {
+					((PanelAbstract) component).disableFields();
+					this.buttonPrepareData.setEnabled(Boolean.FALSE);
+					this.buttonExecute.setEnabled(Boolean.FALSE);
+					this.buttonExit.setEnabled(Boolean.FALSE);
+				}
+			}
+		}
+
+		if(event.getInstanceTypeEnum().equals(InstanceTypeEnum.SLAVE)) {
+			this.actualInstanceType = InstanceTypeEnum.SLAVE;
+			this.fillComponents(new MasterConfigurationData());
+		}
+		else {
+			this.actualInstanceType = InstanceTypeEnum.MASTER;
+		}
+	}
+
+	@Override
+	public void onDataChangedOccur(DataChangedEvent event) {
+		if(this.actualInstanceType != null && this.actualInstanceType.equals(InstanceTypeEnum.MASTER)) {
+			MasterConfigurationData masterConfigurationData = fillData();
+
+			if(this.masterCommunicationManagement != null) {
+				this.masterCommunicationManagement.setMasterConfigurationData(masterConfigurationData);
+			}
+		}
+	}
+
+	private void updateDeviceQuantityThreadNumbers() {
+		if(this.actualInstanceType != null && this.actualInstanceType.equals(InstanceTypeEnum.MASTER)) {
+			if(this.tsaInstance != null) {
+				MasterConfigurationData masterConfigurationData = this.fillData();
+				Collection<DeviceVO> devices = this.tsaInstance.listActiveDevices();
+				List<DeviceVO> correctDevices = new ArrayList<DeviceVO>();
+				Set<String> slavesIPs = this.panelSystemInformation.getSlavesIPs();
+				
+				if(!masterConfigurationData.getMarkDeviceTypeEnum().equals(MarkDeviceTypeEnum.BOTH)) {
+					for (DeviceVO device : devices) {
+						ModelVO model = device.getModel();
+						
+						if(masterConfigurationData.getMarkDeviceTypeEnum().equals(MarkDeviceTypeEnum.ACCESS)) {
+							if(model.getRep() == null || !model.getRep()) {
+								correctDevices.add(device);
+							}
+						}
+						else {
+							if(model.getRep()) {
+								correctDevices.add(device);
+							}
+						}
+					}
+				}
+				else {
+					correctDevices.addAll(devices);
+				}
+				
+				this.devices = correctDevices;
+				
+				BigDecimal deviceNumber = new BigDecimal(this.devices.size());
+				BigDecimal slavesNumber = new BigDecimal(slavesIPs.size() == 0 ? 1 : slavesIPs.size());
+				deviceNumber.setScale(2);
+				
+				BigDecimal threadNumber = deviceNumber.divide(slavesNumber);
+				
+				this.panelMark.getTextDeviceQuantity().setText(Integer.toString(deviceNumber.intValue()));
+				this.panelSystemInformation.getTextThreadsSlaves().setText(Integer.toString(Math.round(threadNumber.floatValue())));
+			}
+			else {
+				this.panelMark.getTextDeviceQuantity().setText(Integer.toString(0));
+				this.panelSystemInformation.getTextThreadsSlaves().setText(Integer.toString(0));
+			}
+		}
+	}
+
+	@Override
+	public void onTSAServerStateChanged(TSAServerStateChangedEvent event) throws TSAServerStatusException {
+		if(event.getStateChanged() == TSAServerStateChangedEvent.STATE_CONNECT) {
+			try {
+				this.tsaInstance = TSABusinessRemoteObjectSingleton.getInstance(event.getHostName(), event.getPortNumber(), event.getUserName(), event.getPassword());
+			}
+			catch(Exception e) {
+				throw new TSAServerStatusException(e.getMessage(), e);
+			}
+		}
+		else if(event.getStateChanged() == TSAServerStateChangedEvent.STATE_DISCONNECT) {
+			this.tsaInstance = null;
+		}
+
+		updateDeviceQuantityThreadNumbers();
+	}
+
+	@Override
+	public void onThreadsSlavesDevicesChanged(ThreadsSlavesDevicesChangedEvent event) {
+		updateDeviceQuantityThreadNumbers();
+	}
+
+	@Override
+	public void onMasterConfigurationDataReceived(MasterConfigurationDataReceivedEvent event) {
+		if(this.actualInstanceType != null && this.actualInstanceType.equals(InstanceTypeEnum.SLAVE)) {
+			this.masterConfigurationData = event.getMasterConfigurationData();
+
+			if(event.getMasterConfigurationData().getConfigurationStage() != null && !event.getMasterConfigurationData().getConfigurationStage().equals(MasterConfigurationDataStageEnum.UPDATE_DATA)) {
+				this.panelConfiguration.disableFieldsAndLock();
+			}
+			if(event.getMasterConfigurationData().getConfigurationStage() != null && event.getMasterConfigurationData().getConfigurationStage().equals(MasterConfigurationDataStageEnum.EXECUTE_STRESS)) {
+				this.masterConfigurationData.setConfigurationStage(MasterConfigurationDataStageEnum.PREPARETED_TO_STRESS);
+				this.buttonExecute.setEnabled(Boolean.TRUE);
+				this.buttonExecute.doClick();
+				this.buttonExecute.setEnabled(Boolean.FALSE);
+			}
+			if(event.getMasterConfigurationData().getConfigurationStage() != null && event.getMasterConfigurationData().getConfigurationStage().equals(MasterConfigurationDataStageEnum.EXIT_APPLICATION)) {
+				System.exit(JFrame.NORMAL);
+			}
+			if(event.getMasterConfigurationData().getConfigurationStage() != null && event.getMasterConfigurationData().getConfigurationStage().equals(MasterConfigurationDataStageEnum.CANCEL_STRESS)) {
+				this.simulateManagement.setStop(Boolean.TRUE);
+			}
+
+			this.fillComponents(event.getMasterConfigurationData());
+		}
+	}
+
+	public class ExecuteStress implements ActionListener {
+		private PanelGeneral pg;
+
+		public ExecuteStress(PanelGeneral pg) {
+			this.pg = pg;
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			boolean isExecuting = (masterConfigurationData.getConfigurationStage().equals(MasterConfigurationDataStageEnum.EXECUTE_STRESS) ? Boolean.TRUE : Boolean.FALSE);
+
+			if(isExecuting) {
+				masterConfigurationData.setConfigurationStage(MasterConfigurationDataStageEnum.CANCEL_STRESS);
+
+				if(masterCommunicationManagement != null) {
+					masterCommunicationManagement.setMasterConfigurationData(masterConfigurationData);
+				}
+
+				simulateManagement.setStop(Boolean.TRUE);
+				buttonExecute.setText(PanelGeneral.EXECUTE_CANCELING);
+				buttonExecute.setEnabled(Boolean.FALSE);
+			}
+			else {
+				if(actualInstanceType != null && actualInstanceType.equals(InstanceTypeEnum.MASTER)) {
+					masterConfigurationData.setConfigurationStage(MasterConfigurationDataStageEnum.EXECUTE_STRESS);
+					
+					if(masterCommunicationManagement != null) {
+						masterCommunicationManagement.setMasterConfigurationData(masterConfigurationData);
+					}
+				}
+
+				buttonExecute.setText(PanelGeneral.EXECUTE_CANCEL);
+				buttonPrepareData.setEnabled(Boolean.FALSE);
+
+				List<SlaveIP> slaves = masterConfigurationData.getTechnicalInformationSlaves();
+				
+				for (SlaveIP slave : slaves) {
+					List<DeviceSimple> devices = null;
+					
+					if(actualInstanceType.equals(InstanceTypeEnum.MASTER) && slave.getMasterInstance()) {
+						devices = slave.getDevices();
+					}
+					else if(actualInstanceType.equals(InstanceTypeEnum.SLAVE) && slave.getIpAddress().equals(masterConfigurationData.getInstanceIpAddress())) {
+						devices = slave.getDevices();
+					}
+					
+					if(devices != null) {
+						simulateManagement = new ThreadSimulateManagement(masterConfigurationData, slave, devices);
+						SimulateProcessDispatcher.getInstance().addSimulateProcessListener(pg);
+						Thread t = new Thread(simulateManagement);
+						t.start();
+					}
+				}
+			}
+		}
+	}
+
+	public class ExitApplication implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			MasterConfigurationData masterConfigurationData = fillData();
+			masterConfigurationData.setConfigurationStage(MasterConfigurationDataStageEnum.EXIT_APPLICATION);
+
+			if(masterCommunicationManagement != null) {
+				masterCommunicationManagement.setMasterConfigurationData(masterConfigurationData);
+			}
+
+			try {
+				Thread.sleep(3000);
+			} catch (InterruptedException e1) {
+			}
+
+			System.exit(JFrame.NORMAL);
+		}
+	}
+
+	public class PrepareData implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if(actualInstanceType == null) {
+				JOptionPane.showMessageDialog(null, "Selecione uma 'Forma de Operação' para esta instância.", "Validação dos Dados", JOptionPane.ERROR_MESSAGE);
+
+				return;
+			}
+
+			if(tsaInstance == null) {
+				panelSystemInformation.getButtonConnectDisconnect().doClick();
+
+				if(tsaInstance == null) {
+					return;
+				}
+			}
+
+			Component[] components = mainPanel.getComponents();
+
+			for (Component component : components) {
+				if(component instanceof PanelAbstract) {
+					((PanelAbstract) component).disableFields();
+				}
+			}
+
+			panelConfiguration.disableFieldsAndLock();
+			buttonExecute.setEnabled(Boolean.TRUE);
+
+			calculateDataToStress();
+		}
+	}
+
+	private void calculateDataToStress() {
+		MasterConfigurationData masterConfigurationData = fillData();
+		masterConfigurationData.setConfigurationStage(MasterConfigurationDataStageEnum.PREPARETED_TO_STRESS);
+
+		Map<Long, Collection<UserRoleBadgeVO>> mapBusinessGroupMap = new HashMap<Long, Collection<UserRoleBadgeVO>>();
+		Map<Long, Collection<UserRoleBadgeVO>> mapLegalPersonMap = new HashMap<Long, Collection<UserRoleBadgeVO>>();
+		List<SlaveIP> slaves = masterConfigurationData.getTechnicalInformationSlaves();
+		String threadsNumberStr = masterConfigurationData.getTechnicalInformationThreadsNumber();
+		Integer threadsNumber = 1;
+		Integer deviceGeneralCount = 0;
+
+		try {
+			threadsNumber = Integer.parseInt(threadsNumberStr);
+		}
+		catch(NumberFormatException e) {
+		}
+
+		for (SlaveIP slaveIP : slaves) {
+			slaveIP.getDevices().clear();
+
+			for(int i=deviceGeneralCount; i < threadsNumber && deviceGeneralCount < this.devices.size(); i++) {
+				DeviceVO deviceVO = this.devices.get(i);
+				ModelVO modelVO = deviceVO.getModel();
+				DeviceSimple deviceSimple = new DeviceSimple((int) deviceVO.getCode().longValue(), modelVO.getRep());
+
+				BusinessGroupVO businessGroupVO = deviceVO.getBusinessGroupVO();
+				LegalPersonVO legalPerson = deviceVO.getLegalPerson();
+				Collection<UserRoleBadgeVO> users = null;
+
+				//caso o dispositivo esteja configurado para BusinessGroup
+				if(businessGroupVO != null) {
+					Long key = businessGroupVO.getId();
+					users = mapBusinessGroupMap.get(key);
+
+					//verifica, caso ainda não esteja no cache, busca.
+					if(users == null) {
+						users = this.tsaInstance.listUserRoleBadgeByBusinessGroup(deviceVO);
+
+						mapBusinessGroupMap.put(key, users);
+					}
+				}
+				else {
+					Long key = legalPerson.getId();
+					users = mapLegalPersonMap.get(key);
+
+					//verifica, caso ainda não esteja no cache, busca.
+					if(users == null) {
+						users = this.tsaInstance.listUserRoleBadgeByLegalPerson(deviceVO, legalPerson.getFederalId(), legalPerson.getCei());
+
+						mapLegalPersonMap.put(key, users);
+					}
+				}
+
+				if(users != null) {
+					for (UserRoleBadgeVO userRoleBadgeVO : users) {
+						List<UserSimple> usersAvailable = deviceSimple.getUsersAvailable();
+
+						usersAvailable.add(new UserSimple(userRoleBadgeVO.getBadge().getNumber()));
+					}
+				}
+
+				slaveIP.getDevices().add(deviceSimple);
+			}
+		}
+
+		this.masterConfigurationData = masterConfigurationData;
+
+		if(this.masterCommunicationManagement != null) {
+			this.masterCommunicationManagement.setMasterConfigurationData(masterConfigurationData);
+		}
+
+		try {
+			ObjectMapper om = new ObjectMapper();
+			System.out.println("Configuração dos slaves: " + om.writeValueAsString(masterConfigurationData));
+		} catch (JsonGenerationException e) {
+			e.printStackTrace();
+		} catch (JsonMappingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void onSimulateProcessEvent(SimulateProcessEvent event) {
+		if(event.getTypeEnum().equals(SimulateProcessType.CANCELED) || event.getTypeEnum().equals(SimulateProcessType.CONCLUDED)) {
+			this.buttonExecute.setText(PanelGeneral.EXECUTE_OK);
+			if(this.actualInstanceType != null && this.actualInstanceType.equals(InstanceTypeEnum.MASTER)) {
+				this.buttonExecute.setEnabled(Boolean.TRUE);
+				this.buttonPrepareData.setEnabled(Boolean.TRUE);
+			}
+		}
+	}
+
+	@Override
+	public void onExecutionSimulationOccur(ExecutionSimulationEvent event) {
+		this.panelSystemInformation.getLabelActualThreads().setText(" " + event.getActualThreadsActive() + " threads ativas");
+		this.panelSystemInformation.getLabelExecutionTimeProgress().setText(" " + event.getActualTimeExecution() + " segundos");
+	}
+}
