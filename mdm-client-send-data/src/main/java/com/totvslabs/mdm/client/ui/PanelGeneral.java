@@ -16,19 +16,26 @@ import javax.swing.JTabbedPane;
 import com.google.gson.JsonArray;
 import com.totvslabs.mdm.client.pojo.JDBCConnectionParameter;
 import com.totvslabs.mdm.client.pojo.JDBCTableVO;
+import com.totvslabs.mdm.client.ui.events.ChangeTabDispatcher;
+import com.totvslabs.mdm.client.ui.events.ChangeTabEvent;
+import com.totvslabs.mdm.client.ui.events.ChangeTabListener;
 import com.totvslabs.mdm.client.ui.events.DatasourceChangedDispatcher;
 import com.totvslabs.mdm.client.ui.events.DatasourceChangedEvent;
 import com.totvslabs.mdm.client.ui.events.DatasourceChangedListener;
+import com.totvslabs.mdm.client.ui.events.JDBCConnectionStabilizedDispatcher;
+import com.totvslabs.mdm.client.ui.events.JDBCConnectionStabilizedEvent;
+import com.totvslabs.mdm.client.ui.events.JDBCConnectionStabilizedListener;
 import com.totvslabs.mdm.client.ui.events.JDBCTableSelectedDispatcher;
 import com.totvslabs.mdm.client.ui.events.JDBCTableSelectedEvent;
 import com.totvslabs.mdm.client.ui.events.JDBCTableSelectedListener;
+import com.totvslabs.mdm.client.ui.events.LogManagerDispatcher;
 import com.totvslabs.mdm.client.util.JDBCConnectionFactory;
 import com.totvslabs.mdm.restclient.MDMRestConnection;
 import com.totvslabs.mdm.restclient.MDMRestConnectionFactory;
 import com.totvslabs.mdm.restclient.command.CommandPostStaging;
 import com.totvslabs.mdm.restclient.command.CommandPostStagingC;
 
-public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, DatasourceChangedListener {
+public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, DatasourceChangedListener, ChangeTabListener, JDBCConnectionStabilizedListener {
 	private static final long serialVersionUID = 1L;
 
 	public static final String EXECUTE_OK = "Execute!";
@@ -41,6 +48,9 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, D
 	private MDMEntities panelMDMEntities = new MDMEntities();
 	private JDBCDatabaseConnection panelJDBCConnection = new JDBCDatabaseConnection();
 	private JDBCEntities panelJDBCEntities = new JDBCEntities();
+	private ProcessLog processLog = new ProcessLog();
+
+	private JTabbedPane tabbedPane;
 
 	private JButton buttonExecute = new JButton(EXECUTE_OK);
 	private JButton buttonExit = new JButton("Exit");
@@ -77,16 +87,22 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, D
 		mainJDBCPanel.add(this.panelJDBCConnection, BorderLayout.NORTH);
 		mainJDBCPanel.add(this.panelJDBCEntities, BorderLayout.SOUTH);
 
-		JTabbedPane tabbedPane = new JTabbedPane();
+		tabbedPane = new JTabbedPane();
 
 		tabbedPane.addTab("MDM Connection", this.panelMDMConnection);
 		tabbedPane.addTab("JDBC Connection", mainJDBCPanel);
+		tabbedPane.addTab("Process Log", this.processLog);
 
 		JPanel mainButtonPanel = new JPanel();
 		mainButtonPanel.add(this.buttonExecute);
 		mainButtonPanel.add(this.buttonExit);
 
-//		this.mainPanel.add(this.panelMDMEntities);
+		LogManagerDispatcher.getInstance().addLogManagerListener(this.processLog);
+		ChangeTabDispatcher.getInstance().addChangeTabListener(this);
+		JDBCConnectionStabilizedDispatcher.getInstance().addJDBCConnectionStabilizedListener(this);
+
+		this.buttonExecute.setEnabled(false);
+
 		this.mainPanel.add(tabbedPane, BorderLayout.CENTER);
 		this.mainPanel.add(mainButtonPanel, BorderLayout.SOUTH);
 	}
@@ -135,6 +151,9 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, D
 	public class ExecuteSendData implements ActionListener, Runnable {
 		@Override
 		public void actionPerformed(ActionEvent event) {
+			buttonExecute.setEnabled(false);
+			tabbedPane.setSelectedIndex(2);
+
 			Thread th = new Thread(this);
 			th.start();
 		}
@@ -143,7 +162,7 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, D
 		public void run() {
 			DateFormat df = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z");
 
-			System.out.println("Starting the process now: " + df.format(Calendar.getInstance().getTime()));
+			LogManagerDispatcher.getInstance().register("Starting the process now: " + df.format(Calendar.getInstance().getTime()));
 			JsonArray data = JDBCConnectionFactory.loadData(param, tableVO);
 			Integer batchSize = 100;
 			long totalDataSend = 0l;
@@ -154,7 +173,7 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, D
 			catch(NumberFormatException e) {
 			}
 
-			System.out.println("I will start to send " + data.size() + " records...");
+			LogManagerDispatcher.getInstance().register("I will start to send " + data.size() + " records...");
 
 			JsonArray lote = new JsonArray();
 
@@ -182,7 +201,7 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, D
 						}
 
 						connection.executeCommand(staging);
-						System.out.println("Total time execute command: " + (System.currentTimeMillis() - initialTime) + additionalInformation);
+						LogManagerDispatcher.getInstance().register("Total time to execute the command: " + (System.currentTimeMillis() - initialTime) + additionalInformation + " ms.");
 						totalDataSend += lote.size();
 					}
 					catch(Exception e) {
@@ -196,11 +215,14 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, D
 					DecimalFormat decF = new DecimalFormat("0.00");
 
 					lote = new JsonArray();
-					System.out.println("Total data to be sent: " + data.size() + ", data send until now: " + totalDataSend + ":::::::" + decF.format(result*100) + "%");
+					LogManagerDispatcher.getInstance().register("Total records to be send: " + data.size() + ", records sent: " + totalDataSend + ":::::::" + decF.format(result*100) + "%");
 				}
 			}
 
-			System.out.println("Finishing the process now: " + df.format(Calendar.getInstance().getTime()));
+			LogManagerDispatcher.getInstance().register("Finishing the process now: " + df.format(Calendar.getInstance().getTime()) + "\n\n");
+
+			tabbedPane.setSelectedIndex(2);
+			buttonExecute.setEnabled(true);
 		}
 	}
 
@@ -223,5 +245,15 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, D
 			tenantId = event.getActualValue().getTenantId();
 			datasourceId = event.getActualValue().getDatasourceId();
 		}
+	}
+
+	@Override
+	public void onChangeTabListener(ChangeTabEvent event) {
+		this.tabbedPane.setSelectedIndex(event.getTabToSelect());
+	}
+
+	@Override
+	public void onJDBCConnectionStabilizedEvent(JDBCConnectionStabilizedEvent event) {
+		this.buttonExecute.setEnabled(true);
 	}
 }

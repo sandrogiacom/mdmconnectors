@@ -20,13 +20,13 @@ public class Main {
 		for (GenericVO vo : envelope.getHits()) {
 			System.out.println(vo);
 
-			CommandListDatasource ds = new CommandListDatasource(vo.get_mdmId());
+			CommandListDatasource ds = new CommandListDatasource(((GenericVO) vo).get_mdmId());
 			EnvelopeVO dsResult = connection.executeCommand(ds);
 
 			for (GenericVO string : dsResult.getHits()) {
 				System.out.println(string);
 
-				CommandListEntity entity = new CommandListEntity(string.get_mdmTenantId(), string.get_mdmDataSourceId());
+				CommandListEntity entity = new CommandListEntity(((GenericVO) string).get_mdmTenantId(), ((GenericVO) string).get_mdmDataSourceId());
 				EnvelopeVO entityCommand = connection.executeCommand(entity);
 
 				for (GenericVO entityPOJO : entityCommand.getHits()) {
@@ -35,7 +35,7 @@ public class Main {
 
 
 
-				CommandPostStaging staging = new CommandPostStaging(string.get_mdmTenantId(), string.get_mdmDataSourceId(),"test", dsResult.getHits());
+				CommandPostStaging staging = new CommandPostStaging(((GenericVO) string).get_mdmTenantId(), ((GenericVO) string).get_mdmDataSourceId(),"test", dsResult.getHits());
 				EnvelopeVO executeCommand = connection.executeCommand(staging);
 				System.out.println(executeCommand);
 			}

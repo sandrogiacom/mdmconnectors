@@ -5,6 +5,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,14 +21,18 @@ import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.JerseyClientBuilder;
 
 import com.google.gson.Gson;
+import com.totvslabs.mdm.restclient.command.AuthenticationRequired;
 import com.totvslabs.mdm.restclient.command.CommandPostStagingC;
 import com.totvslabs.mdm.restclient.command.ICommand;
 import com.totvslabs.mdm.restclient.vo.EnvelopeVO;
+import com.totvslabs.mdm.restclient.vo.GenericVO;
 
 public class MDMRestConnection {
 	private Client client;
@@ -101,15 +107,19 @@ public class MDMRestConnection {
 			}
 		}
 
-		if(command instanceof CommandPostStagingC) {
-			request = request.header("HttpHeaders.ACCEPT_ENCODING", "gzip");
+		if(command instanceof AuthenticationRequired) {
+			request = request.header("Authorization", MDMRestAuthentication.getInstance().getAuthVO().getAccess_token());
 		}
 
 		Response response = null;
 
 		switch(command.getType()) {
 			case GET:
+				long initialTimeGet = System.currentTimeMillis();
+
 				response = request.accept(MediaType.APPLICATION_JSON).get();
+
+				System.out.println("Time to execute the service ('" + command.getCommandURL() + "'): " + (System.currentTimeMillis() - initialTimeGet) );
 				break;
 
 			case POST:
@@ -121,25 +131,56 @@ public class MDMRestConnection {
 					additionalInformation = " - COMPRESS";
 				}
 
+				Map<String, String> formDataCommand = command.getFormData();
+				MultivaluedMap<String, String> formData = new MultivaluedHashMap<String, String>();
+
+				if(formDataCommand != null && formDataCommand.size() > 0) {
+					Set<String> keySet = formDataCommand.keySet();
+
+					for (String key : keySet) {
+						String value = formDataCommand.get(key);
+
+						formData.add(key, value);
+					}
+				}
+
 				long initialTimeConvertJson = System.currentTimeMillis();
-				String string = command.getData().toString();
+				String string = command.getData() != null ? command.getData().toString() : "";
 				System.out.println("Time to convert the OBJECT to JSON: " + (System.currentTimeMillis() - initialTimeConvertJson) );
 				long initialTime = System.currentTimeMillis();
-				System.out.println("Time BEFORE send the data: " + System.currentTimeMillis());
-				response = request.accept(type).post(Entity.entity(string, type));
-				System.out.println("Time AFTER send the data: " + System.currentTimeMillis());
+
+				if(formData != null && formData.size() > 0) {
+					response = request.accept(type).post(Entity.form(formData));
+				}
+				else {
+					response = request.accept(type).post(Entity.entity(string, type));
+				}
+
 				System.out.println("Time to execute the service ('" + command.getCommandURL() + "'" + additionalInformation + "): " + (System.currentTimeMillis() - initialTime) );
 				break;
 		}
 
 		if (response.getStatus() != 200) {
-			System.out.println(command.getData().toString());
+			if(command.getData() != null) {
+				System.out.println(command.getData().toString());
+			}
+
 			throw new RuntimeException("Failed : HTTP error code : " + response.getStatus());
 		}
 
-		EnvelopeVO envelopeVO = gson.fromJson(response.readEntity(String.class), EnvelopeVO.class);
-//		Type mapType = new TypeToken<List<GenericVO>>() {}.getType();
-//		List<GenericVO> genericVO = gson.fromJson(jsonObject.get("hits"), mapType);
+		Object resultVO = gson.fromJson(response.readEntity(String.class), command.getResponseType());
+		EnvelopeVO envelopeVO = null;
+
+		if(resultVO instanceof EnvelopeVO) {
+			envelopeVO = (EnvelopeVO) resultVO;
+		}
+		else {
+			envelopeVO = new EnvelopeVO();
+
+			List<GenericVO> genericVO = new ArrayList<GenericVO>();
+			genericVO.add((GenericVO) resultVO);
+			envelopeVO.setHits(genericVO);
+		}
 
 		return envelopeVO;
 	}

@@ -6,7 +6,7 @@ import java.util.Map;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.DatasourceVO;
 
-public class CommandPostStaging implements ICommand {
+public class CommandPostStaging implements ICommand, AuthenticationRequired {
 	private String tenantId;
 	private String datasourceId;
 	private String type;
@@ -57,5 +57,10 @@ public class CommandPostStaging implements ICommand {
 	@Override
 	public Object getData() {
 		return data;
+	}
+
+	@Override
+	public Map<String, String> getFormData() {
+		return null;
 	}
 }

@@ -11,6 +11,7 @@ public interface ICommand {
 	public Class<GenericVO> getResponseType();
 	public Map<String, String> getParametersHeader();
 	public Map<String, String> getParameterPath();
+	public Map<String, String> getFormData();
 	public CommandTypeEnum getType();
 	public Object getData();
 }

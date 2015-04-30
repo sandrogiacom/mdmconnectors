@@ -4,9 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
-import com.totvslabs.mdm.restclient.vo.DatasourceVO;
+import com.totvslabs.mdm.restclient.vo.EnvelopeVO;
 
-public class CommandListDatasource implements ICommand {
+public class CommandListDatasource implements ICommand, AuthenticationRequired {
 	private String tenantId;
 
 	public CommandListDatasource(String tenantId) {
@@ -34,7 +34,7 @@ public class CommandListDatasource implements ICommand {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public Class getResponseType() {
-		return DatasourceVO.class;
+		return EnvelopeVO.class;
 	}
 
 	@Override
@@ -49,6 +49,11 @@ public class CommandListDatasource implements ICommand {
 
 	@Override
 	public Object getData() {
+		return null;
+	}
+
+	@Override
+	public Map<String, String> getFormData() {
 		return null;
 	}
 }

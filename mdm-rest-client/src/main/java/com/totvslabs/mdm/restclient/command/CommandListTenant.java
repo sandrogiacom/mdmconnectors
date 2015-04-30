@@ -5,7 +5,7 @@ import java.util.Map;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.TenantVO;
 
-public class CommandListTenant implements ICommand {
+public class CommandListTenant implements ICommand, AuthenticationRequired {
 
 	@Override
 	public void processReturn() {
@@ -39,6 +39,11 @@ public class CommandListTenant implements ICommand {
 
 	@Override
 	public Object getData() {
+		return null;
+	}
+
+	@Override
+	public Map<String, String> getFormData() {
 		return null;
 	}
 }

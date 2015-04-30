@@ -6,7 +6,7 @@ import java.util.Map;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.EntityVO;
 
-public class CommandListEntity implements ICommand {
+public class CommandListEntity implements ICommand, AuthenticationRequired {
 	private String tenantId;
 	private String datasourceId;
 
@@ -52,6 +52,11 @@ public class CommandListEntity implements ICommand {
 
 	@Override
 	public Object getData() {
+		return null;
+	}
+
+	@Override
+	public Map<String, String> getFormData() {
 		return null;
 	}
 }
