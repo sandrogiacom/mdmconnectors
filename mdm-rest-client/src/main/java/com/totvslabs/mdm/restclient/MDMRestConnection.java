@@ -165,7 +165,9 @@ public class MDMRestConnection {
 				System.out.println(command.getData().toString());
 			}
 
-			throw new RuntimeException("Failed : HTTP error code : " + response.getStatus());
+			String readEntity = response.readEntity(String.class);
+
+			throw new RuntimeException("Failed : HTTP error code : " + response.getStatus() + " -> " + readEntity);
 		}
 
 		Object resultVO = gson.fromJson(response.readEntity(String.class), command.getResponseType());

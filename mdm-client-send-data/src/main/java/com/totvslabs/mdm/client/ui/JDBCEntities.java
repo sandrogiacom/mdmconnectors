@@ -63,7 +63,7 @@ public class JDBCEntities extends PanelAbstract implements JDBCConnectionStabili
 		this.textTemplateName = new JTextField(20);
 
 		this.labelCompressOption = new JLabel("Compress: ");
-		this.checkBoxCompress = new JCheckBox("Yes!");
+		this.checkBoxCompress = new JCheckBox("Yes!", true);
 
 		this.labelBatchSize = new JLabel("Batch Size (records): ");
 		this.textBatchSize = new JTextField("500", 20);
