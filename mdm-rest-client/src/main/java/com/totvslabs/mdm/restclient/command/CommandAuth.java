@@ -73,8 +73,8 @@ public class CommandAuth implements ICommand {
 		parameters.put("grant_type", this.grantType);
 		parameters.put("username", this.username);
 		parameters.put("password", this.password);
-		parameters.put("tenantId", this.tenantId);
-		parameters.put("datasourceId", datasourceId);
+		parameters.put("subdomain", this.tenantId);
+		parameters.put("dataSourceId", datasourceId);
 
 		return parameters;
 	}

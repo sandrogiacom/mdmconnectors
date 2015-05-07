@@ -160,7 +160,7 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, D
 
 		@Override
 		public void run() {
-			DateFormat df = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z");
+			DateFormat df = new SimpleDateFormat("yyyy.MM.dd 'at' HH:mm:ss z");
 
 			LogManagerDispatcher.getInstance().register("Starting the process now: " + df.format(Calendar.getInstance().getTime()));
 			JsonArray data = JDBCConnectionFactory.loadData(param, tableVO);
@@ -173,7 +173,7 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, D
 			catch(NumberFormatException e) {
 			}
 
-			LogManagerDispatcher.getInstance().register("I will start to send " + data.size() + " records...");
+			LogManagerDispatcher.getInstance().register("I am going to send " + data.size() + " records...");
 
 			JsonArray lote = new JsonArray();
 
@@ -192,16 +192,18 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, D
 
 					MDMRestConnection connection = MDMRestConnectionFactory.getConnection(panelMDMConnection.getTextMDMServerURL().getText());
 
+					long initialTime = System.currentTimeMillis();
+					long endTime = initialTime;
+
+					String additionalInformation = "";
+
+					if(staging instanceof CommandPostStagingC) {
+						additionalInformation = " (compressed)";
+					}
+
 					try {
-						long initialTime = System.currentTimeMillis();
-						String additionalInformation = "";
-
-						if(staging instanceof CommandPostStagingC) {
-							additionalInformation = " - COMPRESS";
-						}
-
 						connection.executeCommand(staging);
-						LogManagerDispatcher.getInstance().register("Total time to execute the command: " + (System.currentTimeMillis() - initialTime) + additionalInformation + " ms.");
+						endTime = System.currentTimeMillis();
 						totalDataSend += lote.size();
 					}
 					catch(Exception e) {
@@ -215,11 +217,12 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, D
 					DecimalFormat decF = new DecimalFormat("0.00");
 
 					lote = new JsonArray();
-					LogManagerDispatcher.getInstance().register("Total records to be send: " + data.size() + ", records sent: " + totalDataSend + ":::::::" + decF.format(result*100) + "%");
+//					Sent 1001 (Compressed) records in 3326ms, 10.59% completed (9456 in total)
+					LogManagerDispatcher.getInstance().register("Sent " + totalDataSend + additionalInformation + " records in " + (endTime - initialTime) + "ms, " + decF.format(result*100) + "% completed (" + data.size() + " in total).");
 				}
 			}
 
-			LogManagerDispatcher.getInstance().register("Finishing the process now: " + df.format(Calendar.getInstance().getTime()) + "\n\n");
+			LogManagerDispatcher.getInstance().register("Finished the process now: " + df.format(Calendar.getInstance().getTime()) + "\n\n");
 
 			tabbedPane.setSelectedIndex(2);
 			buttonExecute.setEnabled(true);

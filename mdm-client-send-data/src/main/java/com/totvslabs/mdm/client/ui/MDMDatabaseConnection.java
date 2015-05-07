@@ -38,11 +38,11 @@ public class MDMDatabaseConnection extends PanelAbstract {
 		super(1, 16, " MDM Database Parameters");
 
 		this.labelMDMServerURL = new JLabel("Server URL: ");
-		this.textMDMServerURL = new JTextField("https://app.fluigdata.com:443/mdm/", 20);
-		this.labelMDMTenantId = new JLabel("Tenant ID: ");
-		this.textMDMTenantId = new JTextField("3c786c80e9f211e4a8910401474f6001");
+		this.textMDMServerURL = new JTextField("https://localhost:8443/mdm/", 20);
+		this.labelMDMTenantId = new JLabel("Subdomain: ");
+		this.textMDMTenantId = new JTextField("totvslabs");
 		this.labelMDMDatasourceId = new JLabel("Datasource ID: ");
-		this.textMDMDatasourceId = new JTextField("3d341b60e9f211e4a8910401474f6001");
+		this.textMDMDatasourceId = new JTextField("0a0829172fc2433c9aa26460c31b78f0");
 		this.labelMDMUserName = new JLabel("User: ");
 		this.textMDMUserName = new JTextField("admin@totvslabs.com", 20);
 		this.labelMDMPassword = new JLabel("Password: ");
