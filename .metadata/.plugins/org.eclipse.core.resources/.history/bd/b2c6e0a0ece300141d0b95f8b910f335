@@ -1,5 +1,0 @@
-package com.totvs.hcm.tsa.markgenerator.ui.events;
-
-public interface ThreadsSlavesDevicesChangedListener {
-	public void onThreadsSlavesDevicesChanged(ThreadsSlavesDevicesChangedEvent event);
-}

@@ -1,5 +1,0 @@
-package com.totvs.hcm.tsa.markgenerator.ui.events;
-
-public interface MasterConfigurationDataReceivedListener {
-	public void onMasterConfigurationDataReceived(MasterConfigurationDataReceivedEvent event);
-}

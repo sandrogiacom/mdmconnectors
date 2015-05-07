@@ -1,5 +1,0 @@
-package com.totvs.hcm.tsa.markgenerator.ui.events;
-
-public interface TSAServerStateChangedListener {
-	public void onTSAServerStateChanged(TSAServerStateChangedEvent event) throws TSAServerStatusException;
-}

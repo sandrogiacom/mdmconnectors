@@ -1,3 +1,0 @@
-INDEX VERSION 1.127+/Users/poffo/Documents/hd/trabalhos/totvs labs/_developments/workspaceMDMSendData/.metadata/.plugins/org.eclipse.jdt.core
-3842411080.index
-3313561323.index
