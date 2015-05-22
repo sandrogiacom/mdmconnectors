@@ -163,9 +163,8 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, D
 			DateFormat df = new SimpleDateFormat("yyyy.MM.dd 'at' HH:mm:ss z");
 
 			LogManagerDispatcher.getInstance().register("Starting the process now: " + df.format(Calendar.getInstance().getTime()));
-			JsonArray data = JDBCConnectionFactory.loadData(param, tableVO);
 			Integer batchSize = 100;
-			long totalDataSend = 0l;
+			Integer totalRecords = tableVO.getTotalRecords();
 
 			try {
 				batchSize = Integer.parseInt(panelJDBCEntities.getTextBatchSize().getText());
@@ -173,53 +172,47 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, D
 			catch(NumberFormatException e) {
 			}
 
-			LogManagerDispatcher.getInstance().register("I am going to send " + data.size() + " records...");
+			LogManagerDispatcher.getInstance().register("I am going to send " + totalRecords + " records...");
 
-			JsonArray lote = new JsonArray();
+			for(int totalDataSend=0; totalDataSend<totalRecords;) {
+				JsonArray lote = JDBCConnectionFactory.loadData(param, tableVO, totalDataSend, batchSize);
 
-			for(int i=0; i<data.size(); i++) {
-				lote.add(data.get(i));
+				CommandPostStaging staging = null;
 
-				if(i!= 0 && i%(batchSize) == 0 || ((totalDataSend + lote.size()) == data.size())) {
-					CommandPostStaging staging = null;
-
-					if(panelJDBCEntities.getCheckBoxCompress().isSelected()) {
-						staging = new CommandPostStagingC(tenantId, datasourceId, panelJDBCEntities.getTextTemplateName().getText(), lote);
-					}
-					else {
-						staging = new CommandPostStaging(tenantId, datasourceId, panelJDBCEntities.getTextTemplateName().getText(), lote);
-					}
-
-					MDMRestConnection connection = MDMRestConnectionFactory.getConnection(panelMDMConnection.getTextMDMServerURL().getText());
-
-					long initialTime = System.currentTimeMillis();
-					long endTime = initialTime;
-
-					String additionalInformation = "";
-
-					if(staging instanceof CommandPostStagingC) {
-						additionalInformation = " (compressed)";
-					}
-
-					try {
-						connection.executeCommand(staging);
-						endTime = System.currentTimeMillis();
-						totalDataSend += lote.size();
-					}
-					catch(Exception e) {
-						System.err.println("Error: " + e.getMessage());
-						e.printStackTrace();
-					}
-
-					double n1 = totalDataSend;
-					double n2 = data.size();
-					double result = n1 / n2;
-					DecimalFormat decF = new DecimalFormat("0.00");
-
-					lote = new JsonArray();
-//					Sent 1001 (Compressed) records in 3326ms, 10.59% completed (9456 in total)
-					LogManagerDispatcher.getInstance().register("Sent " + totalDataSend + additionalInformation + " records in " + (endTime - initialTime) + "ms, " + decF.format(result*100) + "% completed (" + data.size() + " in total).");
+				if(panelJDBCEntities.getCheckBoxCompress().isSelected()) {
+					staging = new CommandPostStagingC(tenantId, datasourceId, panelJDBCEntities.getTextTemplateName().getText(), lote);
 				}
+				else {
+					staging = new CommandPostStaging(tenantId, datasourceId, panelJDBCEntities.getTextTemplateName().getText(), lote);
+				}
+
+				MDMRestConnection connection = MDMRestConnectionFactory.getConnection(panelMDMConnection.getTextMDMServerURL().getText());
+
+				long initialTime = System.currentTimeMillis();
+				long endTime = initialTime;
+
+				String additionalInformation = "";
+
+				if(staging instanceof CommandPostStagingC) {
+					additionalInformation = " (compressed)";
+				}
+
+				try {
+					connection.executeCommand(staging);
+					endTime = System.currentTimeMillis();
+					totalDataSend += lote.size();
+				}
+				catch(Exception e) {
+					System.err.println("Error: " + e.getMessage());
+					e.printStackTrace();
+				}
+
+				double n1 = totalDataSend;
+				double n2 = totalRecords;
+				double result = n1 / n2;
+				DecimalFormat decF = new DecimalFormat("0.00");
+
+				LogManagerDispatcher.getInstance().register("Sent " + lote.size() + additionalInformation + " records in " + (endTime - initialTime) + "ms, " + decF.format(result*100) + "% completed (" + totalDataSend + " in total).");
 			}
 
 			LogManagerDispatcher.getInstance().register("Finished the process now: " + df.format(Calendar.getInstance().getTime()) + "\n\n");

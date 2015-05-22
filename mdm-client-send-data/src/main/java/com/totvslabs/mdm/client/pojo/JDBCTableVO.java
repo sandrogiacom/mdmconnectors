@@ -6,6 +6,7 @@ import java.util.List;
 public class JDBCTableVO {
 	private String name;
 	private List<JDBCFieldVO> fields = new ArrayList<JDBCFieldVO>();
+	private Integer totalRecords;
 
 	public JDBCTableVO(String name) {
 		super();
@@ -24,9 +25,16 @@ public class JDBCTableVO {
 	public void setFields(List<JDBCFieldVO> fields) {
 		this.fields = fields;
 	}
+	public Integer getTotalRecords() {
+		return totalRecords;
+	}
+
+	public void setTotalRecords(Integer totalRecords) {
+		this.totalRecords = totalRecords;
+	}
 
 	@Override
 	public String toString() {
-		return name;
+		return (name + (totalRecords != null && totalRecords != 0 ? " (" + totalRecords +  " records)" : ""));
 	}
 }

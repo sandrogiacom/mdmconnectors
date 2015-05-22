@@ -8,6 +8,7 @@ import java.awt.event.ItemListener;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
@@ -81,6 +82,11 @@ public class JDBCDatabaseConnection extends PanelAbstract {
 		@Override
 		public void actionPerformed(ActionEvent e) {
         	JDBCDatabaseVO database = JDBCConnectionFactory.loadFisicModelTables(textJDBCURL.getText(), textJDBCUserName.getText(), textJDBCPassword.getText());
+
+        	if(database == null) {
+        		JOptionPane.showMessageDialog(null, "An error occurred while establishing the connection, verify the error message.", "Connection Error", JOptionPane.ERROR_MESSAGE);
+        		return;
+        	}
 
         	JDBCConnectionParameter param = new JDBCConnectionParameter(textJDBCURL.getText(), textJDBCUserName.getText(), textJDBCPassword.getText());
 			JDBCConnectionStabilizedEvent event = new JDBCConnectionStabilizedEvent(param, database.getTables());

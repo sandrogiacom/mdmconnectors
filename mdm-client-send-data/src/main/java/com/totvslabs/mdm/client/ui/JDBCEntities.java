@@ -144,6 +144,9 @@ public class JDBCEntities extends PanelAbstract implements JDBCConnectionStabili
 
 			JDBCTableSelectedEvent eventTableSelected = new JDBCTableSelectedEvent(vo, event.getParam());
 			JDBCTableSelectedDispatcher.getInstance().fireJDBCTableSelectedEvent(eventTableSelected);
+
+			Integer totalRecords = JDBCConnectionFactory.getTotalRecords(event.getParam(), vo);
+			vo.setTotalRecords(totalRecords);
 		}
 	}
 

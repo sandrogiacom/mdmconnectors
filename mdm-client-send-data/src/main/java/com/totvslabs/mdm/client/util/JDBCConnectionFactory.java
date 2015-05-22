@@ -32,14 +32,14 @@ public class JDBCConnectionFactory {
 		return connection;
 	}
 
-	public static JsonArray loadData(JDBCConnectionParameter param, JDBCTableVO tableVO) {
-		JsonArray jsonRecords = new JsonArray();
+	public static Integer getTotalRecords(JDBCConnectionParameter param, JDBCTableVO tableVO) {
 		StringBuffer sql = new StringBuffer();
 
-		sql.append("SELECT * FROM ");
+		sql.append("SELECT count(*) FROM ");
 		sql.append(tableVO.getName());
 
 		Connection connection = JDBCConnectionFactory.getJDBCConnection(param.getUrl(), param.getUser(), param.getPassword());
+		Integer totalRecords = 0;
 
 		try {
 			Statement st = null;
@@ -47,20 +47,9 @@ public class JDBCConnectionFactory {
 			try {
 				st = connection.createStatement();
 				ResultSet rs = st.executeQuery(sql.toString());
-				ResultSetMetaData metaData = rs.getMetaData();
-
-				int columnCount = metaData.getColumnCount();
 
 				while(rs.next()) {
-					JsonObject jsonRecord = new JsonObject();
-
-					for(int i=1; i<=columnCount; i++) {
-						String columnName = metaData.getColumnName(i);
-
-						jsonRecord.addProperty(columnName, rs.getString(i));
-					}
-
-					jsonRecords.add(jsonRecord);
+					totalRecords = rs.getInt(1);
 				}
 
 				if(rs != null) {
@@ -89,7 +78,81 @@ public class JDBCConnectionFactory {
 			}
 		}
 
+		return totalRecords;
+	}
+
+	public static JsonArray loadData(JDBCConnectionParameter param, JDBCTableVO tableVO, int initialRecord, int quantity) {
+		JsonArray jsonRecords = new JsonArray();
+		StringBuffer sql = new StringBuffer();
+
+		sql.append("SELECT * FROM ");
+		sql.append(tableVO.getName());
+
+		Connection connection = JDBCConnectionFactory.getJDBCConnection(param.getUrl(), param.getUser(), param.getPassword());
+
+		try {
+			Statement st = null;
+
+			try {
+				st = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
+				ResultSet rs = st.executeQuery(sql.toString());
+				ResultSetMetaData metaData = rs.getMetaData();
+
+				int columnCount = metaData.getColumnCount();
+				int totalRecordsLoaded = 0;
+
+				if(quantity > 0) {
+					st.setMaxRows(quantity);
+				}
+
+				if(initialRecord > 0) {
+					rs.absolute(initialRecord);
+				}
+
+				while(rs.next() && (quantity == 0 || (quantity != totalRecordsLoaded))) {
+					JsonObject jsonRecord = new JsonObject();
+
+					for(int i=1; i<=columnCount; i++) {
+						String columnName = metaData.getColumnName(i);
+
+						jsonRecord.addProperty(columnName, rs.getString(i));
+					}
+
+					jsonRecords.add(jsonRecord);
+					totalRecordsLoaded++;
+				}
+
+				if(rs != null) {
+					rs.close();
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+			finally {
+				if(st != null) {
+					try {
+						st.close();
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+		finally {
+			try {
+				if(connection != null) {
+					connection.close();
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+
 		return jsonRecords;
+	}
+
+	public static JsonArray loadData(JDBCConnectionParameter param, JDBCTableVO tableVO) {
+		return loadData(param, tableVO, 0, 0);
 	}
 
 	public static void loadFisicModelFields(String url, String user, String password, JDBCTableVO tableVO) {
@@ -155,6 +218,10 @@ public class JDBCConnectionFactory {
 	public static JDBCDatabaseVO loadFisicModelTables(String url, String user, String password) {
 		Connection connection = JDBCConnectionFactory.getJDBCConnection(url, user, password);
 		JDBCDatabaseVO databaseByFisicModelVO = new JDBCDatabaseVO();
+
+		if(connection == null) {
+			return null;
+		}
 
 		try {
 			ResultSet tables = connection.getMetaData().getTables(null, "%", "%", new String[] { "TABLE" });
