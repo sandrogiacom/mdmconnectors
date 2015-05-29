@@ -34,9 +34,9 @@ public class MDMRestAuthentication {
 		experiedCalend.add(Calendar.SECOND, expiresInSeconds.intValue());
 	}
 
-	public static MDMRestAuthentication getInstnace(String mdmURL, String tenantId, String datasourceId, String username, String password) {
+	public static MDMRestAuthentication getInstance(String mdmURL, String subdomain, String datasourceId, String username, String password) {
 		if(MDMRestAuthentication.instance == null) {
-			AuthVO authVO = MDMRestAuthentication.authorization(mdmURL, tenantId, datasourceId, username, password);
+			AuthVO authVO = MDMRestAuthentication.authorization(mdmURL, subdomain, datasourceId, username, password);
 			MDMRestAuthentication.instance = new MDMRestAuthentication(mdmURL, authVO.getRefresh_token(), authVO.getAccess_token(), authVO.getClient_id(), authVO.getTimeIssuedInMillis(), authVO.getExpires_in());
 		}
 		else {
@@ -47,14 +47,18 @@ public class MDMRestAuthentication {
 	}
 
 	public static MDMRestAuthentication getInstance() {
+		if (MDMRestAuthentication.instance == null) {
+			throw new RuntimeException("Authentication is required to use this operation.");
+		}
+		
 		MDMRestAuthentication.instance.refreshToken();
 
 		return MDMRestAuthentication.instance;
 	}
 
-	private static AuthVO authorization(String mdmURL, String tenantId, String datasourceId, String username, String password) {
+	private static AuthVO authorization(String mdmURL, String subdomain, String datasourceId, String username, String password) {
 		MDMRestConnection connection = MDMRestConnectionFactory.getConnection(mdmURL);
-		EnvelopeVO authResult = connection.executeCommand(new CommandAuth(tenantId, datasourceId, username, password));
+		EnvelopeVO authResult = connection.executeCommand(new CommandAuth(subdomain, datasourceId, username, password));
 		List<GenericVO> authsVO = authResult.getHits();
 		AuthVO authVO = (AuthVO) authsVO.get(0);
 

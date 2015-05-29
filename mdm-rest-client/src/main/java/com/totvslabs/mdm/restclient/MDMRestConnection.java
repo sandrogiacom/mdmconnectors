@@ -25,6 +25,7 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import org.apache.log4j.Logger;
 import org.glassfish.jersey.client.JerseyClientBuilder;
 
 import com.google.gson.Gson;
@@ -35,6 +36,9 @@ import com.totvslabs.mdm.restclient.vo.EnvelopeVO;
 import com.totvslabs.mdm.restclient.vo.GenericVO;
 
 public class MDMRestConnection {
+	
+	private static final Logger log = Logger.getLogger(MDMRestConnection.class);
+	
 	private Client client;
 	private String mdmURL;
 
@@ -119,7 +123,7 @@ public class MDMRestConnection {
 
 				response = request.accept(MediaType.APPLICATION_JSON).get();
 
-				System.out.println("Time to execute the service ('" + command.getCommandURL() + "'): " + (System.currentTimeMillis() - initialTimeGet) );
+				log.info("Time to execute the GET service ('" + command.getCommandURL() + "'): " + (System.currentTimeMillis() - initialTimeGet) );
 				break;
 
 			case POST:
@@ -146,7 +150,7 @@ public class MDMRestConnection {
 
 				long initialTimeConvertJson = System.currentTimeMillis();
 				String string = command.getData() != null ? command.getData().toString() : "";
-				System.out.println("Time to convert the OBJECT to JSON: " + (System.currentTimeMillis() - initialTimeConvertJson) );
+				log.info("Time to convert the OBJECT to JSON: " + (System.currentTimeMillis() - initialTimeConvertJson) );
 				long initialTime = System.currentTimeMillis();
 
 				if(formData != null && formData.size() > 0) {
@@ -156,13 +160,13 @@ public class MDMRestConnection {
 					response = request.accept(type).post(Entity.entity(string, type));
 				}
 
-				System.out.println("Time to execute the service ('" + command.getCommandURL() + "'" + additionalInformation + "): " + (System.currentTimeMillis() - initialTime) );
+				log.info("Time to execute the POST service ('" + command.getCommandURL() + "'" + additionalInformation + "): " + (System.currentTimeMillis() - initialTime) );
 				break;
 		}
 
 		if (response.getStatus() != 200) {
 			if(command.getData() != null) {
-				System.out.println(command.getData().toString());
+				log.info("Data response:" + command.getData().toString());
 			}
 
 			String readEntity = response.readEntity(String.class);

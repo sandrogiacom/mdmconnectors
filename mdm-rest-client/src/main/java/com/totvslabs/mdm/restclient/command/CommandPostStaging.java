@@ -63,4 +63,9 @@ public class CommandPostStaging implements ICommand, AuthenticationRequired {
 	public Map<String, String> getFormData() {
 		return null;
 	}
+	@Override
+	public String toString() {
+		return "CommandPostStaging [tenantId=" + tenantId + ", datasourceId="
+				+ datasourceId + ", type=" + type + ", data=" + data + "]";
+	}
 }
