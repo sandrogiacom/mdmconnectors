@@ -9,8 +9,8 @@ import com.totvslabs.mdm.restclient.vo.EnvelopeVO;
 public class CommandListDatasource implements ICommand, AuthenticationRequired {
 	private String tenantId;
 
-	public CommandListDatasource(String tenantId) {
-		this.tenantId = tenantId;
+	public CommandListDatasource(String domain) {
+		this.tenantId = domain;
 	}
 
 	@Override

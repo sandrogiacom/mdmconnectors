@@ -73,7 +73,7 @@ public class MDMDatabaseConnection extends PanelAbstract {
 	class ConnectClick implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			MDMRestAuthentication.getInstnace(textMDMServerURL.getText(), textMDMTenantId.getText(), textMDMDatasourceId.getText(), textMDMUserName.getText(), textMDMPassword.getText());
+			MDMRestAuthentication.getInstance(textMDMServerURL.getText(), textMDMTenantId.getText(), textMDMDatasourceId.getText(), textMDMUserName.getText(), textMDMPassword.getText());
 			MDMRestConnectionFactory.getConnection(textMDMServerURL.getText());
 
 			ChangeTabDispatcher.getInstance().fireChangeTabEvent(new ChangeTabEvent(1));
