@@ -11,6 +11,11 @@ import org.junit.Test;
 import com.totvslabs.mdm.restclient.command.CommandPostStaging;
 import com.totvslabs.mdm.restclient.vo.GenericVO;
 
+/**
+ * Some testing with Staging Command
+ * @author Bruno Candido Volpato da Cunha
+ *
+ */
 public class CommandPostStagingTest {
     
 	private MDMRestConnection connection;
