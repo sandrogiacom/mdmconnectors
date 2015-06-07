@@ -35,6 +35,10 @@ import com.totvslabs.mdm.restclient.command.ICommand;
 import com.totvslabs.mdm.restclient.vo.EnvelopeVO;
 import com.totvslabs.mdm.restclient.vo.GenericVO;
 
+/**
+ * 
+ *
+ */
 public class MDMRestConnection {
 	
 	private static final Logger log = Logger.getLogger(MDMRestConnection.class);
@@ -43,41 +47,11 @@ public class MDMRestConnection {
 	private String mdmURL;
 
 	public MDMRestConnection(String mdmURL) {
-		TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
-
-			public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-				return new X509Certificate[0];
-			}
-
-			public void checkServerTrusted(java.security.cert.X509Certificate[] arg0, String arg1) throws CertificateException {
-			}
-
-			public void checkClientTrusted(java.security.cert.X509Certificate[] arg0, String arg1) throws CertificateException {
-			}
-		} };
-
-		HostnameVerifier hv = new HostnameVerifier() {
-			public boolean verify(String hostname, SSLSession session) {
-				return true;
-			}
-		};
-
-		SSLContext sc = null;
-
-		try {
-			sc = SSLContext.getInstance("SSL");
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		}
-
-		try {
-			sc.init(null, trustAllCerts, new SecureRandom());
-		} catch (KeyManagementException e) {
-			e.printStackTrace();
-		}
-
-		this.client = new JerseyClientBuilder().sslContext(sc).hostnameVerifier(hv).build(); 
-
+		this.client = new JerseyClientBuilder()
+						.sslContext(getTrustAllSSLContext())
+						.hostnameVerifier(new DefaultHostnameVerifier())
+						.build(); 
+		
 		this.mdmURL = mdmURL;
 	}
 
@@ -86,8 +60,6 @@ public class MDMRestConnection {
 			this.client.register(GZipReaderInterceptor.class);
 			this.client.register(GZipWriterInterceptor.class);
 		}
-
-		Gson gson = new Gson();
 
 		Map<String, String> parametersHeader = command.getParametersHeader();
 		Map<String, String> parameterPath = command.getParameterPath();
@@ -153,10 +125,9 @@ public class MDMRestConnection {
 				log.info("Time to convert the OBJECT to JSON: " + (System.currentTimeMillis() - initialTimeConvertJson) );
 				long initialTime = System.currentTimeMillis();
 
-				if(formData != null && formData.size() > 0) {
+				if (formData != null && formData.size() > 0) {
 					response = request.accept(type).post(Entity.form(formData));
-				}
-				else {
+				} else {
 					response = request.accept(type).post(Entity.entity(string, type));
 				}
 
@@ -164,7 +135,7 @@ public class MDMRestConnection {
 				break;
 		}
 
-		if (response.getStatus() != 200) {
+		if (response.getStatus() != Response.Status.OK.getStatusCode()) {
 			if(command.getData() != null) {
 				log.info("Data response:" + command.getData().toString());
 			}
@@ -174,13 +145,13 @@ public class MDMRestConnection {
 			throw new RuntimeException("Failed : HTTP error code : " + response.getStatus() + " -> " + readEntity);
 		}
 
+		Gson gson = new Gson();
 		Object resultVO = gson.fromJson(response.readEntity(String.class), command.getResponseType());
 		EnvelopeVO envelopeVO = null;
 
-		if(resultVO instanceof EnvelopeVO) {
+		if (resultVO instanceof EnvelopeVO) {
 			envelopeVO = (EnvelopeVO) resultVO;
-		}
-		else {
+		} else {
 			envelopeVO = new EnvelopeVO();
 
 			List<GenericVO> genericVO = new ArrayList<GenericVO>();
@@ -189,5 +160,55 @@ public class MDMRestConnection {
 		}
 
 		return envelopeVO;
+	}
+	
+	
+
+
+	/**
+	 * Instantiates and initializes a trust-all SSL Context
+	 * @return
+	 */
+	protected SSLContext getTrustAllSSLContext() {
+		SSLContext sc = null;
+
+		try {
+			sc = SSLContext.getInstance("SSL");
+		} catch (NoSuchAlgorithmException e) {
+			log.error("Error registering SSLContext", e);
+		}
+		try {
+			sc.init(null, new TrustManager[] { new DefaultTrustManager() }, new SecureRandom());
+		} catch (KeyManagementException e) {
+			log.error("Error initializing SSLContext", e);
+		}
+
+		return sc;
+	}
+
+	public static class DefaultTrustManager implements X509TrustManager {
+
+		@Override
+		public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+		}
+
+		@Override
+		public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+		}
+
+		@Override
+		public X509Certificate[] getAcceptedIssuers() {
+			return new X509Certificate[0];
+		}
+		
+	}
+	
+	public static class DefaultHostnameVerifier implements HostnameVerifier {
+		
+		@Override
+		public boolean verify(String hostname, SSLSession session) {
+			return true;
+		}
+
 	}
 }
