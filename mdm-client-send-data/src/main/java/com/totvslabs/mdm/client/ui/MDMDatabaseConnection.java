@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
@@ -93,11 +94,16 @@ public class MDMDatabaseConnection extends PanelAbstract implements ActionListen
 	class ConnectClick implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			MDMRestAuthentication.getInstance(textMDMServerURL.getText(), textMDMTenantId.getText(), textMDMDatasourceId.getText(), textMDMUserName.getText(), textMDMPassword.getText());
-			MDMRestConnectionFactory.getConnection(textMDMServerURL.getText());
-
-			radioFile.setEnabled(true);
-			radioDB.setEnabled(true);
+			try {
+				MDMRestAuthentication.getInstance(textMDMServerURL.getText(), textMDMTenantId.getText(), textMDMDatasourceId.getText(), textMDMUserName.getText(), textMDMPassword.getText());
+				MDMRestConnectionFactory.getConnection(textMDMServerURL.getText());
+				
+				radioFile.setEnabled(true);
+				radioDB.setEnabled(true);
+			}
+			catch(RuntimeException e1) {
+				JOptionPane.showMessageDialog(null, "Happened a problem to establish the connection, please see the log and try again later." + e1.getMessage());
+			}
 		}
 	}
 

@@ -4,12 +4,22 @@ public class JDBCConnectionParameter {
 	private String url;
 	private String user;
 	private String password;
+	private String driver;
 
-	public JDBCConnectionParameter(String url, String user, String password) {
+	public JDBCConnectionParameter(String driver, String url, String user, String password) {
 		super();
+		this.driver = driver;
 		this.url = url;
 		this.user = user;
 		this.password = password;
+	}
+
+	public String getDriver() {
+		return driver;
+	}
+
+	public void setDriver(String driver) {
+		this.driver = driver;
 	}
 
 	public String getUrl() {

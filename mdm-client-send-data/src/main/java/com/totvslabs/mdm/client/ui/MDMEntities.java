@@ -14,7 +14,6 @@ import javax.swing.table.TableColumn;
 
 import com.totvslabs.mdm.client.pojo.MDMEntityBO;
 import com.totvslabs.mdm.client.pojo.MDMEntitySyncTypeVO;
-import com.totvslabs.mdm.client.pojoTSA.MasterConfigurationData;
 
 public class MDMEntities extends PanelAbstract {
 	private static final long serialVersionUID = 1L;
@@ -50,18 +49,6 @@ public class MDMEntities extends PanelAbstract {
 		this.add(this.comboSyncType);
 
 		this.initColumnSizes(tableEntitiesMDM);
-	}
-
-	@Override
-	public void fillComponents(MasterConfigurationData masterConfigurationData) {
-		if(masterConfigurationData != null) {
-		}
-	}
-
-	@Override
-	public void fillData(MasterConfigurationData masterConfigurationData) {
-		if(masterConfigurationData != null) {
-		}
 	}
 
     private void initColumnSizes(JTable table) {

@@ -6,13 +6,18 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
+
+import javax.swing.JOptionPane;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.totvslabs.mdm.client.pojo.JDBCConnectionParameter;
 import com.totvslabs.mdm.client.pojo.JDBCDatabaseVO;
 import com.totvslabs.mdm.client.pojo.JDBCFieldVO;
+import com.totvslabs.mdm.client.pojo.JDBCIndexVO;
 import com.totvslabs.mdm.client.pojo.JDBCTableVO;
 
 public class JDBCConnectionFactory {
@@ -36,7 +41,7 @@ public class JDBCConnectionFactory {
 		StringBuffer sql = new StringBuffer();
 
 		sql.append("SELECT count(*) FROM ");
-		sql.append(tableVO.getName());
+		sql.append(tableVO.getInternalName());
 
 		Connection connection = JDBCConnectionFactory.getJDBCConnection(param.getUrl(), param.getUser(), param.getPassword());
 		Integer totalRecords = 0;
@@ -86,7 +91,7 @@ public class JDBCConnectionFactory {
 		StringBuffer sql = new StringBuffer();
 
 		sql.append("SELECT * FROM ");
-		sql.append(tableVO.getName());
+		sql.append(tableVO.getInternalName());
 
 		Connection connection = JDBCConnectionFactory.getJDBCConnection(param.getUrl(), param.getUser(), param.getPassword());
 
@@ -109,17 +114,25 @@ public class JDBCConnectionFactory {
 					rs.absolute(initialRecord);
 				}
 
-				while(rs.next() && (quantity == 0 || (quantity != totalRecordsLoaded))) {
-					JsonObject jsonRecord = new JsonObject();
+				System.out.println("Initial record: " + initialRecord);
 
-					for(int i=1; i<=columnCount; i++) {
-						String columnName = metaData.getColumnName(i);
+				try {
+					while(rs.next() && (quantity == 0 || (quantity != totalRecordsLoaded))) {
+						JsonObject jsonRecord = new JsonObject();
 
-						jsonRecord.addProperty(columnName, rs.getString(i));
+						for(int i=1; i<=columnCount; i++) {
+							String columnName = metaData.getColumnName(i);
+
+							jsonRecord.addProperty(columnName, rs.getString(i));
+						}
+
+						jsonRecords.add(jsonRecord);
+						totalRecordsLoaded++;
 					}
-
-					jsonRecords.add(jsonRecord);
-					totalRecordsLoaded++;
+				}
+				catch(SQLException e) {
+					System.err.println("Error loading that record: " + (initialRecord + totalRecordsLoaded));
+					e.printStackTrace();
 				}
 
 				if(rs != null) {
@@ -159,7 +172,7 @@ public class JDBCConnectionFactory {
 		StringBuffer sql = new StringBuffer();
 
 		sql.append("SELECT * FROM ");
-		sql.append(tableVO.getName());
+		sql.append(tableVO.getInternalName());
 		sql.append(" WHERE 1=0 ");
 		Connection connection = JDBCConnectionFactory.getJDBCConnection(url, user, password);
 
@@ -178,18 +191,48 @@ public class JDBCConnectionFactory {
 					String columnClassName = metaData.getColumnClassName(i);
 					int precision = metaData.getPrecision(i);
 
-					columnName = columnName.toUpperCase();
-
 					JDBCFieldVO fieldVO = new JDBCFieldVO();
 					fieldVO.setName(columnName);
 					fieldVO.setSize(Double.parseDouble(Integer.toString(precision)));
 					fieldVO.setType(columnClassName);
 
-					tableVO.getFields().add(fieldVO);
+					tableVO.addField(fieldVO);
 				}
 
 				if(rs != null) {
 					rs.close();
+				}
+
+				ResultSet indexInformation = connection.getMetaData().getIndexInfo(connection.getCatalog(), null, tableVO.getInternalName(), false, true);
+				Map<String, JDBCIndexVO> mapIndex = new HashMap<String, JDBCIndexVO>();
+
+				try {
+					while (indexInformation.next()) {
+						String dbIndexName = indexInformation.getString("INDEX_NAME");
+						String dbColumnName = indexInformation.getString("COLUMN_NAME");
+						Boolean dbUnique = indexInformation.getBoolean("NON_UNIQUE");
+
+						if(dbIndexName != null) {
+							JDBCIndexVO indexVO = mapIndex.get(dbIndexName);
+
+							if(indexVO == null) {
+								indexVO = new JDBCIndexVO();
+								indexVO.setName(dbIndexName);
+								indexVO.setUnique(dbUnique);
+								mapIndex.put(dbIndexName, indexVO);
+							}
+
+							tableVO.getField(dbColumnName).setIdentifier(true);
+							indexVO.addField(tableVO.getField(dbColumnName));
+						}
+					}
+
+					tableVO.setPrimaryKey(mapIndex.values());
+
+					indexInformation.close();
+				}
+				catch(Exception e) {
+					JOptionPane.showMessageDialog(null, "Erro ao carregar dados do banco de dados, por favor, verifique os logs e tente novamente.");
 				}
 			} catch (SQLException e) {
 				e.printStackTrace();
@@ -229,6 +272,7 @@ public class JDBCConnectionFactory {
 			while (tables.next()) {
 				String databaseName = tables.getString("TABLE_CAT");
 				String tableName = tables.getString("TABLE_NAME");
+
 				tableName = tableName.toLowerCase();
 
 				databaseByFisicModelVO.setName(databaseName);

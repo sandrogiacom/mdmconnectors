@@ -17,6 +17,13 @@
                 <include>*.*</include>
             </includes>
         </fileSet>
+        <fileSet>
+            <directory>${basedir}/src/main/resources/data</directory>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>*.*</include>
+            </includes>
+        </fileSet>
 		<fileSet>
 			<directory>${basedir}/src/main/resources/lib</directory>
 			<outputDirectory>/lib</outputDirectory>

@@ -1,32 +1,48 @@
 package com.totvslabs.mdm.client.ui;
 
 import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
+import com.totvslabs.mdm.client.pojo.JDBCConnectionParameter;
 import com.totvslabs.mdm.client.pojo.JDBCFieldVO;
 import com.totvslabs.mdm.client.pojo.JDBCTableVO;
-import com.totvslabs.mdm.client.pojoTSA.MasterConfigurationData;
-import com.totvslabs.mdm.client.ui.events.JDBCConnectionStabilizedDispatcher;
-import com.totvslabs.mdm.client.ui.events.JDBCConnectionStabilizedEvent;
-import com.totvslabs.mdm.client.ui.events.JDBCConnectionStabilizedListener;
+import com.totvslabs.mdm.client.ui.events.DataLoadedDispatcher;
+import com.totvslabs.mdm.client.ui.events.DataLoadedEvent;
+import com.totvslabs.mdm.client.ui.events.DataLoadedListener;
 import com.totvslabs.mdm.client.ui.events.JDBCTableSelectedDispatcher;
 import com.totvslabs.mdm.client.ui.events.JDBCTableSelectedEvent;
+import com.totvslabs.mdm.client.ui.events.JDBCTableSelectedListener;
+import com.totvslabs.mdm.client.ui.events.SendDataFluigDataDoneDispatcher;
+import com.totvslabs.mdm.client.ui.events.SendDataFluigDataDoneEvent;
+import com.totvslabs.mdm.client.ui.events.SendDataFluigDataDoneListener;
 import com.totvslabs.mdm.client.util.JDBCConnectionFactory;
+import com.totvslabs.mdm.client.util.ProcessTypeEnum;
+import com.totvslabs.mdm.client.util.ThreadExportData;
 
-public class JDBCEntities extends PanelAbstract implements JDBCConnectionStabilizedListener {
+public class SendJDBCEntities extends PanelAbstract implements DataLoadedListener {
 	private static final long serialVersionUID = 1L;
 
 	private JLabel labelTable;
@@ -45,10 +61,12 @@ public class JDBCEntities extends PanelAbstract implements JDBCConnectionStabili
 	private JLabel labelCompressOption;
 	private JCheckBox checkBoxCompress;
 
-	private JDBCConnectionStabilizedEvent jdbcConnectionStabilizedEvent;
+	private DataLoadedEvent jdbcConnectionStabilizedEvent;
 
-	public JDBCEntities(){
-		super(2, 17, " MDM Entities");
+	private JButton buttonGenerateJsonFile;
+
+	public SendJDBCEntities(){
+		super(2, 19, " MDM Entities");
 
 		this.labelTable = new JLabel("Table: ");
 		this.comboTable = new JComboBox<JDBCTableVO>();
@@ -67,6 +85,9 @@ public class JDBCEntities extends PanelAbstract implements JDBCConnectionStabili
 
 		this.labelBatchSize = new JLabel("Batch Size (records): ");
 		this.textBatchSize = new JTextField("500", 20);
+
+		this.buttonGenerateJsonFile = new JButton("Export Entity as Json File");
+		this.buttonGenerateJsonFile.setEnabled(false);
 
 		this.initializeLayout();
 	}
@@ -87,23 +108,15 @@ public class JDBCEntities extends PanelAbstract implements JDBCConnectionStabili
 		this.add(new JLabel());
 		this.add(this.scrollBarEntitiesMDM, 2, true, 8, 2);
 
+		this.add(new JLabel());
+		this.add(this.buttonGenerateJsonFile);
+
 		this.initColumnSizes(this.tableFieldsJDBC);
 
 		this.comboTable.addItemListener(new JDBCTableSelectClick());
+		this.buttonGenerateJsonFile.addActionListener(new GenerateJSonFileClick(this));
 
-		JDBCConnectionStabilizedDispatcher.getInstance().addJDBCConnectionStabilizedListener(this);
-	}
-
-	@Override
-	public void fillComponents(MasterConfigurationData masterConfigurationData) {
-		if(masterConfigurationData != null) {
-		}
-	}
-
-	@Override
-	public void fillData(MasterConfigurationData masterConfigurationData) {
-		if(masterConfigurationData != null) {
-		}
+		DataLoadedDispatcher.getInstance().addJDBCConnectionStabilizedListener(this);
 	}
 
     private void initColumnSizes(JTable table) {
@@ -127,6 +140,78 @@ public class JDBCEntities extends PanelAbstract implements JDBCConnectionStabili
         }
     }
 
+	class GenerateJSonFileClick implements ActionListener, JDBCTableSelectedListener, DataLoadedListener, SendDataFluigDataDoneListener {
+		private JDBCConnectionParameter connectionStabilizedEvent;
+		private JDBCTableVO tableVO;
+		private SendJDBCEntities panelJDBCEntities;
+		private File file;
+
+		public GenerateJSonFileClick(SendJDBCEntities panelJDBCEntities) {
+			this.panelJDBCEntities = panelJDBCEntities;
+			JDBCTableSelectedDispatcher.getInstance().addJDBCTableSelectedListener(this);
+			DataLoadedDispatcher.getInstance().addJDBCConnectionStabilizedListener(this);
+			SendDataFluigDataDoneDispatcher.getInstance().addSendDataFluigDataDoneListener(this);
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			buttonGenerateJsonFile.setEnabled(false);
+			JFileChooser fileChooser = new JFileChooser();
+			fileChooser.setSelectedFile(new File(textTemplateName.getText() + ".json"));
+			fileChooser.setFileFilter(new FileNameExtensionFilter("json", "json"));
+
+			int returnValue = fileChooser.showSaveDialog(null);
+
+			if(returnValue == JFileChooser.APPROVE_OPTION) {
+	            File file = fileChooser.getSelectedFile();
+
+	            if(!file.exists()) {
+	            	try {
+						file.createNewFile();
+					} catch (IOException e1) {
+					}
+	            }
+
+	            this.file = file;
+
+	            Thread threadExportData = new Thread(new ThreadExportData(this.tableVO, this.connectionStabilizedEvent, this.panelJDBCEntities));
+	            threadExportData.start();
+			}
+			else {
+				buttonGenerateJsonFile.setEnabled(true);	
+			}
+		}
+
+		@Override
+		public void onDataLoadedEvent(DataLoadedEvent event) {
+			this.connectionStabilizedEvent = event.getParam();
+		}
+
+		@Override
+		public void onJDBCTableSelectedEvent(JDBCTableSelectedEvent event) {
+			this.connectionStabilizedEvent = event.getParam();
+			this.tableVO = event.getTableVO();
+		}
+
+		@Override
+		public void onSendDataFluigDataDone(SendDataFluigDataDoneEvent event) {
+			try {
+				String jsonData = event.getJsonData();
+				
+				if(event.getProcessTypeEnum().equals(ProcessTypeEnum.EXPORT_DATA)) {
+					PrintWriter pw = new PrintWriter(file);
+					pw.write(jsonData);
+					pw.close();
+					JOptionPane.showMessageDialog(null, "The json file was generated successfully at: " + file.getAbsolutePath());
+				}
+
+				buttonGenerateJsonFile.setEnabled(true);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 	class JDBCTableSelectClick implements ItemListener {
 		@Override
 		public void itemStateChanged(ItemEvent e) {
@@ -134,7 +219,7 @@ public class JDBCEntities extends PanelAbstract implements JDBCConnectionStabili
 
 			textTemplateName.setText(vo.getName());
 
-			JDBCConnectionStabilizedEvent event = jdbcConnectionStabilizedEvent;
+			DataLoadedEvent event = jdbcConnectionStabilizedEvent;
 
 			JDBCConnectionFactory.loadFisicModelFields(event.getParam().getUrl(), event.getParam().getUser(), event.getParam().getPassword(), vo);
 			List<JDBCFieldVO> fields = vo.getFields();
@@ -228,17 +313,21 @@ public class JDBCEntities extends PanelAbstract implements JDBCConnectionStabili
 	}
 
 	@Override
-	public void onJDBCConnectionStabilizedEvent(JDBCConnectionStabilizedEvent event) {
-		this.comboTable.removeAllItems();
-		this.textTemplateName.setText("");
-		this.textBatchSize.setText("500");
-
-		this.jdbcConnectionStabilizedEvent = event;
-
-		this.comboTable.removeAllItems();
-
-		for (JDBCTableVO tables : event.getTables()) {
-			this.comboTable.addItem(tables);
+	public void onDataLoadedEvent(DataLoadedEvent event) {
+		if(event.getTables() != null) {
+			this.comboTable.removeAllItems();
+			this.textTemplateName.setText("");
+			this.textBatchSize.setText("500");
+			
+			this.jdbcConnectionStabilizedEvent = event;
+			
+			this.comboTable.removeAllItems();
+			
+			for (JDBCTableVO tables : event.getTables()) {
+				this.comboTable.addItem(tables);
+			}
+			
+			this.buttonGenerateJsonFile.setEnabled(true);
 		}
 	}
 
@@ -254,3 +343,4 @@ public class JDBCEntities extends PanelAbstract implements JDBCConnectionStabili
 		return checkBoxCompress;
 	}
 }
+

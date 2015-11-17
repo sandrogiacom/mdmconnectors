@@ -1,6 +1,5 @@
 package com.totvslabs.mdm.client.ui;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -13,7 +12,6 @@ import javax.swing.text.MaskFormatter;
 
 import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.FormLayout;
-import com.totvslabs.mdm.client.pojoTSA.MasterConfigurationData;
 
 public abstract class PanelAbstract extends JPanel {
 	private static final long serialVersionUID = 1L;
@@ -29,7 +27,6 @@ public abstract class PanelAbstract extends JPanel {
 		this.setLayoutGeneral(new FormLayout( "30px, " + this.generateStringLayout(colNumber, 300) + ", 30px", "10px, " + this.generateStringLayout(rowNumber, 21) + ", 10px" ));
 		
 		this.setLayout(this.getLayoutGeneral());
-//		this.setBackground(Color.GREEN);
 
 		this.setBorder( BorderFactory.createTitledBorder(borderName) );
 	}
@@ -79,8 +76,6 @@ public abstract class PanelAbstract extends JPanel {
 	}
 
 	public abstract void initializeLayout();
-	public abstract void fillComponents(MasterConfigurationData masterConfigurationData);
-	public abstract void fillData(MasterConfigurationData masterConfigurationData);
 
 	public void disableFields() {
 		disableFields(this);

@@ -46,6 +46,12 @@ public class MDMRestAuthentication {
 		return MDMRestAuthentication.instance;
 	}
 
+	public static MDMRestAuthentication getInstance(String mdmURL, String clientId, String accessToken, String refreshToken, Long timeIssuedInMillis, Long experiesIn) {
+		MDMRestAuthentication.instance = new MDMRestAuthentication(mdmURL, refreshToken, accessToken, clientId, timeIssuedInMillis, experiesIn);
+
+		return MDMRestAuthentication.instance;
+	}
+
 	public static MDMRestAuthentication getInstance() {
 		if (MDMRestAuthentication.instance == null) {
 			throw new RuntimeException("Authentication is required to use this operation.");

@@ -218,7 +218,7 @@ public class ThreadExportData implements Runnable {
 				System.err.println("Error sending schema: " + e.getMessage());
 				e.printStackTrace();
 			}
-			
+
 			LogManagerDispatcher.getInstance().register("I am going to send " + totalRecords + " records...");
 		}
 

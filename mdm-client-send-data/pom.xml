@@ -26,9 +26,24 @@
 			<version>4.0.2206.100</version>
 		</dependency>
 		<dependency>
+			<groupId>progress</groupId>
+			<artifactId>jdbc-openedge</artifactId>
+			<version>10.1b</version>
+		</dependency>
+		<dependency>
 			<groupId>com.totvslabs.mdm</groupId>
 			<artifactId>mdm-rest-client</artifactId>
 			<version>1.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>3.13</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.poi</groupId>
+		    <artifactId>poi-ooxml</artifactId>
+		    <version>3.13</version>
 		</dependency>
 	</dependencies>
 

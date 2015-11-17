@@ -1,19 +1,17 @@
 package com.totvslabs.mdm.client.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JTabbedPane;
 
-import com.google.gson.JsonArray;
 import com.totvslabs.mdm.client.pojo.JDBCConnectionParameter;
 import com.totvslabs.mdm.client.pojo.JDBCTableVO;
 import com.totvslabs.mdm.client.ui.events.ChangeTabDispatcher;
@@ -22,20 +20,23 @@ import com.totvslabs.mdm.client.ui.events.ChangeTabListener;
 import com.totvslabs.mdm.client.ui.events.DatasourceChangedDispatcher;
 import com.totvslabs.mdm.client.ui.events.DatasourceChangedEvent;
 import com.totvslabs.mdm.client.ui.events.DatasourceChangedListener;
-import com.totvslabs.mdm.client.ui.events.JDBCConnectionStabilizedDispatcher;
-import com.totvslabs.mdm.client.ui.events.JDBCConnectionStabilizedEvent;
-import com.totvslabs.mdm.client.ui.events.JDBCConnectionStabilizedListener;
+import com.totvslabs.mdm.client.ui.events.DataLoadedDispatcher;
+import com.totvslabs.mdm.client.ui.events.DataLoadedEvent;
+import com.totvslabs.mdm.client.ui.events.DataLoadedListener;
 import com.totvslabs.mdm.client.ui.events.JDBCTableSelectedDispatcher;
 import com.totvslabs.mdm.client.ui.events.JDBCTableSelectedEvent;
 import com.totvslabs.mdm.client.ui.events.JDBCTableSelectedListener;
 import com.totvslabs.mdm.client.ui.events.LogManagerDispatcher;
-import com.totvslabs.mdm.client.util.JDBCConnectionFactory;
-import com.totvslabs.mdm.restclient.MDMRestConnection;
-import com.totvslabs.mdm.restclient.MDMRestConnectionFactory;
-import com.totvslabs.mdm.restclient.command.CommandPostStaging;
-import com.totvslabs.mdm.restclient.command.CommandPostStagingC;
+import com.totvslabs.mdm.client.ui.events.SendDataFluigDataDoneDispatcher;
+import com.totvslabs.mdm.client.ui.events.SendDataFluigDataDoneEvent;
+import com.totvslabs.mdm.client.ui.events.SendDataFluigDataDoneListener;
+import com.totvslabs.mdm.client.ui.events.SendDataFluigDataUpdateProcessDispatcher;
+import com.totvslabs.mdm.client.ui.events.SendDataFluigDataUpdateProcessEvent;
+import com.totvslabs.mdm.client.ui.events.SendDataFluigDataUpdateProcessListener;
+import com.totvslabs.mdm.client.util.ProcessTypeEnum;
+import com.totvslabs.mdm.client.util.ThreadExportData;
 
-public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, DatasourceChangedListener, ChangeTabListener, JDBCConnectionStabilizedListener {
+public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, DatasourceChangedListener, ChangeTabListener, DataLoadedListener, SendDataFluigDataUpdateProcessListener {
 	private static final long serialVersionUID = 1L;
 
 	public static final String EXECUTE_OK = "Execute!";
@@ -46,11 +47,14 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, D
 	private MDMDatabaseConnection panelMDMConnection = new MDMDatabaseConnection();
 	@SuppressWarnings("unused")
 	private MDMEntities panelMDMEntities = new MDMEntities();
-	private JDBCDatabaseConnection panelJDBCConnection = new JDBCDatabaseConnection();
-	private JDBCEntities panelJDBCEntities = new JDBCEntities();
+	private SendJDBCDatabaseConnection panelJDBCConnection = new SendJDBCDatabaseConnection();
+	private SendFileFluigData panelSendFileFluigData = new SendFileFluigData();
+	private SendJDBCEntities panelJDBCEntities = new SendJDBCEntities();
 	private ProcessLog processLog = new ProcessLog();
 
 	private JTabbedPane tabbedPane;
+
+	private JProgressBar progressBar = new JProgressBar();
 
 	private JButton buttonExecute = new JButton(EXECUTE_OK);
 	private JButton buttonExit = new JButton("Exit");
@@ -69,13 +73,14 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, D
 		this.initializeLayout();
 
 		this.pack();
-		this.setSize(714, 780);
+		this.setSize(714, 800);
 		this.setVisible(true);
 	}
 
 	public void initializeLayout() {
 		JDBCTableSelectedDispatcher.getInstance().addJDBCTableSelectedListener(this);
 		DatasourceChangedDispatcher.getInstance().addDatasourceChangedListener(this);
+		SendDataFluigDataUpdateProcessDispatcher.getInstance().addSendDataFluigDataUpdateProcessListener(this);
 		this.buttonExit.addActionListener(new ExitApplication());
 		this.buttonExecute.addActionListener(new ExecuteSendData());
 
@@ -90,16 +95,27 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, D
 		tabbedPane = new JTabbedPane();
 
 		tabbedPane.addTab("MDM Connection", this.panelMDMConnection);
-		tabbedPane.addTab("JDBC Connection", mainJDBCPanel);
+		tabbedPane.addTab("Send Data: JDBC Connection", mainJDBCPanel);
+		tabbedPane.addTab("Send Data: File", panelSendFileFluigData);
 		tabbedPane.addTab("Process Log", this.processLog);
 
+		this.tabbedPane.setEnabledAt(1, false);
+		this.tabbedPane.setEnabledAt(2, false);
+		this.tabbedPane.setBackgroundAt(1, Color.GRAY);
+		this.tabbedPane.setBackgroundAt(2, Color.GRAY);
+
 		JPanel mainButtonPanel = new JPanel();
-		mainButtonPanel.add(this.buttonExecute);
-		mainButtonPanel.add(this.buttonExit);
+		mainButtonPanel.setLayout(new BorderLayout());
+		JPanel mainButtonSpecificPanel = new JPanel();
+		mainButtonSpecificPanel.add(this.buttonExecute);
+		mainButtonSpecificPanel.add(this.buttonExit);
+
+		mainButtonPanel.add(this.progressBar, BorderLayout.NORTH);
+		mainButtonPanel.add(mainButtonSpecificPanel, BorderLayout.CENTER);		
 
 		LogManagerDispatcher.getInstance().addLogManagerListener(this.processLog);
 		ChangeTabDispatcher.getInstance().addChangeTabListener(this);
-		JDBCConnectionStabilizedDispatcher.getInstance().addJDBCConnectionStabilizedListener(this);
+		DataLoadedDispatcher.getInstance().addJDBCConnectionStabilizedListener(this);
 
 		this.buttonExecute.setEnabled(false);
 
@@ -107,118 +123,30 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, D
 		this.mainPanel.add(mainButtonPanel, BorderLayout.SOUTH);
 	}
 
-//	@Override
-//	public void onChangeInstanceType(InstanceTypeEvent event) {
-//		Component[] components = this.mainPanel.getComponents();
-//
-//		for (Component component : components) {
-//			if(component instanceof PanelAbstract) {
-//				if(event.getInstanceTypeEnum().equals(InstanceTypeEnum.MASTER)) {
-//					((PanelAbstract) component).enableFields();
-//					this.buttonPrepareData.setEnabled(Boolean.TRUE);
-//					this.buttonExecute.setEnabled(Boolean.FALSE);
-//					this.buttonExit.setEnabled(Boolean.TRUE);
-//				}
-//				else if(event.getInstanceTypeEnum().equals(InstanceTypeEnum.SLAVE)) {
-//					((PanelAbstract) component).disableFields();
-//					this.buttonPrepareData.setEnabled(Boolean.FALSE);
-//					this.buttonExecute.setEnabled(Boolean.FALSE);
-//					this.buttonExit.setEnabled(Boolean.FALSE);
-//				}
-//			}
-//		}
-//
-//		if(event.getInstanceTypeEnum().equals(InstanceTypeEnum.SLAVE)) {
-//			this.actualInstanceType = InstanceTypeEnum.SLAVE;
-//			this.fillComponents(new MasterConfigurationData());
-//		}
-//		else {
-//			this.actualInstanceType = InstanceTypeEnum.MASTER;
-//		}
-//	}
-
-//	@Override
-//	public void onDataChangedOccur(DataChangedEvent event) {
-//		if(this.actualInstanceType != null && this.actualInstanceType.equals(InstanceTypeEnum.MASTER)) {
-//			MasterConfigurationData masterConfigurationData = fillData();
-//
-//			if(this.masterCommunicationManagement != null) {
-//				this.masterCommunicationManagement.setMasterConfigurationData(masterConfigurationData);
-//			}
-//		}
-//	}
-
-	public class ExecuteSendData implements ActionListener, Runnable {
+	public class ExecuteSendData implements ActionListener, SendDataFluigDataDoneListener {
 		@Override
 		public void actionPerformed(ActionEvent event) {
 			buttonExecute.setEnabled(false);
-			tabbedPane.setSelectedIndex(2);
+			tabbedPane.setSelectedIndex(3);
 
-			Thread th = new Thread(this);
-			th.start();
+			SendDataFluigDataUpdateProcessDispatcher.getInstance().fireSendDataFluigDataUpdateProcessEvent(new SendDataFluigDataUpdateProcessEvent(0, 0, ProcessTypeEnum.SEND_DATA));
+			SendDataFluigDataDoneDispatcher.getInstance().addSendDataFluigDataDoneListener(this);
+
+			if(panelMDMConnection.isDatabaseData()) {
+				Thread th = new Thread(new ThreadExportData(panelMDMConnection.getTextMDMServerURL().getText(), tenantId, datasourceId, tableVO, param, panelJDBCEntities));
+				th.start();
+			}
+			else {
+				Thread th = new Thread(new ThreadExportData(panelMDMConnection.getTextMDMServerURL().getText(), tenantId, datasourceId, panelSendFileFluigData));
+				th.start();
+			}
 		}
 
 		@Override
-		public void run() {
-			DateFormat df = new SimpleDateFormat("yyyy.MM.dd 'at' HH:mm:ss z");
-
-			LogManagerDispatcher.getInstance().register("Starting the process now: " + df.format(Calendar.getInstance().getTime()));
-			Integer batchSize = 100;
-			Integer totalRecords = tableVO.getTotalRecords();
-
-			try {
-				batchSize = Integer.parseInt(panelJDBCEntities.getTextBatchSize().getText());
-			}
-			catch(NumberFormatException e) {
-			}
-
-			LogManagerDispatcher.getInstance().register("I am going to send " + totalRecords + " records...");
-
-			for(int totalDataSend=0; totalDataSend<totalRecords;) {
-				JsonArray lote = JDBCConnectionFactory.loadData(param, tableVO, totalDataSend, batchSize);
-
-				CommandPostStaging staging = null;
-
-				if(panelJDBCEntities.getCheckBoxCompress().isSelected()) {
-					staging = new CommandPostStagingC(tenantId, datasourceId, panelJDBCEntities.getTextTemplateName().getText(), lote);
-				}
-				else {
-					staging = new CommandPostStaging(tenantId, datasourceId, panelJDBCEntities.getTextTemplateName().getText(), lote);
-				}
-
-				MDMRestConnection connection = MDMRestConnectionFactory.getConnection(panelMDMConnection.getTextMDMServerURL().getText());
-
-				long initialTime = System.currentTimeMillis();
-				long endTime = initialTime;
-
-				String additionalInformation = "";
-
-				if(staging instanceof CommandPostStagingC) {
-					additionalInformation = " (compressed)";
-				}
-
-				try {
-					connection.executeCommand(staging);
-					endTime = System.currentTimeMillis();
-					totalDataSend += lote.size();
-				}
-				catch(Exception e) {
-					System.err.println("Error: " + e.getMessage());
-					e.printStackTrace();
-				}
-
-				double n1 = totalDataSend;
-				double n2 = totalRecords;
-				double result = n1 / n2;
-				DecimalFormat decF = new DecimalFormat("0.00");
-
-				LogManagerDispatcher.getInstance().register("Sent " + lote.size() + additionalInformation + " records in " + (endTime - initialTime) + "ms, " + decF.format(result*100) + "% completed (" + totalDataSend + " in total).");
-			}
-
-			LogManagerDispatcher.getInstance().register("Finished the process now: " + df.format(Calendar.getInstance().getTime()) + "\n\n");
-
-			tabbedPane.setSelectedIndex(2);
+		public void onSendDataFluigDataDone(SendDataFluigDataDoneEvent event) {
+			tabbedPane.setSelectedIndex(0);
 			buttonExecute.setEnabled(true);
+			JOptionPane.showMessageDialog(null, "Send data process finished sucessfully!");
 		}
 	}
 
@@ -246,10 +174,29 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, D
 	@Override
 	public void onChangeTabListener(ChangeTabEvent event) {
 		this.tabbedPane.setSelectedIndex(event.getTabToSelect());
+		
+		if(event.getTabToSelect() == 1) {
+			this.tabbedPane.setEnabledAt(2, false);
+			this.tabbedPane.setBackgroundAt(2, Color.GRAY);
+			this.tabbedPane.setEnabledAt(1, true);
+			this.tabbedPane.setBackgroundAt(1, Color.WHITE);
+		}
+		else if(event.getTabToSelect() == 2) {
+			this.tabbedPane.setEnabledAt(1, false);
+			this.tabbedPane.setBackgroundAt(1, Color.GRAY);
+			this.tabbedPane.setEnabledAt(2, true);
+			this.tabbedPane.setBackgroundAt(2, Color.WHITE);
+		}
 	}
 
 	@Override
-	public void onJDBCConnectionStabilizedEvent(JDBCConnectionStabilizedEvent event) {
+	public void onDataLoadedEvent(DataLoadedEvent event) {
 		this.buttonExecute.setEnabled(true);
+	}
+
+	@Override
+	public void onSendDataFluigDataUpdateProcess(SendDataFluigDataUpdateProcessEvent event) {
+		this.progressBar.setMaximum(event.getTotalRecords());
+		this.progressBar.setValue(event.getRecordsSent());
 	}
 }

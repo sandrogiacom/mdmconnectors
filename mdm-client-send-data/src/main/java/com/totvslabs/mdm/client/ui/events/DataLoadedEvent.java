@@ -5,14 +5,18 @@ import java.util.List;
 import com.totvslabs.mdm.client.pojo.JDBCConnectionParameter;
 import com.totvslabs.mdm.client.pojo.JDBCTableVO;
 
-public class JDBCConnectionStabilizedEvent {
+public class DataLoadedEvent {
 	private List<JDBCTableVO> tables;
 	private JDBCConnectionParameter param;
 
-	public JDBCConnectionStabilizedEvent(JDBCConnectionParameter param, List<JDBCTableVO> tables) {
+	public DataLoadedEvent(JDBCConnectionParameter param, List<JDBCTableVO> tables) {
 		super();
 		this.tables = tables;
 		this.param = param;
+	}
+
+	public DataLoadedEvent() {
+		super();
 	}
 
 	public List<JDBCTableVO> getTables() {
@@ -31,3 +35,4 @@ public class JDBCConnectionStabilizedEvent {
 		this.param = param;
 	}
 }
+

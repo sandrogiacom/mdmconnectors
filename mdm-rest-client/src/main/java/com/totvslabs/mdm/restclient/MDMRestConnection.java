@@ -51,16 +51,14 @@ public class MDMRestConnection {
 						.sslContext(getTrustAllSSLContext())
 						.hostnameVerifier(new DefaultHostnameVerifier())
 						.build(); 
-		
+
+		this.client.register(GZipReaderInterceptor.class);
+		this.client.register(GZipWriterInterceptor.class);
+
 		this.mdmURL = mdmURL;
 	}
 
 	public EnvelopeVO executeCommand(ICommand command) {
-		if(command instanceof CommandPostStagingC) {
-			this.client.register(GZipReaderInterceptor.class);
-			this.client.register(GZipWriterInterceptor.class);
-		}
-
 		Map<String, String> parametersHeader = command.getParametersHeader();
 		Map<String, String> parameterPath = command.getParameterPath();
 

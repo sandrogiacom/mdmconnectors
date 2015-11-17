@@ -4,6 +4,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -15,12 +18,11 @@ import javax.swing.JTextField;
 import com.totvslabs.mdm.client.pojo.JDBCConnectionParameter;
 import com.totvslabs.mdm.client.pojo.JDBCDatabaseVO;
 import com.totvslabs.mdm.client.pojo.JDBCDriverTypeVO;
-import com.totvslabs.mdm.client.pojoTSA.MasterConfigurationData;
-import com.totvslabs.mdm.client.ui.events.JDBCConnectionStabilizedDispatcher;
-import com.totvslabs.mdm.client.ui.events.JDBCConnectionStabilizedEvent;
+import com.totvslabs.mdm.client.ui.events.DataLoadedDispatcher;
+import com.totvslabs.mdm.client.ui.events.DataLoadedEvent;
 import com.totvslabs.mdm.client.util.JDBCConnectionFactory;
 
-public class JDBCDatabaseConnection extends PanelAbstract {
+public class SendJDBCDatabaseConnection extends PanelAbstract {
 	private static final long serialVersionUID = 1L;
 
 	private JLabel labelJDBCURL;
@@ -37,7 +39,10 @@ public class JDBCDatabaseConnection extends PanelAbstract {
 
 	private JButton buttonConnectDisconnect;
 
-	public JDBCDatabaseConnection(){
+	private Map<String, JDBCDriverTypeVO> jdbcDrivers = new HashMap<String, JDBCDriverTypeVO>();
+	private JDBCDriverTypeVO driver;
+
+	public SendJDBCDatabaseConnection(){
 		super(2, 10, " JDBC Database Parameters");
 
 		this.labelJDBCURL = new JLabel("JDBC URL: ");
@@ -50,11 +55,22 @@ public class JDBCDatabaseConnection extends PanelAbstract {
 		this.comboDriver = new JComboBox<JDBCDriverTypeVO>();
 		this.buttonConnectDisconnect = new JButton("Connect!");
 
-		this.comboDriver.addItem(new JDBCDriverTypeVO("SQL Server"));
-		this.comboDriver.addItem(new JDBCDriverTypeVO("Progress"));
-		this.comboDriver.addItem(new JDBCDriverTypeVO("Oracle"));
-		this.comboDriver.addItem(new JDBCDriverTypeVO("DB2"));
-		this.comboDriver.addItem(new JDBCDriverTypeVO("Informix"));
+		this.jdbcDrivers.put("sqlserver", new JDBCDriverTypeVO("sqlServer", "SQL Server", "", "jdbc:sqlserver://192.168.56.101:1433;DatabaseName=ems2cad1211", "sa", "sa"));
+		this.jdbcDrivers.put("progress", new JDBCDriverTypeVO("progress", "Progress", "com.ddtek.jdbc.openedge.OpenEdgeDriver", "jdbc:datadirect:openedge://192.168.56.101:2121;databaseName=marelli;defaultSchema=pub", "sysprogress", "sysprogress"));
+//		this.jdbcDrivers.put("oracle", new JDBCDriverTypeVO("oracle", "Oracle", "", "", "", ""));
+//		this.jdbcDrivers.put("db2", new JDBCDriverTypeVO("db2", "DB2", "", "", "", ""));
+//		this.jdbcDrivers.put("informix", new JDBCDriverTypeVO("informix", "Informix", "", "", "", ""));
+
+		Collection<JDBCDriverTypeVO> values = jdbcDrivers.values();
+
+		for (JDBCDriverTypeVO jdbcDriverTypeVO : values) {
+			this.comboDriver.addItem(jdbcDriverTypeVO);
+		}
+
+		this.comboDriver.setSelectedIndex(-1);
+		this.textJDBCURL.setText("");
+		this.textJDBCUserName.setText("");
+		this.textJDBCPassword.setText("");
 
 		this.initializeLayout();
 	}
@@ -74,7 +90,6 @@ public class JDBCDatabaseConnection extends PanelAbstract {
 		this.add(this.buttonConnectDisconnect);
 
 		this.buttonConnectDisconnect.addActionListener(new ConnectClick());
-
 		this.comboDriver.addItemListener(new ComboBoxStateChangeDriver());
 	}
 
@@ -88,30 +103,23 @@ public class JDBCDatabaseConnection extends PanelAbstract {
         		return;
         	}
 
-        	JDBCConnectionParameter param = new JDBCConnectionParameter(textJDBCURL.getText(), textJDBCUserName.getText(), textJDBCPassword.getText());
-			JDBCConnectionStabilizedEvent event = new JDBCConnectionStabilizedEvent(param, database.getTables());
-			JDBCConnectionStabilizedDispatcher.getInstance().fireJDBCConnectionStabilizedEvent(event);
-		}
-	}
-
-	@Override
-	public void fillComponents(MasterConfigurationData masterConfigurationData) {
-		if(masterConfigurationData != null) {
-		}
-	}
-
-	@Override
-	public void fillData(MasterConfigurationData masterConfigurationData) {
-		if(masterConfigurationData != null) {
-			masterConfigurationData.setTechnicalInformationTSAServer(this.textJDBCURL.getText());
-			masterConfigurationData.setTechnicalInformationTSAUserName(this.textJDBCUserName.getText());
-			masterConfigurationData.setTechnicalInformationTSAPassword(this.textJDBCPassword.getText());
+        	JDBCConnectionParameter param = new JDBCConnectionParameter(driver.getDriverClass(), textJDBCURL.getText(), textJDBCUserName.getText(), textJDBCPassword.getText());
+			DataLoadedEvent event = new DataLoadedEvent(param, database.getTables());
+			DataLoadedDispatcher.getInstance().fireJDBCConnectionStabilizedEvent(event);
 		}
 	}
 
 	class ComboBoxStateChangeDriver implements ItemListener {
 		@Override
 		public void itemStateChanged(ItemEvent e) {
+			JDBCDriverTypeVO driverSelected = (JDBCDriverTypeVO) e.getItem();
+
+			textJDBCPassword.setText(driverSelected.getPasswordSample());
+			textJDBCURL.setText(driverSelected.getUrlSample());
+			textJDBCUserName.setText(driverSelected.getUserSample());
+
+			driver = driverSelected;
 		}
 	}
 }
+
