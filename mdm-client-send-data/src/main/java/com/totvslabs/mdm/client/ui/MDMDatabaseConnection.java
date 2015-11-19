@@ -42,6 +42,9 @@ public class MDMDatabaseConnection extends PanelAbstract implements ActionListen
 
 	private JLabel labelMDMDatasourceId;
 	private JTextField textMDMDatasourceId;
+	
+	private JLabel labelMDMConsumerId;
+	private JTextField textMDMConsumerId;
 
 	private JLabel labelMDMUserName;
 	private JTextField textMDMUserName;
@@ -69,6 +72,8 @@ public class MDMDatabaseConnection extends PanelAbstract implements ActionListen
 		this.textMDMTenantId = new JTextField("totvslabs");
 		this.labelMDMDatasourceId = new JLabel("Datasource ID: ");
 		this.textMDMDatasourceId = new JTextField("0b672ec08cbc11e5991b0242ac110002");
+		this.labelMDMConsumerId = new JLabel("Consumer ID: ");
+		this.textMDMConsumerId = new JTextField("819f0980819211e5991b0242ac110002");
 		this.labelMDMUserName = new JLabel("User: ");
 		this.textMDMUserName = new JTextField("admin@totvslabs.com", 20);
 		this.labelMDMPassword = new JLabel("Password: ");
@@ -101,6 +106,8 @@ public class MDMDatabaseConnection extends PanelAbstract implements ActionListen
 		this.add(this.textMDMTenantId);
 		this.add(this.labelMDMDatasourceId);
 		this.add(this.textMDMDatasourceId);
+		this.add(this.labelMDMConsumerId);
+		this.add(this.textMDMConsumerId);
 		this.add(this.labelMDMUserName);
 		this.add(this.textMDMUserName);
 		this.add(this.labelMDMPassword);
@@ -140,7 +147,7 @@ public class MDMDatabaseConnection extends PanelAbstract implements ActionListen
 				event.setTypeEnum(ConnectionTypeEnum.CONNECTED);
 				MDMConnectionChangedDispatcher.getInstance().fireMDMConnectionChangedEvent(event);
 			}
-			catch(RuntimeException e1) {
+			catch(RuntimeException e1) {e1.printStackTrace();
 				JOptionPane.showMessageDialog(null, "Happened a problem to establish the connection, please see the log and try again later." + e1.getMessage());
 			}
 		}
@@ -192,6 +199,7 @@ public class MDMDatabaseConnection extends PanelAbstract implements ActionListen
 		instance.setServerURL(this.textMDMServerURL.getText());
 		instance.setDomain(this.textMDMTenantId.getText());
 		instance.setDatasourceID(this.textMDMDatasourceId.getText());
+		instance.setConsumerID(this.textMDMConsumerId.getText());
 		instance.setUsername(this.textMDMUserName.getText());
 		instance.setPassword(this.textMDMPassword.getText());
 
@@ -210,6 +218,7 @@ public class MDMDatabaseConnection extends PanelAbstract implements ActionListen
 		this.textMDMServerURL.setText(instance.getServerURL());
 		this.textMDMTenantId.setText(instance.getDomain());
 		this.textMDMDatasourceId.setText(instance.getDatasourceID());
+		this.textMDMConsumerId.setText(instance.getConsumerID());
 		this.textMDMUserName.setText(instance.getUsername());
 		this.textMDMPassword.setText(instance.getPassword());
 	}

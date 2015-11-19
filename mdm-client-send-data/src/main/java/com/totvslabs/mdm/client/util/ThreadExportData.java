@@ -46,6 +46,7 @@ public class ThreadExportData implements Runnable {
 	private String datasourceId;
 	private boolean justExportJSonData = Boolean.FALSE;
 	private boolean backgroundProcess = Boolean.FALSE;
+	private Integer quantityRecords = 0;
 
 	public ThreadExportData(JDBCTableVO tableVO, StoredJDBCConnectionVO jdbcConnectionVO, SendJDBCEntities panelJDBCEntities) {
 		this(null, tableVO, jdbcConnectionVO, panelJDBCEntities);
@@ -307,6 +308,7 @@ public class ThreadExportData implements Runnable {
 						connection.executeCommand(staging);
 						endTime = System.currentTimeMillis();
 						totalDataSend += loteInitial.size();
+						this.quantityRecords += lote.size();
 					}
 					catch(Exception e) {
 						System.err.println("Error: " + e.getMessage());
@@ -343,5 +345,9 @@ public class ThreadExportData implements Runnable {
 		}
 
 		SendDataFluigDataDoneDispatcher.getInstance().fireSendDataFluigDataDoneEvent(new SendDataFluigDataDoneEvent(processTypeEnum, totalDataJSon.toString()));
+	}
+
+	public Integer getQuantityRecords() {
+		return quantityRecords;
 	}
 }

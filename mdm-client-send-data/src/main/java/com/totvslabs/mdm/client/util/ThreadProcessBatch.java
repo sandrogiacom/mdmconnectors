@@ -1,5 +1,6 @@
 package com.totvslabs.mdm.client.util;
 
+import java.util.Date;
 import java.util.List;
 
 import com.totvslabs.mdm.client.pojo.JDBCTableVO;
@@ -34,6 +35,9 @@ public class ThreadProcessBatch implements Runnable {
 			/* Running as processor not thread */
 			ThreadExportData thread = new ThreadExportData(fluigProfile, tableVO, jdbcConnection);
 			thread.run();
+			conf.setLastExecution(new Date());
+			conf.setQuantity(thread.getQuantityRecords());
+			PersistenceEngine.getInstance().save(conf);
 			System.out.println("took '" + (System.currentTimeMillis() - initialTime) + "' ms to run the process for " + conf.getName());
 		}
 	}

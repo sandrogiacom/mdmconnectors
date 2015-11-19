@@ -59,6 +59,7 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, C
 	private SendJDBCDatabaseConnection panelJDBCConnection = new SendJDBCDatabaseConnection();
 	private SendJDBCEntities panelJDBCEntities = new SendJDBCEntities();
 	private SendFileFluigData panelSendFileFluigData = new SendFileFluigData();
+	private MDMConsumer panelMDMConsumer = new MDMConsumer();
 	private ProcessLog processLog = new ProcessLog();
 
 	private JTabbedPane tabbedPane;
@@ -121,6 +122,7 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, C
 		tabbedPane.addTab("Fluig Data Connection", this.panelMDMConnection);
 		tabbedPane.addTab("Send Data: JDBC", mainJDBCPanel);
 		tabbedPane.addTab("Send Data: File", panelSendFileFluigData);
+		tabbedPane.addTab("Fluig Data Consumer", this.panelMDMConsumer);
 		tabbedPane.addTab("Process Log", this.processLog);
 
 		this.tabbedPane.setEnabledAt(1, false);

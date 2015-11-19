@@ -3,6 +3,7 @@ package com.totvslabs.mdm.client.ui;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.text.DateFormat;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -160,6 +161,7 @@ public class StoredConfigurationPanel extends JPanel implements StoredConfigurat
 			}
 
 			StoredConfigurationVO record = (StoredConfigurationVO) this.data.get(rowIndex);
+			DateFormat df = DateFormat.getDateTimeInstance();
 
 			switch(columnIndex) {
 				case 0:
@@ -171,7 +173,7 @@ public class StoredConfigurationPanel extends JPanel implements StoredConfigurat
 				case 3:
 					return record.getSourceName();
 				case 4:
-					return record.getLastExecution();
+					return df.format(record.getLastExecution());
 				case 5:
 					return record.getQuantity();
 			}
