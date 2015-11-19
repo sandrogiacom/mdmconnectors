@@ -1,19 +1,27 @@
 package com.totvslabs.mdm.client.util;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.totvslabs.mdm.client.pojo.JDBCConnectionParameter;
 import com.totvslabs.mdm.client.pojo.JDBCFieldVO;
 import com.totvslabs.mdm.client.pojo.JDBCTableVO;
 import com.totvslabs.mdm.client.pojo.MDMData;
+import com.totvslabs.mdm.client.pojo.StoredAbstractVO;
+import com.totvslabs.mdm.client.pojo.StoredFluigDataProfileVO;
+import com.totvslabs.mdm.client.pojo.StoredJDBCConnectionVO;
+import com.totvslabs.mdm.client.pojo.StoredRecordHashVO;
 import com.totvslabs.mdm.client.ui.SendFileFluigData;
 import com.totvslabs.mdm.client.ui.SendJDBCEntities;
 import com.totvslabs.mdm.client.ui.events.LogManagerDispatcher;
@@ -31,31 +39,43 @@ public class ThreadExportData implements Runnable {
 	private SendJDBCEntities panelJDBCEntities;
 	private SendFileFluigData panelSendFileFluigData;
 	private JDBCTableVO tableVO;
-	private JDBCConnectionParameter param;
+	private StoredJDBCConnectionVO jdbcConnectionVO;
+	private StoredFluigDataProfileVO fluigDataProfileVO;
 	private String mdmServerURL;
 	private String tenantId;
 	private String datasourceId;
 	private boolean justExportJSonData = Boolean.FALSE;
+	private boolean backgroundProcess = Boolean.FALSE;
 
-	public ThreadExportData(JDBCTableVO tableVO, JDBCConnectionParameter param, SendJDBCEntities panelJDBCEntities) {
-		this(null, null, null, tableVO, param, panelJDBCEntities);
+	public ThreadExportData(JDBCTableVO tableVO, StoredJDBCConnectionVO jdbcConnectionVO, SendJDBCEntities panelJDBCEntities) {
+		this(null, tableVO, jdbcConnectionVO, panelJDBCEntities);
 		this.justExportJSonData = Boolean.TRUE;
+		this.backgroundProcess = Boolean.FALSE;
 	}
 
-	public ThreadExportData(String mdmServerURL, String tenantId, String datasourceId, JDBCTableVO tableVO, JDBCConnectionParameter param, SendJDBCEntities panelJDBCEntities) {
+	public ThreadExportData(StoredFluigDataProfileVO mdmProfile, JDBCTableVO tableVO, StoredJDBCConnectionVO jdbcConnectionVO) {
+		this(mdmProfile, tableVO, jdbcConnectionVO, null);
+		this.backgroundProcess = Boolean.TRUE;
+	}
+
+	public ThreadExportData(StoredFluigDataProfileVO mdmProfile, JDBCTableVO tableVO, StoredJDBCConnectionVO jdbcConnectionVO, SendJDBCEntities panelJDBCEntities) {
 		this.panelJDBCEntities = panelJDBCEntities;
-		this.param = param;
-		this.mdmServerURL = mdmServerURL;
-		this.tenantId = tenantId;
-		this.datasourceId = datasourceId;
+		this.jdbcConnectionVO = jdbcConnectionVO;
+		this.fluigDataProfileVO = mdmProfile;
+		this.mdmServerURL = mdmProfile != null ? mdmProfile.getServerURL() : null;
+		this.tenantId = mdmProfile != null ? mdmProfile.getDomain() : null;
+		this.datasourceId = mdmProfile != null ? mdmProfile.getDatasourceID() : null;
 		this.tableVO = tableVO;
+		this.backgroundProcess = Boolean.FALSE;
 	}
 
-	public ThreadExportData(String mdmServerURL, String tenantId, String datasourceId, SendFileFluigData panelSendFileFluigData) {
+	public ThreadExportData(StoredFluigDataProfileVO mdmProfile, SendFileFluigData panelSendFileFluigData) {
 		this.panelSendFileFluigData = panelSendFileFluigData;
-		this.mdmServerURL = mdmServerURL;
-		this.tenantId = tenantId;
-		this.datasourceId = datasourceId;
+		this.fluigDataProfileVO = mdmProfile;
+		this.mdmServerURL = mdmProfile != null ? mdmProfile.getServerURL() : null;
+		this.tenantId = mdmProfile != null ? mdmProfile.getDomain() : null;
+		this.datasourceId = mdmProfile != null ? mdmProfile.getDatasourceID() : null;
+		this.backgroundProcess = Boolean.FALSE;
 	}
 
 	@Override
@@ -63,7 +83,7 @@ public class ThreadExportData implements Runnable {
 		if(panelSendFileFluigData != null) {
 			sendDataFile();
 		}
-		else if(panelJDBCEntities != null) {
+		else if(panelJDBCEntities != null || this.backgroundProcess) {
 			sendDataJDBC();
 		}
 	}
@@ -129,13 +149,15 @@ public class ThreadExportData implements Runnable {
 
 		LogManagerDispatcher.getInstance().register("Starting the process now: " + df.format(Calendar.getInstance().getTime()));
 		StringBuffer totalDataJSon = new StringBuffer();
-		Integer batchSize = 100;
+		Integer batchSize = 500;
 		Integer totalRecords = tableVO.getTotalRecords();
 
-		try {
-			batchSize = Integer.parseInt(panelJDBCEntities.getTextBatchSize().getText());
-		}
-		catch(NumberFormatException e) {
+		if(panelJDBCEntities != null) {
+			try {
+				batchSize = Integer.parseInt(panelJDBCEntities.getTextBatchSize().getText());
+			}
+			catch(NumberFormatException e) {
+			}
 		}
 
 		MDMRestConnection connection = MDMRestConnectionFactory.getConnection(mdmServerURL);
@@ -207,12 +229,11 @@ public class ThreadExportData implements Runnable {
 		}
 
 		if(!this.justExportJSonData) {
-			CommandPostSchema schemaCommand = new CommandPostSchema(tenantId, datasourceId, panelJDBCEntities.getTextTemplateName().getText(), completeSchema.toString());
+			CommandPostSchema schemaCommand = new CommandPostSchema(tenantId, datasourceId, (panelJDBCEntities != null ? panelJDBCEntities.getTextTemplateName().getText() : tableVO.getName()), completeSchema.toString());
 
 			try {
 				connection.executeCommand(schemaCommand);
-				/* See the result, what happen??? */
-				LogManagerDispatcher.getInstance().register("Sent the schema for the type '" + panelJDBCEntities.getTextTemplateName().getText() + "' in " + (totalTimeSchema - System.currentTimeMillis()) + "ms.");
+				LogManagerDispatcher.getInstance().register("Sent the schema for the type '" + (panelJDBCEntities != null ? panelJDBCEntities.getTextTemplateName().getText() : tableVO.getName()) + "' in " + (totalTimeSchema - System.currentTimeMillis()) + "ms.");
 			}
 			catch(Exception e) {
 				System.err.println("Error sending schema: " + e.getMessage());
@@ -223,47 +244,85 @@ public class ThreadExportData implements Runnable {
 		}
 
 		for(int totalDataSend=0; totalDataSend<totalRecords;) {
-			JsonArray lote = JDBCConnectionFactory.loadData(param, tableVO, totalDataSend, batchSize);
+			JsonArray loteInitial = JDBCConnectionFactory.loadData(jdbcConnectionVO, tableVO, totalDataSend, batchSize);
+			JsonArray lote = new JsonArray();
 
 			if(this.justExportJSonData) {
-				totalDataJSon.append(lote.toString() + "\n");
-				totalDataSend += lote.size();
+				totalDataJSon.append(loteInitial.toString() + "\n");
+				totalDataSend += loteInitial.size();
 			}
 			else {
-				CommandPostStaging staging = null;
-				
-				if(panelJDBCEntities.getCheckBoxCompress().isSelected()) {
-					staging = new CommandPostStagingC(tenantId, datasourceId, panelJDBCEntities.getTextTemplateName().getText(), lote);
+				List<String> tempMD5Hash = new ArrayList<String>();
+
+				long initialTimeMD5 = System.currentTimeMillis();
+				for(int i=0; i<loteInitial.size(); i++) {
+					JsonElement jsonElement = loteInitial.get(i);
+
+					try {
+						MessageDigest m = MessageDigest.getInstance("MD5");
+						m.reset();
+						m.update(jsonElement.toString().getBytes());
+						byte[] digest = m.digest();
+						BigInteger bigInt = new BigInteger(1,digest);
+						String hashtext = bigInt.toString(16);
+						tempMD5Hash.add(hashtext);
+
+						StoredRecordHashVO vo = new StoredRecordHashVO(fluigDataProfileVO.getName(), tableVO.getName(), hashtext);
+						StoredAbstractVO hash = PersistenceEngine.getInstance().getByName(vo.getName(), StoredRecordHashVO.class);
+
+						if(hash != null) {
+							continue;
+						}
+						else {
+							lote.add(jsonElement);
+							PersistenceEngine.getInstance().save(vo, Boolean.FALSE);
+						}
+					} catch (NoSuchAlgorithmException e) {
+					}
+				}
+
+				PersistenceEngine.getInstance().persist();
+				System.out.println("Took '" + (System.currentTimeMillis() - initialTimeMD5) + "' for hash operatins..");
+
+				if(lote.size() > 0) {
+					CommandPostStaging staging = null;
+
+					if(panelJDBCEntities == null || panelJDBCEntities.getCheckBoxCompress().isSelected()) {
+						staging = new CommandPostStagingC(tenantId, datasourceId, (panelJDBCEntities != null ? panelJDBCEntities.getTextTemplateName().getText() : tableVO.getName()), lote);
+					}
+					else {
+						staging = new CommandPostStaging(tenantId, datasourceId, (panelJDBCEntities != null ? panelJDBCEntities.getTextTemplateName().getText() : tableVO.getName()), lote);
+					}
+
+					long initialTime = System.currentTimeMillis();
+					long endTime = initialTime;
+
+					String additionalInformation = "";
+
+					if(staging instanceof CommandPostStagingC) {
+						additionalInformation = " (compressed)";
+					}
+
+					try {
+						connection.executeCommand(staging);
+						endTime = System.currentTimeMillis();
+						totalDataSend += loteInitial.size();
+					}
+					catch(Exception e) {
+						System.err.println("Error: " + e.getMessage());
+						e.printStackTrace();
+					}
+					
+					double n1 = totalDataSend;
+					double n2 = totalRecords;
+					double result = n1 / n2;
+					DecimalFormat decF = new DecimalFormat("0.00");
+					
+					LogManagerDispatcher.getInstance().register("Sent " + lote.size() + additionalInformation + " records in " + (endTime - initialTime) + "ms, " + decF.format(result*100) + "% completed (" + totalDataSend + " in total).");
 				}
 				else {
-					staging = new CommandPostStaging(tenantId, datasourceId, panelJDBCEntities.getTextTemplateName().getText(), lote);
+					totalDataSend += loteInitial.size();
 				}
-
-				long initialTime = System.currentTimeMillis();
-				long endTime = initialTime;
-				
-				String additionalInformation = "";
-				
-				if(staging instanceof CommandPostStagingC) {
-					additionalInformation = " (compressed)";
-				}
-
-				try {
-					connection.executeCommand(staging);
-					endTime = System.currentTimeMillis();
-					totalDataSend += lote.size();
-				}
-				catch(Exception e) {
-					System.err.println("Error: " + e.getMessage());
-					e.printStackTrace();
-				}
-
-				double n1 = totalDataSend;
-				double n2 = totalRecords;
-				double result = n1 / n2;
-				DecimalFormat decF = new DecimalFormat("0.00");
-
-				LogManagerDispatcher.getInstance().register("Sent " + lote.size() + additionalInformation + " records in " + (endTime - initialTime) + "ms, " + decF.format(result*100) + "% completed (" + totalDataSend + " in total).");
 			}
 
 			ProcessTypeEnum processType = ProcessTypeEnum.SEND_DATA;

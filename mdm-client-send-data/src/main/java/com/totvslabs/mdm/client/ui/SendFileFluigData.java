@@ -35,8 +35,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.totvslabs.mdm.client.pojo.MDMData;
-import com.totvslabs.mdm.client.ui.events.DataLoadedDispatcher;
-import com.totvslabs.mdm.client.ui.events.DataLoadedEvent;
+import com.totvslabs.mdm.client.pojo.StoredAbstractVO;
+import com.totvslabs.mdm.client.ui.events.JDBCConnectionStabilizedDispatcher;
+import com.totvslabs.mdm.client.ui.events.JDBCConnectionStabilizedEvent;
 
 public class SendFileFluigData extends PanelAbstract {
 	private static final long serialVersionUID = 1L;
@@ -142,8 +143,8 @@ public class SendFileFluigData extends PanelAbstract {
 					textTemplateName.setEnabled(false);
 				}
 
-				DataLoadedEvent event = new DataLoadedEvent();
-				DataLoadedDispatcher.getInstance().fireJDBCConnectionStabilizedEvent(event);
+				JDBCConnectionStabilizedEvent event = new JDBCConnectionStabilizedEvent();
+				JDBCConnectionStabilizedDispatcher.getInstance().fireJDBCConnectionStabilizedEvent(event);
 			}
 		}
 
@@ -262,5 +263,22 @@ public class SendFileFluigData extends PanelAbstract {
 
 	public JCheckBox getCheckBoxCompress() {
 		return checkBoxCompress;
+	}
+
+	@Override
+	public StoredAbstractVO getAllData() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void loadAllData(StoredAbstractVO intance) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void loadDefaultData() {
+		// TODO Auto-generated method stub
 	}
 }

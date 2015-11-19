@@ -14,11 +14,11 @@ import javax.swing.JOptionPane;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.totvslabs.mdm.client.pojo.JDBCConnectionParameter;
 import com.totvslabs.mdm.client.pojo.JDBCDatabaseVO;
 import com.totvslabs.mdm.client.pojo.JDBCFieldVO;
 import com.totvslabs.mdm.client.pojo.JDBCIndexVO;
 import com.totvslabs.mdm.client.pojo.JDBCTableVO;
+import com.totvslabs.mdm.client.pojo.StoredJDBCConnectionVO;
 
 public class JDBCConnectionFactory {
 
@@ -37,13 +37,13 @@ public class JDBCConnectionFactory {
 		return connection;
 	}
 
-	public static Integer getTotalRecords(JDBCConnectionParameter param, JDBCTableVO tableVO) {
+	public static Integer getTotalRecords(StoredJDBCConnectionVO jdbcConnectionVO, JDBCTableVO tableVO) {
 		StringBuffer sql = new StringBuffer();
 
 		sql.append("SELECT count(*) FROM ");
 		sql.append(tableVO.getInternalName());
 
-		Connection connection = JDBCConnectionFactory.getJDBCConnection(param.getUrl(), param.getUser(), param.getPassword());
+		Connection connection = JDBCConnectionFactory.getJDBCConnection(jdbcConnectionVO.getUrl(), jdbcConnectionVO.getUsername(), jdbcConnectionVO.getPassword());
 		Integer totalRecords = 0;
 
 		try {
@@ -86,14 +86,14 @@ public class JDBCConnectionFactory {
 		return totalRecords;
 	}
 
-	public static JsonArray loadData(JDBCConnectionParameter param, JDBCTableVO tableVO, int initialRecord, int quantity) {
+	public static JsonArray loadData(StoredJDBCConnectionVO jdbcConnectionVO, JDBCTableVO tableVO, int initialRecord, int quantity) {
 		JsonArray jsonRecords = new JsonArray();
 		StringBuffer sql = new StringBuffer();
 
 		sql.append("SELECT * FROM ");
 		sql.append(tableVO.getInternalName());
 
-		Connection connection = JDBCConnectionFactory.getJDBCConnection(param.getUrl(), param.getUser(), param.getPassword());
+		Connection connection = JDBCConnectionFactory.getJDBCConnection(jdbcConnectionVO.getUrl(), jdbcConnectionVO.getUsername(), jdbcConnectionVO.getPassword());
 
 		try {
 			Statement st = null;
@@ -164,8 +164,12 @@ public class JDBCConnectionFactory {
 		return jsonRecords;
 	}
 
-	public static JsonArray loadData(JDBCConnectionParameter param, JDBCTableVO tableVO) {
-		return loadData(param, tableVO, 0, 0);
+	public static JsonArray loadData(StoredJDBCConnectionVO jdbcConnectionVO, JDBCTableVO tableVO) {
+		return loadData(jdbcConnectionVO, tableVO, 0, 0);
+	}
+
+	public static void loadFisicModelFields(StoredJDBCConnectionVO jdbcConnectionVO, JDBCTableVO tableVO) {
+		JDBCConnectionFactory.loadFisicModelFields(jdbcConnectionVO.getUrl(), jdbcConnectionVO.getUsername(), jdbcConnectionVO.getPassword(), tableVO);
 	}
 
 	public static void loadFisicModelFields(String url, String user, String password, JDBCTableVO tableVO) {
@@ -220,6 +224,7 @@ public class JDBCConnectionFactory {
 								indexVO.setName(dbIndexName);
 								indexVO.setUnique(dbUnique);
 								mapIndex.put(dbIndexName, indexVO);
+								System.out.println(indexVO);
 							}
 
 							tableVO.getField(dbColumnName).setIdentifier(true);

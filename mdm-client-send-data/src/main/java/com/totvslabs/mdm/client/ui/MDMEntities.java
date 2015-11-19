@@ -14,6 +14,7 @@ import javax.swing.table.TableColumn;
 
 import com.totvslabs.mdm.client.pojo.MDMEntityBO;
 import com.totvslabs.mdm.client.pojo.MDMEntitySyncTypeVO;
+import com.totvslabs.mdm.client.pojo.StoredAbstractVO;
 
 public class MDMEntities extends PanelAbstract {
 	private static final long serialVersionUID = 1L;
@@ -141,5 +142,21 @@ public class MDMEntities extends PanelAbstract {
 
 			return null;
 		}
+	}
+
+	@Override
+	public StoredAbstractVO getAllData() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void loadAllData(StoredAbstractVO intance) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void loadDefaultData() {
+		// TODO Auto-generated method stub
 	}
 }

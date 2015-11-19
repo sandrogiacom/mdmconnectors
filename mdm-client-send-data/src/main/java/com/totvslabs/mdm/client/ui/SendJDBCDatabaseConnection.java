@@ -1,29 +1,39 @@
 package com.totvslabs.mdm.client.ui;
 
+import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
-import com.totvslabs.mdm.client.pojo.JDBCConnectionParameter;
 import com.totvslabs.mdm.client.pojo.JDBCDatabaseVO;
 import com.totvslabs.mdm.client.pojo.JDBCDriverTypeVO;
-import com.totvslabs.mdm.client.ui.events.DataLoadedDispatcher;
-import com.totvslabs.mdm.client.ui.events.DataLoadedEvent;
+import com.totvslabs.mdm.client.pojo.StoredAbstractVO;
+import com.totvslabs.mdm.client.pojo.StoredJDBCConnectionVO;
+import com.totvslabs.mdm.client.ui.events.JDBCConnectionStabilizedDispatcher;
+import com.totvslabs.mdm.client.ui.events.JDBCConnectionStabilizedEvent;
 import com.totvslabs.mdm.client.util.JDBCConnectionFactory;
+import com.totvslabs.mdm.client.util.PersistenceEngine;
 
 public class SendJDBCDatabaseConnection extends PanelAbstract {
 	private static final long serialVersionUID = 1L;
+
+	private JLabel labelConnectionProfile;
+	private JComboBox<String> comboConnectionProfile;
+	private DefaultComboBoxModel<String> comboBoxModelProfiles = new DefaultComboBoxModel<String>();
 
 	private JLabel labelJDBCURL;
 	private JTextField textJDBCURL;
@@ -37,14 +47,17 @@ public class SendJDBCDatabaseConnection extends PanelAbstract {
 	private JLabel labelDriver;
 	private JComboBox<JDBCDriverTypeVO> comboDriver;
 
+	private JButton buttonSaveJDBCConnection;
+	private JButton buttonDeleteJDBCConnection;
 	private JButton buttonConnectDisconnect;
 
 	private Map<String, JDBCDriverTypeVO> jdbcDrivers = new HashMap<String, JDBCDriverTypeVO>();
-	private JDBCDriverTypeVO driver;
 
 	public SendJDBCDatabaseConnection(){
-		super(2, 10, " JDBC Database Parameters");
+		super(2, 12, " JDBC Connection Parameters");
 
+		this.labelConnectionProfile = new JLabel("Connection Profile: ");
+		this.comboConnectionProfile = new JComboBox<String>(comboBoxModelProfiles);
 		this.labelJDBCURL = new JLabel("JDBC URL: ");
 		this.textJDBCURL = new JTextField("jdbc:sqlserver://192.168.56.101:1433;DatabaseName=ems2cad1211", 20);
 		this.labelJDBCUserName = new JLabel("User: ");
@@ -53,13 +66,17 @@ public class SendJDBCDatabaseConnection extends PanelAbstract {
 		this.textJDBCPassword = new JPasswordField("sa", 20);
 		this.labelDriver = new JLabel("Driver: ");
 		this.comboDriver = new JComboBox<JDBCDriverTypeVO>();
+		this.buttonSaveJDBCConnection = new JButton("Save");
+		this.buttonDeleteJDBCConnection = new JButton("Delete");
 		this.buttonConnectDisconnect = new JButton("Connect!");
 
-		this.jdbcDrivers.put("sqlserver", new JDBCDriverTypeVO("sqlServer", "SQL Server", "", "jdbc:sqlserver://192.168.56.101:1433;DatabaseName=ems2cad1211", "sa", "sa"));
+		this.jdbcDrivers.put("sqlserver", new JDBCDriverTypeVO("sqlserver", "SQL Server", "", "jdbc:sqlserver://192.168.56.101:1433;DatabaseName=ems2cad1211", "sa", "sa"));
 		this.jdbcDrivers.put("progress", new JDBCDriverTypeVO("progress", "Progress", "com.ddtek.jdbc.openedge.OpenEdgeDriver", "jdbc:datadirect:openedge://192.168.56.101:2121;databaseName=marelli;defaultSchema=pub", "sysprogress", "sysprogress"));
 //		this.jdbcDrivers.put("oracle", new JDBCDriverTypeVO("oracle", "Oracle", "", "", "", ""));
 //		this.jdbcDrivers.put("db2", new JDBCDriverTypeVO("db2", "DB2", "", "", "", ""));
 //		this.jdbcDrivers.put("informix", new JDBCDriverTypeVO("informix", "Informix", "", "", "", ""));
+
+		this.comboConnectionProfile.setEditable(true);
 
 		Collection<JDBCDriverTypeVO> values = jdbcDrivers.values();
 
@@ -73,12 +90,14 @@ public class SendJDBCDatabaseConnection extends PanelAbstract {
 		this.textJDBCPassword.setText("");
 
 		this.initializeLayout();
+		this.loadDefaultData();
 	}
 
 	public void initializeLayout() {
+		this.add(this.labelConnectionProfile);
+		this.add(this.comboConnectionProfile);
 		this.add(this.labelDriver);
 		this.add(this.comboDriver);
-
 		this.add(this.labelJDBCURL);
 		this.add(this.textJDBCURL, 2, true, 1, 2);
 		this.add(this.labelJDBCUserName);
@@ -86,26 +105,43 @@ public class SendJDBCDatabaseConnection extends PanelAbstract {
 		this.add(this.labelJDBCPassword);
 		this.add(this.textJDBCPassword);
 
+		JPanel panel = new JPanel();
+		panel.setLayout(new BorderLayout());
+		panel.add(this.buttonSaveJDBCConnection, BorderLayout.WEST);
+		panel.add(this.buttonConnectDisconnect, BorderLayout.CENTER);
+		panel.add(this.buttonDeleteJDBCConnection, BorderLayout.EAST);
 		this.add(new JLabel());
-		this.add(this.buttonConnectDisconnect);
+		this.add(panel);
 
-		this.buttonConnectDisconnect.addActionListener(new ConnectClick());
+		this.buttonSaveJDBCConnection.addActionListener(new SaveClick());
+		this.buttonDeleteJDBCConnection.addActionListener(new DeleteClick());
+		this.buttonConnectDisconnect.addActionListener(new ConnectClick(this));
 		this.comboDriver.addItemListener(new ComboBoxStateChangeDriver());
+		this.comboConnectionProfile.addActionListener(new ComboBoxStateChangeProfile());
 	}
 
 	class ConnectClick implements ActionListener {
+		private JPanel parent;
+
+		public ConnectClick(JPanel parent) {
+			this.parent = parent;
+		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			if(comboDriver.getSelectedIndex() < 0) {
+				JOptionPane.showMessageDialog(this.parent, "Please, inform the conection parameters before perform the connection.");
+				return;
+			}
+
         	JDBCDatabaseVO database = JDBCConnectionFactory.loadFisicModelTables(textJDBCURL.getText(), textJDBCUserName.getText(), textJDBCPassword.getText());
 
         	if(database == null) {
-        		JOptionPane.showMessageDialog(null, "An error occurred while establishing the connection, verify the error message.", "Connection Error", JOptionPane.ERROR_MESSAGE);
+        		JOptionPane.showMessageDialog(this.parent, "An error occurred while establishing the connection, verify the error message.", "Connection Error", JOptionPane.ERROR_MESSAGE);
         		return;
         	}
 
-        	JDBCConnectionParameter param = new JDBCConnectionParameter(driver.getDriverClass(), textJDBCURL.getText(), textJDBCUserName.getText(), textJDBCPassword.getText());
-			DataLoadedEvent event = new DataLoadedEvent(param, database.getTables());
-			DataLoadedDispatcher.getInstance().fireJDBCConnectionStabilizedEvent(event);
+			JDBCConnectionStabilizedEvent event = new JDBCConnectionStabilizedEvent((StoredJDBCConnectionVO) getAllData(), database.getTables());
+			JDBCConnectionStabilizedDispatcher.getInstance().fireJDBCConnectionStabilizedEvent(event);
 		}
 	}
 
@@ -117,8 +153,54 @@ public class SendJDBCDatabaseConnection extends PanelAbstract {
 			textJDBCPassword.setText(driverSelected.getPasswordSample());
 			textJDBCURL.setText(driverSelected.getUrlSample());
 			textJDBCUserName.setText(driverSelected.getUserSample());
+		}
+	}
 
-			driver = driverSelected;
+	class ComboBoxStateChangeProfile implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			StoredAbstractVO actualRecord = PersistenceEngine.getInstance().getByName((String) comboBoxModelProfiles.getSelectedItem(), StoredJDBCConnectionVO.class);
+			loadAllData(actualRecord);
+		}
+	}
+
+	@Override
+	public StoredAbstractVO getAllData() {
+		StoredJDBCConnectionVO instance = new StoredJDBCConnectionVO();
+		instance.setProfileName((String) this.comboConnectionProfile.getSelectedItem());
+		instance.setDriver(this.comboDriver.getSelectedItem() != null ? ((JDBCDriverTypeVO) this.comboDriver.getSelectedItem()).getId() : null);
+		instance.setUrl(this.textJDBCURL.getText());
+		instance.setUsername(this.textJDBCUserName.getText());
+		instance.setPassword(this.textJDBCPassword.getText());
+
+		return instance;
+	}
+
+	@Override
+	public void loadAllData(StoredAbstractVO instanceGeneric) {
+		if(instanceGeneric == null) {
+			instanceGeneric = new StoredJDBCConnectionVO();
+		}
+		if(!(instanceGeneric instanceof StoredJDBCConnectionVO)) {
+			return;
+		}
+
+		StoredJDBCConnectionVO instance = (StoredJDBCConnectionVO) instanceGeneric;
+//		this.comboConnectionProfile.setSelectedItem(instance.getProfileName());
+		this.comboDriver.setSelectedItem(jdbcDrivers.get(instance.getDriver()));
+		this.textJDBCURL.setText(instance.getUrl());
+		this.textJDBCUserName.setText(instance.getUsername());
+		this.textJDBCPassword.setText(instance.getPassword());		
+	}
+
+	@Override
+	public void loadDefaultData() {
+		List<StoredAbstractVO> data = PersistenceEngine.getInstance().findAll(StoredJDBCConnectionVO.class);
+
+		this.comboBoxModelProfiles.removeAllElements();
+
+		for (StoredAbstractVO storedAbstractVO : data) {
+			this.comboBoxModelProfiles.addElement(storedAbstractVO.getName());
 		}
 	}
 }

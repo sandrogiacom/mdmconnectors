@@ -26,12 +26,13 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
-import com.totvslabs.mdm.client.pojo.JDBCConnectionParameter;
 import com.totvslabs.mdm.client.pojo.JDBCFieldVO;
 import com.totvslabs.mdm.client.pojo.JDBCTableVO;
-import com.totvslabs.mdm.client.ui.events.DataLoadedDispatcher;
-import com.totvslabs.mdm.client.ui.events.DataLoadedEvent;
-import com.totvslabs.mdm.client.ui.events.DataLoadedListener;
+import com.totvslabs.mdm.client.pojo.StoredAbstractVO;
+import com.totvslabs.mdm.client.pojo.StoredJDBCConnectionVO;
+import com.totvslabs.mdm.client.ui.events.JDBCConnectionStabilizedDispatcher;
+import com.totvslabs.mdm.client.ui.events.JDBCConnectionStabilizedEvent;
+import com.totvslabs.mdm.client.ui.events.JDBCConnectionStabilizedListener;
 import com.totvslabs.mdm.client.ui.events.JDBCTableSelectedDispatcher;
 import com.totvslabs.mdm.client.ui.events.JDBCTableSelectedEvent;
 import com.totvslabs.mdm.client.ui.events.JDBCTableSelectedListener;
@@ -42,12 +43,13 @@ import com.totvslabs.mdm.client.util.JDBCConnectionFactory;
 import com.totvslabs.mdm.client.util.ProcessTypeEnum;
 import com.totvslabs.mdm.client.util.ThreadExportData;
 
-public class SendJDBCEntities extends PanelAbstract implements DataLoadedListener {
+public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionStabilizedListener {
 	private static final long serialVersionUID = 1L;
 
 	private JLabel labelTable;
 	private JComboBox<JDBCTableVO> comboTable;
 
+	private JLabel labelFields;
 	private JTable tableFieldsJDBC;
 	private JDBCFieldsTableModel tableModel;
 	private JScrollPane scrollBarEntitiesMDM;
@@ -61,16 +63,18 @@ public class SendJDBCEntities extends PanelAbstract implements DataLoadedListene
 	private JLabel labelCompressOption;
 	private JCheckBox checkBoxCompress;
 
-	private DataLoadedEvent jdbcConnectionStabilizedEvent;
+	private JDBCConnectionStabilizedEvent jdbcConnectionStabilizedEvent;
 
 	private JButton buttonGenerateJsonFile;
 
 	public SendJDBCEntities(){
-		super(2, 19, " MDM Entities");
+//		super(2, 15, " MDM Entities");
+		super(2, 10, " JDBC Entities");
 
 		this.labelTable = new JLabel("Table: ");
 		this.comboTable = new JComboBox<JDBCTableVO>();
 
+		this.labelFields = new JLabel("Fields: ");
 		this.tableModel = new JDBCFieldsTableModel();
 		this.tableFieldsJDBC = new JTable(this.tableModel);
 		this.tableFieldsJDBC.setFillsViewportHeight(true);
@@ -96,27 +100,27 @@ public class SendJDBCEntities extends PanelAbstract implements DataLoadedListene
 		this.add(this.labelTable);
 		this.add(this.comboTable);
 
-		this.add(this.labelTemplateName);
-		this.add(this.textTemplateName);
+//		this.add(this.labelTemplateName);
+//		this.add(this.textTemplateName);
+//
+//		this.add(this.labelBatchSize);
+//		this.add(this.textBatchSize);
+//
+//		this.add(this.labelCompressOption);
+//		this.add(this.checkBoxCompress);
 
-		this.add(this.labelBatchSize);
-		this.add(this.textBatchSize);
+		this.add(this.labelFields);
+		this.add(this.scrollBarEntitiesMDM, 2, true, 7, 2);
 
-		this.add(this.labelCompressOption);
-		this.add(this.checkBoxCompress);
-
-		this.add(new JLabel());
-		this.add(this.scrollBarEntitiesMDM, 2, true, 8, 2);
-
-		this.add(new JLabel());
-		this.add(this.buttonGenerateJsonFile);
+//		this.add(new JLabel());
+//		this.add(this.buttonGenerateJsonFile);
 
 		this.initColumnSizes(this.tableFieldsJDBC);
 
 		this.comboTable.addItemListener(new JDBCTableSelectClick());
 		this.buttonGenerateJsonFile.addActionListener(new GenerateJSonFileClick(this));
 
-		DataLoadedDispatcher.getInstance().addJDBCConnectionStabilizedListener(this);
+		JDBCConnectionStabilizedDispatcher.getInstance().addJDBCConnectionStabilizedListener(this);
 	}
 
     private void initColumnSizes(JTable table) {
@@ -140,8 +144,8 @@ public class SendJDBCEntities extends PanelAbstract implements DataLoadedListene
         }
     }
 
-	class GenerateJSonFileClick implements ActionListener, JDBCTableSelectedListener, DataLoadedListener, SendDataFluigDataDoneListener {
-		private JDBCConnectionParameter connectionStabilizedEvent;
+	class GenerateJSonFileClick implements ActionListener, JDBCTableSelectedListener, JDBCConnectionStabilizedListener, SendDataFluigDataDoneListener {
+		private StoredJDBCConnectionVO jdbcConnectionVO;
 		private JDBCTableVO tableVO;
 		private SendJDBCEntities panelJDBCEntities;
 		private File file;
@@ -149,7 +153,7 @@ public class SendJDBCEntities extends PanelAbstract implements DataLoadedListene
 		public GenerateJSonFileClick(SendJDBCEntities panelJDBCEntities) {
 			this.panelJDBCEntities = panelJDBCEntities;
 			JDBCTableSelectedDispatcher.getInstance().addJDBCTableSelectedListener(this);
-			DataLoadedDispatcher.getInstance().addJDBCConnectionStabilizedListener(this);
+			JDBCConnectionStabilizedDispatcher.getInstance().addJDBCConnectionStabilizedListener(this);
 			SendDataFluigDataDoneDispatcher.getInstance().addSendDataFluigDataDoneListener(this);
 		}
 
@@ -174,7 +178,7 @@ public class SendJDBCEntities extends PanelAbstract implements DataLoadedListene
 
 	            this.file = file;
 
-	            Thread threadExportData = new Thread(new ThreadExportData(this.tableVO, this.connectionStabilizedEvent, this.panelJDBCEntities));
+	            Thread threadExportData = new Thread(new ThreadExportData(this.tableVO, this.jdbcConnectionVO, this.panelJDBCEntities));
 	            threadExportData.start();
 			}
 			else {
@@ -183,13 +187,13 @@ public class SendJDBCEntities extends PanelAbstract implements DataLoadedListene
 		}
 
 		@Override
-		public void onDataLoadedEvent(DataLoadedEvent event) {
-			this.connectionStabilizedEvent = event.getParam();
+		public void onDataLoadedEvent(JDBCConnectionStabilizedEvent event) {
+			this.jdbcConnectionVO = event.getJdbcConnectionVO();
 		}
 
 		@Override
 		public void onJDBCTableSelectedEvent(JDBCTableSelectedEvent event) {
-			this.connectionStabilizedEvent = event.getParam();
+			this.jdbcConnectionVO = event.getJdbcConnectionVO();
 			this.tableVO = event.getTableVO();
 		}
 
@@ -219,18 +223,18 @@ public class SendJDBCEntities extends PanelAbstract implements DataLoadedListene
 
 			textTemplateName.setText(vo.getName());
 
-			DataLoadedEvent event = jdbcConnectionStabilizedEvent;
+			JDBCConnectionStabilizedEvent event = jdbcConnectionStabilizedEvent;
 
-			JDBCConnectionFactory.loadFisicModelFields(event.getParam().getUrl(), event.getParam().getUser(), event.getParam().getPassword(), vo);
+			JDBCConnectionFactory.loadFisicModelFields(event.getJdbcConnectionVO().getUrl(), event.getJdbcConnectionVO().getUsername(), event.getJdbcConnectionVO().getPassword(), vo);
 			List<JDBCFieldVO> fields = vo.getFields();
 
 			tableModel.addRows(fields);
 			tableFieldsJDBC.updateUI();
 
-			JDBCTableSelectedEvent eventTableSelected = new JDBCTableSelectedEvent(vo, event.getParam());
+			JDBCTableSelectedEvent eventTableSelected = new JDBCTableSelectedEvent(vo, event.getJdbcConnectionVO());
 			JDBCTableSelectedDispatcher.getInstance().fireJDBCTableSelectedEvent(eventTableSelected);
 
-			Integer totalRecords = JDBCConnectionFactory.getTotalRecords(event.getParam(), vo);
+			Integer totalRecords = JDBCConnectionFactory.getTotalRecords(event.getJdbcConnectionVO(), vo);
 			vo.setTotalRecords(totalRecords);
 		}
 	}
@@ -313,7 +317,7 @@ public class SendJDBCEntities extends PanelAbstract implements DataLoadedListene
 	}
 
 	@Override
-	public void onDataLoadedEvent(DataLoadedEvent event) {
+	public void onDataLoadedEvent(JDBCConnectionStabilizedEvent event) {
 		if(event.getTables() != null) {
 			this.comboTable.removeAllItems();
 			this.textTemplateName.setText("");
@@ -342,5 +346,19 @@ public class SendJDBCEntities extends PanelAbstract implements DataLoadedListene
 	public JCheckBox getCheckBoxCompress() {
 		return checkBoxCompress;
 	}
-}
 
+	@Override
+	public StoredAbstractVO getAllData() {
+		return null;
+	}
+
+	@Override
+	public void loadAllData(StoredAbstractVO intance) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void loadDefaultData() {
+		// TODO Auto-generated method stub
+	}
+}

@@ -1,6 +1,8 @@
 package com.totvslabs.mdm.client.ui;
 
 import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +14,10 @@ import javax.swing.text.MaskFormatter;
 
 import com.jgoodies.forms.layout.CellConstraints;
 import com.jgoodies.forms.layout.FormLayout;
+import com.totvslabs.mdm.client.pojo.StoredAbstractVO;
+import com.totvslabs.mdm.client.ui.events.StoredConfigurationChangedDispatcher;
+import com.totvslabs.mdm.client.ui.events.StoredConfigurationChangedEvent;
+import com.totvslabs.mdm.client.util.PersistenceEngine;
 
 public abstract class PanelAbstract extends JPanel {
 	private static final long serialVersionUID = 1L;
@@ -152,6 +158,12 @@ public abstract class PanelAbstract extends JPanel {
 		}
 	}
 
+	public abstract StoredAbstractVO getAllData();
+
+	public abstract void loadAllData(StoredAbstractVO intance);
+
+	public abstract void loadDefaultData();
+
 	protected void add(final JComponent component, int colNumber, boolean addRow, int rowSpan) {
 		this.add(component, colNumber, addRow, rowSpan, 1);
 	}
@@ -170,5 +182,26 @@ public abstract class PanelAbstract extends JPanel {
 
 	public void setLayoutGeneral(FormLayout layoutGeneral) {
 		this.layoutGeneral = layoutGeneral;
+	}
+
+	class SaveClick implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			StoredAbstractVO data = getAllData();
+			PersistenceEngine.getInstance().save(data);
+			loadDefaultData();
+			StoredConfigurationChangedDispatcher.getInstance().fireStoredConfigurationChangedEvent(new StoredConfigurationChangedEvent());
+		}
+	}
+
+	class DeleteClick implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			StoredAbstractVO data = getAllData();
+			StoredAbstractVO actualRecord = PersistenceEngine.getInstance().getByName(data.getName(), data.getClass());
+			PersistenceEngine.getInstance().delete(actualRecord);
+			loadDefaultData();
+			StoredConfigurationChangedDispatcher.getInstance().fireStoredConfigurationChangedEvent(new StoredConfigurationChangedEvent());
+		}
 	}
 }
