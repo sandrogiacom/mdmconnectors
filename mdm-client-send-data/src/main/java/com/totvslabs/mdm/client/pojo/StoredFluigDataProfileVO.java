@@ -5,7 +5,7 @@ package com.totvslabs.mdm.client.pojo;
 public class StoredFluigDataProfileVO extends StoredAbstractVO {
 	private static final long serialVersionUID = 1L;
 	private String profileName;
-	private String serverURL = "https://totvslabs.fluigdata.com:8443/mdm/";
+	private String serverURL = "https://totvslabs.fluigdata.com:8443/";
 	private String domain = "totvslabs";
 	private String datasourceID = "0b672ec08cbc11e5991b0242ac110002";
 	private String username = "admin@totvslabs.com";

@@ -67,7 +67,7 @@ public class MDMDatabaseConnection extends PanelAbstract implements ActionListen
 		this.labelMDMConnectionName = new JLabel("Connection Profile: ");
 		this.comboMDMConnectionName = new JComboBox<String>(comboBoxModelProfiles);
 		this.labelMDMServerURL = new JLabel("Server URL: ");
-		this.textMDMServerURL = new JTextField("https://totvslabs.fluigdata.com:8443/mdm/", 20);
+		this.textMDMServerURL = new JTextField("https://totvslabs.fluigdata.com:8443/", 20);
 		this.labelMDMTenantId = new JLabel("Subdomain: ");
 		this.textMDMTenantId = new JTextField("totvslabs");
 		this.labelMDMDatasourceId = new JLabel("Datasource ID: ");

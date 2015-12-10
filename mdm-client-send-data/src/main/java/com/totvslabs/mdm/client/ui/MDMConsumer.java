@@ -248,6 +248,10 @@ public class MDMConsumer extends PanelAbstract implements MDMConnectionChangedLi
 			return String.class;
 		}
 
+		public void clear() {
+			this.data.clear();
+		}
+		
 		public void addRows(List<FDEntityVO> vos) {
 			this.data.clear();
 			this.data.addAll(vos);
@@ -334,6 +338,8 @@ public class MDMConsumer extends PanelAbstract implements MDMConnectionChangedLi
 				List<String> entities = ((DataConsumerVO) hits.get(0)).get_mdmEntitiesConsumed();
 
 				if(entities != null) {
+					tableModelEntitiesFD.clear();
+					
 					for (String string : entities) {
 						CommandGetDataModel dataModel = new CommandGetDataModel(string);
 						EnvelopeVO executeCommandGetDataModel = MDMRestConnectionFactory.getConnection(fluigDataProfile.getServerURL()).executeCommand(dataModel);
