@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -14,8 +15,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
-
-import sun.misc.BASE64Encoder;
 
 @Provider
 public class GZipWriterInterceptor implements WriterInterceptor {
@@ -80,7 +79,7 @@ public class GZipWriterInterceptor implements WriterInterceptor {
            
           try {
 			String string = new String(Files.readAllBytes(Paths.get(gzipFile)));
-			String encode = new BASE64Encoder().encode(string.getBytes());
+			String encode = Base64.getEncoder().encodeToString(string.getBytes());
 			System.out.println(string);
 			System.out.println();
 			System.out.println(encode);
