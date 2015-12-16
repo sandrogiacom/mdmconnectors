@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -19,6 +20,7 @@ import com.totvslabs.mdm.client.pojo.JDBCFieldVO;
 import com.totvslabs.mdm.client.pojo.JDBCIndexVO;
 import com.totvslabs.mdm.client.pojo.JDBCTableVO;
 import com.totvslabs.mdm.client.pojo.StoredJDBCConnectionVO;
+import com.totvslabs.mdm.client.ui.SendJDBCDatabaseConnection;
 
 public class JDBCConnectionFactory {
 
@@ -90,7 +92,35 @@ public class JDBCConnectionFactory {
 		JsonArray jsonRecords = new JsonArray();
 		StringBuffer sql = new StringBuffer();
 
-		sql.append("SELECT * FROM ");
+		if(jdbcConnectionVO.getDriver().equals(SendJDBCDatabaseConnection.DB_PROGRESS)) {
+			StringBuffer fields = new StringBuffer();
+
+			for (int i = 0; i < tableVO.getFields().size(); i++) {
+				JDBCFieldVO jdbcFieldVO = tableVO.getFields().get(i);
+				
+				DecimalFormat df = new DecimalFormat("####");
+				Double size = jdbcFieldVO.getSize();
+				String type = jdbcFieldVO.getType();
+				String name = jdbcFieldVO.getName();
+
+				if(size != null && type.contains("String")) {
+					fields.append("substr(\"" + name + "\", 1, " + df.format(size) + ") '" + name + "'");
+				}
+				else {
+					fields.append("\"" + name + "\"");
+				}
+				
+				if(tableVO.getFields().size() > (i+1)) {
+					fields.append(", ");
+				}
+			}
+
+			sql.append("SELECT " + fields.toString() + " FROM ");
+		}
+		else {
+			sql.append("SELECT * FROM ");
+		}
+
 		sql.append(tableVO.getInternalName());
 
 		Connection connection = JDBCConnectionFactory.getJDBCConnection(jdbcConnectionVO.getUrl(), jdbcConnectionVO.getUsername(), jdbcConnectionVO.getPassword());
@@ -207,34 +237,36 @@ public class JDBCConnectionFactory {
 					rs.close();
 				}
 
-				ResultSet indexInformation = connection.getMetaData().getIndexInfo(connection.getCatalog(), null, tableVO.getInternalName(), false, true);
+//				ResultSet indexInformation = connection.getMetaData().getIndexInfo(connection.getCatalog(), null, tableVO.getInternalName(), false, true);
+				ResultSet primaryKey = connection.getMetaData().getPrimaryKeys(null, null, tableVO.getInternalName());
 				Map<String, JDBCIndexVO> mapIndex = new HashMap<String, JDBCIndexVO>();
 
 				try {
-					while (indexInformation.next()) {
-						String dbIndexName = indexInformation.getString("INDEX_NAME");
-						String dbColumnName = indexInformation.getString("COLUMN_NAME");
-						Boolean dbUnique = indexInformation.getBoolean("NON_UNIQUE");
+					while (primaryKey.next()) {
+//						String dbIndexName = indexInformation.getString("INDEX_NAME");
+//						String dbColumnName = indexInformation.getString("COLUMN_NAME");
+//						Boolean dbUnique = indexInformation.getBoolean("NON_UNIQUE");
+						String primaryKeyFeild = primaryKey.getString("COLUMN_NAME");
+						String dbIndexName = "PK";
 
-						if(dbIndexName != null) {
+						if(primaryKeyFeild != null) {
 							JDBCIndexVO indexVO = mapIndex.get(dbIndexName);
 
 							if(indexVO == null) {
 								indexVO = new JDBCIndexVO();
 								indexVO.setName(dbIndexName);
-								indexVO.setUnique(dbUnique);
+								indexVO.setUnique(true);
 								mapIndex.put(dbIndexName, indexVO);
-								System.out.println(indexVO);
 							}
 
-							tableVO.getField(dbColumnName).setIdentifier(true);
-							indexVO.addField(tableVO.getField(dbColumnName));
+							tableVO.getField(primaryKeyFeild).setIdentifier(true);
+							indexVO.addField(tableVO.getField(primaryKeyFeild));
 						}
 					}
 
 					tableVO.setPrimaryKey(mapIndex.values());
 
-					indexInformation.close();
+					primaryKey.close();
 				}
 				catch(Exception e) {
 					JOptionPane.showMessageDialog(null, "Erro ao carregar dados do banco de dados, por favor, verifique os logs e tente novamente.");
@@ -278,11 +310,16 @@ public class JDBCConnectionFactory {
 				String databaseName = tables.getString("TABLE_CAT");
 				String tableName = tables.getString("TABLE_NAME");
 
-				tableName = tableName.toLowerCase();
-
 				databaseByFisicModelVO.setName(databaseName);
 
-				JDBCTableVO tableVO = new JDBCTableVO(tableName);
+				JDBCTableVO tableVO = new JDBCTableVO(tableName.toLowerCase());
+				if(tableName.contains("-")) {
+					tableVO.setInternalName("\"" + tableName + "\"");
+				}
+				else {
+					tableVO.setInternalName(tableName);
+				}
+
 				databaseByFisicModelVO.addTable(tableVO);
 			}
 

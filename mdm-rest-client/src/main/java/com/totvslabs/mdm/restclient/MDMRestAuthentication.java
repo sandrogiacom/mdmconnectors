@@ -35,6 +35,14 @@ public class MDMRestAuthentication {
 	}
 
 	public static MDMRestAuthentication getInstance(String mdmURL, String subdomain, String datasourceId, String username, String password) {
+		return MDMRestAuthentication.getInstance(mdmURL, subdomain, datasourceId, username, password, false);
+	}
+
+	public static MDMRestAuthentication getInstance(String mdmURL, String subdomain, String datasourceId, String username, String password, Boolean forceAuth) {
+		if(forceAuth) {
+			MDMRestAuthentication.instance = null;
+		}
+
 		if(MDMRestAuthentication.instance == null) {
 			AuthVO authVO = MDMRestAuthentication.authorization(mdmURL, subdomain, datasourceId, username, password);
 			MDMRestAuthentication.instance = new MDMRestAuthentication(mdmURL, authVO.getRefresh_token(), authVO.getAccess_token(), authVO.getClient_id(), authVO.getTimeIssuedInMillis(), authVO.getExpires_in());
@@ -88,6 +96,9 @@ public class MDMRestAuthentication {
 	}
 
 
+	public void invalidateAuthVO() {
+		this.authVO = null;
+	}
 
 	public AuthVO getAuthVO() {
 		return authVO;

@@ -2,11 +2,13 @@ package com.totvslabs.mdm.restclient.vo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class DataConsumerVO extends GenericVO {
 	private String _mdmName;
 	private String _mdmDescription;
 	private List<String> _mdmEntitiesConsumed = new ArrayList<String>();
+	private Map<String, DataConsumerDetailsVO> _mdmEntityDetails;
 	private String _mdmElasticsearchMappingType;
 
 	public String get_mdmName() {
@@ -32,5 +34,12 @@ public class DataConsumerVO extends GenericVO {
 	}
 	public void set_mdmElasticsearchMappingType(String _mdmElasticsearchMappingType) {
 		this._mdmElasticsearchMappingType = _mdmElasticsearchMappingType;
+	}
+	public Map<String, DataConsumerDetailsVO> get_mdmEntityDetails() {
+		return _mdmEntityDetails;
+	}
+	public void set_mdmEntityDetails(
+			Map<String, DataConsumerDetailsVO> _mdmEntityDetails) {
+		this._mdmEntityDetails = _mdmEntityDetails;
 	}
 }

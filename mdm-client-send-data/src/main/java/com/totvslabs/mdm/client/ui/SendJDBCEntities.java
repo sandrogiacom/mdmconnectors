@@ -63,13 +63,15 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 	private JLabel labelCompressOption;
 	private JCheckBox checkBoxCompress;
 
+	private JLabel labelIgnoreLocalCache;
+	private JCheckBox checkBoxIgnoreLocalCache;
+
 	private JDBCConnectionStabilizedEvent jdbcConnectionStabilizedEvent;
 
 	private JButton buttonGenerateJsonFile;
 
 	public SendJDBCEntities(){
-//		super(2, 15, " MDM Entities");
-		super(2, 10, " JDBC Entities");
+		super(2, 12, " JDBC Entities");
 
 		this.labelTable = new JLabel("Table: ");
 		this.comboTable = new JComboBox<JDBCTableVO>();
@@ -86,6 +88,9 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 
 		this.labelCompressOption = new JLabel("Compress: ");
 		this.checkBoxCompress = new JCheckBox("Yes!", true);
+
+		this.labelIgnoreLocalCache = new JLabel("Ignore Local Cache: ");
+		this.checkBoxIgnoreLocalCache = new JCheckBox("Yes!", true);
 
 		this.labelBatchSize = new JLabel("Batch Size (records): ");
 		this.textBatchSize = new JTextField("500", 20);
@@ -108,6 +113,9 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 //
 //		this.add(this.labelCompressOption);
 //		this.add(this.checkBoxCompress);
+
+		this.add(this.labelIgnoreLocalCache);
+		this.add(this.checkBoxIgnoreLocalCache);
 
 		this.add(this.labelFields);
 		this.add(this.scrollBarEntitiesMDM, 2, true, 7, 2);
@@ -343,8 +351,12 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 		return textBatchSize;
 	}
 
-	public JCheckBox getCheckBoxCompress() {
-		return checkBoxCompress;
+	public Boolean getCheckBoxCompress() {
+		return checkBoxCompress.isSelected();
+	}
+
+	public Boolean getIgnoreLocalCache() {
+		return this.checkBoxIgnoreLocalCache.isSelected();
 	}
 
 	@Override

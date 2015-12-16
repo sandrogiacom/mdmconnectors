@@ -9,8 +9,15 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 public abstract class StoredAbstractVO implements Serializable {
 	private static final long serialVersionUID = 1L;
+	protected String name;
 
-	public abstract String getName();
+	public final String getName() {
+		return this.name;
+	}
+
+	public abstract String generateHash();
+	public abstract void setName(String name);
+	public abstract void cleanFields();
 
 	public String getJSon() {
 		ObjectMapper mapper = new ObjectMapper();
@@ -36,7 +43,7 @@ public abstract class StoredAbstractVO implements Serializable {
 	}
 
 	@Override
-	public int hashCode() {
+	public final int hashCode() {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((getName() == null) ? 0 : getName().hashCode());
@@ -44,7 +51,7 @@ public abstract class StoredAbstractVO implements Serializable {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
+	public final boolean equals(Object obj) {
 		if (this == obj)
 			return true;
 		if (obj == null)

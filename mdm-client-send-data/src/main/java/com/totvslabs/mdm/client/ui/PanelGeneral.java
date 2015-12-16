@@ -2,6 +2,7 @@ package com.totvslabs.mdm.client.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -10,6 +11,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 
 import com.totvslabs.mdm.client.pojo.DataSourceTypeEnum;
@@ -74,6 +76,10 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, C
 	private JDBCTableVO tableVO;
 
 	public PanelGeneral(){
+		JScrollPane scrollPane = new JScrollPane(this.mainPanel);/* Add the scrool to the inside panel, not the mail panel!!! */
+		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+
 		this.setTitle("MDM: Generic Client");
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.getContentPane().add(this.mainPanel);
@@ -82,6 +88,7 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, C
 		this.initializeLayout();
 
 		this.pack();
+		this.setMaximumSize(java.awt.Toolkit.getDefaultToolkit().getScreenSize());
 		this.setSize(714, 900);
 		this.setVisible(true);
 	}
@@ -209,7 +216,7 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, C
 		@Override
 		public void actionPerformed(ActionEvent event) {
 			buttonExecute.setEnabled(false);
-			tabbedPane.setSelectedIndex(3);
+			tabbedPane.setSelectedIndex(4);
 
 			if(panelMDMConnection.isDatabaseData()) {
 				Thread th = new Thread(new ThreadExportData((StoredFluigDataProfileVO) panelMDMConnection.getAllData(), tableVO, jdbcConnectionVO, panelJDBCEntities));

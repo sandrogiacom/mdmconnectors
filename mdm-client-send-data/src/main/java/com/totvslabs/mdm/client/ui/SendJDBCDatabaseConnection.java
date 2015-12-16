@@ -52,6 +52,9 @@ public class SendJDBCDatabaseConnection extends PanelAbstract {
 	private JButton buttonConnectDisconnect;
 
 	private Map<String, JDBCDriverTypeVO> jdbcDrivers = new HashMap<String, JDBCDriverTypeVO>();
+	
+	public static final String DB_PROGRESS = "progress";
+	public static final String DB_SQLSERVER = "sqlserver";
 
 	public SendJDBCDatabaseConnection(){
 		super(2, 12, " JDBC Connection Parameters");
@@ -70,8 +73,8 @@ public class SendJDBCDatabaseConnection extends PanelAbstract {
 		this.buttonDeleteJDBCConnection = new JButton("Delete");
 		this.buttonConnectDisconnect = new JButton("Connect!");
 
-		this.jdbcDrivers.put("sqlserver", new JDBCDriverTypeVO("sqlserver", "SQL Server", "", "jdbc:sqlserver://192.168.56.101:1433;DatabaseName=ems2cad1211", "sa", "sa"));
-		this.jdbcDrivers.put("progress", new JDBCDriverTypeVO("progress", "Progress", "com.ddtek.jdbc.openedge.OpenEdgeDriver", "jdbc:datadirect:openedge://192.168.56.101:2121;databaseName=marelli;defaultSchema=pub", "sysprogress", "sysprogress"));
+		this.jdbcDrivers.put(SendJDBCDatabaseConnection.DB_SQLSERVER, new JDBCDriverTypeVO("sqlserver", "SQL Server", "", "jdbc:sqlserver://192.168.56.101:1433;DatabaseName=ems2cad1211", "sa", "sa"));
+		this.jdbcDrivers.put(SendJDBCDatabaseConnection.DB_PROGRESS, new JDBCDriverTypeVO("progress", "Progress", "com.ddtek.jdbc.openedge.OpenEdgeDriver", "jdbc:datadirect:openedge://192.168.56.101:2121;databaseName=marelli;defaultSchema=pub", "sysprogress", "sysprogress"));
 //		this.jdbcDrivers.put("oracle", new JDBCDriverTypeVO("oracle", "Oracle", "", "", "", ""));
 //		this.jdbcDrivers.put("db2", new JDBCDriverTypeVO("db2", "DB2", "", "", "", ""));
 //		this.jdbcDrivers.put("informix", new JDBCDriverTypeVO("informix", "Informix", "", "", "", ""));
@@ -199,8 +202,10 @@ public class SendJDBCDatabaseConnection extends PanelAbstract {
 
 		this.comboBoxModelProfiles.removeAllElements();
 
-		for (StoredAbstractVO storedAbstractVO : data) {
-			this.comboBoxModelProfiles.addElement(storedAbstractVO.getName());
+		if(data != null) {
+			for (StoredAbstractVO storedAbstractVO : data) {
+				this.comboBoxModelProfiles.addElement(storedAbstractVO.getName());
+			}
 		}
 	}
 }

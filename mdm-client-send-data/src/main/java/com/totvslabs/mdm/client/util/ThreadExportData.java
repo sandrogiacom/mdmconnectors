@@ -7,7 +7,6 @@ import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
@@ -253,9 +252,8 @@ public class ThreadExportData implements Runnable {
 				totalDataSend += loteInitial.size();
 			}
 			else {
-				List<String> tempMD5Hash = new ArrayList<String>();
-
 				long initialTimeMD5 = System.currentTimeMillis();
+
 				for(int i=0; i<loteInitial.size(); i++) {
 					JsonElement jsonElement = loteInitial.get(i);
 
@@ -266,29 +264,32 @@ public class ThreadExportData implements Runnable {
 						byte[] digest = m.digest();
 						BigInteger bigInt = new BigInteger(1,digest);
 						String hashtext = bigInt.toString(16);
-						tempMD5Hash.add(hashtext);
 
-						StoredRecordHashVO vo = new StoredRecordHashVO(fluigDataProfileVO.getName(), tableVO.getName(), hashtext);
-						StoredAbstractVO hash = PersistenceEngine.getInstance().getByName(vo.getName(), StoredRecordHashVO.class);
-
-						if(hash != null) {
-							continue;
+						if(panelJDBCEntities.getIgnoreLocalCache()) {
+							lote.add(jsonElement);
 						}
 						else {
-							lote.add(jsonElement);
-							PersistenceEngine.getInstance().save(vo, Boolean.FALSE);
+							StoredRecordHashVO vo = new StoredRecordHashVO(fluigDataProfileVO.getName(), jdbcConnectionVO.getName(), tableVO.getName(), hashtext);
+							StoredAbstractVO hash = PersistenceEngine.getInstance().getByName(vo.getName(), StoredRecordHashVO.class);
+	
+							if(hash != null) {
+								continue;
+							}
+							else {
+								lote.add(jsonElement);
+								PersistenceEngine.getInstance().save(vo);
+							}
 						}
 					} catch (NoSuchAlgorithmException e) {
 					}
 				}
 
-				PersistenceEngine.getInstance().persist();
 				System.out.println("Took '" + (System.currentTimeMillis() - initialTimeMD5) + "' for hash operatins..");
 
 				if(lote.size() > 0) {
 					CommandPostStaging staging = null;
 
-					if(panelJDBCEntities == null || panelJDBCEntities.getCheckBoxCompress().isSelected()) {
+					if(panelJDBCEntities == null || panelJDBCEntities.getCheckBoxCompress()) {
 						staging = new CommandPostStagingC(tenantId, datasourceId, (panelJDBCEntities != null ? panelJDBCEntities.getTextTemplateName().getText() : tableVO.getName()), lote);
 					}
 					else {

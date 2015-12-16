@@ -18,8 +18,15 @@
             </includes>
         </fileSet>
         <fileSet>
+            <directory>${basedir}/src/main/resources/conf</directory>
+            <outputDirectory>/conf</outputDirectory>
+            <includes>
+                <include>*.*</include>
+            </includes>
+        </fileSet>
+        <fileSet>
             <directory>${basedir}/src/main/resources/data</directory>
-            <outputDirectory>/</outputDirectory>
+            <outputDirectory>/data</outputDirectory>
             <includes>
                 <include>*.*</include>
             </includes>

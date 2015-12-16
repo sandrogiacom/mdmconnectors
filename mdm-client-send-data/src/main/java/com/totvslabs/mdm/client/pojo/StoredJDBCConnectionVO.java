@@ -9,6 +9,9 @@ public class StoredJDBCConnectionVO extends StoredAbstractVO {
 	private String password;
 
 	@Override
+	public void cleanFields() {
+	}
+	@Override
 	public Boolean validate() {
 		return Boolean.TRUE;
 	}
@@ -17,6 +20,7 @@ public class StoredJDBCConnectionVO extends StoredAbstractVO {
 	}
 	public void setProfileName(String profileName) {
 		this.profileName = profileName;
+		this.name = profileName;
 	}
 	public String getDriver() {
 		return driver;
@@ -42,8 +46,13 @@ public class StoredJDBCConnectionVO extends StoredAbstractVO {
 	public void setPassword(String password) {
 		this.password = password;
 	}
+	@Override 
+	public void setName(String name) {
+		this.profileName = name;
+		this.name = this.generateHash();
+	}
 	@Override
-	public String getName() {
+	public String generateHash() {
 		return profileName;
 	}
 }

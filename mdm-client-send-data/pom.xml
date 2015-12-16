@@ -5,7 +5,7 @@
     <groupId>com.totvslabs.mdm</groupId>
 	<artifactId>mdm-client-sendData</artifactId>
 	<name>MDM - Client Send Data</name>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
 	<dependencies>
@@ -33,7 +33,12 @@
 		<dependency>
 			<groupId>com.totvslabs.mdm</groupId>
 			<artifactId>mdm-rest-client</artifactId>
-			<version>1.0.1-SNAPSHOT</version>
+			<version>1.0.3-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>db4o</groupId>
+			<artifactId>db4o-java5</artifactId>
+			<version>6.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.poi</groupId>
@@ -53,12 +58,6 @@
 	</dependencies>
 
 	<build>
-		<resources>
-			<resource>
-				<directory>src/resources</directory>
-				<filtering>false</filtering>
-			</resource>
-		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

@@ -173,7 +173,7 @@ public class StoredConfigurationPanel extends JPanel implements StoredConfigurat
 				case 3:
 					return record.getSourceName();
 				case 4:
-					return df.format(record.getLastExecution());
+					return record.getLastExecution() != null ? df.format(record.getLastExecution()) : null;
 				case 5:
 					return record.getQuantity();
 			}
