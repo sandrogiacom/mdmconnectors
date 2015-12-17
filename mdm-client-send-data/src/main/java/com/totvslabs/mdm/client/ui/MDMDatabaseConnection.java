@@ -229,8 +229,10 @@ public class MDMDatabaseConnection extends PanelAbstract implements ActionListen
 
 		this.comboBoxModelProfiles.removeAllElements();
 
-		for (StoredAbstractVO storedAbstractVO : data) {
-			this.comboBoxModelProfiles.addElement(storedAbstractVO.getName());
+		if(data != null) {
+			for (StoredAbstractVO storedAbstractVO : data) {
+				this.comboBoxModelProfiles.addElement(storedAbstractVO.getName());
+			}
 		}
 	}
 }
