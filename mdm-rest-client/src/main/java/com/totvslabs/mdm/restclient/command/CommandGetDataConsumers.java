@@ -5,7 +5,8 @@ import java.util.Map;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.DataConsumerVO;
 
-public class CommandGetDataConsumers implements ICommand, AuthenticationRequired {
+@AuthenticationRequired
+public class CommandGetDataConsumers implements ICommand {
 	private String dataConsumerID;
 
 	public CommandGetDataConsumers(String dataConsumerID) {

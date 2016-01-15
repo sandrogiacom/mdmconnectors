@@ -6,7 +6,8 @@ import java.util.Map;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.EnvelopeVO;
 
-public class CommandListDatasource implements ICommand, AuthenticationRequired {
+@AuthenticationRequired
+public class CommandListDatasource implements ICommand {
 	private String tenantId;
 
 	public CommandListDatasource(String domain) {

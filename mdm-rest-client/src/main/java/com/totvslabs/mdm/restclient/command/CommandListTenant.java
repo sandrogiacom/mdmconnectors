@@ -5,7 +5,8 @@ import java.util.Map;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.TenantVO;
 
-public class CommandListTenant implements ICommand, AuthenticationRequired {
+@AuthenticationRequired
+public class CommandListTenant implements ICommand {
 
 	@Override
 	public void processReturn() {

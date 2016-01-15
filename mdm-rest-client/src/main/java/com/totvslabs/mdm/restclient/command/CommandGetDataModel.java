@@ -5,7 +5,8 @@ import java.util.Map;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.DataModelVO;
 
-public class CommandGetDataModel implements ICommand, AuthenticationRequired {
+@AuthenticationRequired
+public class CommandGetDataModel implements ICommand {
 	private String dataModelID;
 
 	public CommandGetDataModel(String dataModelID) {

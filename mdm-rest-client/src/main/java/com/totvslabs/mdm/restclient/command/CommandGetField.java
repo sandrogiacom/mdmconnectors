@@ -5,7 +5,8 @@ import java.util.Map;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.FieldsVO;
 
-public class CommandGetField implements ICommand, AuthenticationRequired {
+@AuthenticationRequired
+public class CommandGetField implements ICommand {
 	private String fieldID;
 
 	public CommandGetField(String fieldID) {

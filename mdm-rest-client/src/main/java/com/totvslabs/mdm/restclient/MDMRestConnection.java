@@ -80,8 +80,9 @@ public class MDMRestConnection {
 				request = request.header(string, parametersHeader.get(string));
 			}
 		}
-
-		if(command instanceof AuthenticationRequired) {
+		AuthenticationRequired authenticationRequired = command.getClass().getAnnotation(AuthenticationRequired.class);
+		if(authenticationRequired != null) {
+		    log.info("Adding Authorization header...");
 			request = request.header("Authorization", MDMRestAuthentication.getInstance().getAuthVO().getAccess_token());
 		}
 

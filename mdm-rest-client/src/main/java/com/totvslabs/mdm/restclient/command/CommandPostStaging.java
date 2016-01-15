@@ -6,7 +6,8 @@ import java.util.Map;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.DatasourceVO;
 
-public class CommandPostStaging implements ICommand, AuthenticationRequired {
+@AuthenticationRequired
+public class CommandPostStaging implements ICommand {
 	private String tenantId;
 	private String datasourceId;
 	private String type;

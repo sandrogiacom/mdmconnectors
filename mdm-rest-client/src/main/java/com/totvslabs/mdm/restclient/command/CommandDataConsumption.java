@@ -1,13 +1,14 @@
 package com.totvslabs.mdm.restclient.command;
 
-import java.util.Map;
-
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.DataConsumptionVO;
 
+import java.util.Map;
+
 //https://totvslabs.fluigdata.com:8443/mdm/api/v1/dataConsumption/entities/0423ece09c7811e5ab44ca46fae0c14f/records?startCounter=-1&pageSize=10
 
-public class CommandDataConsumption implements ICommand, AuthenticationRequired {
+@AuthenticationRequired
+public class CommandDataConsumption implements ICommand {
 	private String entityType;
 	private Integer pageSize;
 	private Integer counter;
