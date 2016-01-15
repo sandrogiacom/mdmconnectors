@@ -5,14 +5,24 @@ import com.totvslabs.mdm.restclient.vo.DataConsumptionVO;
 
 import java.util.Map;
 
-//https://totvslabs.fluigdata.com:8443/mdm/api/v1/dataConsumption/entities/0423ece09c7811e5ab44ca46fae0c14f/records?startCounter=-1&pageSize=10
-
-@AuthenticationRequired
-public class CommandDataConsumption implements ICommand {
+/**
+ * Command to consume data from golden records.
+ * Sample request: /api/v1/dataConsumption/entities/0423ece09c7811e5ab44ca46fae0c14f/records?startCounter=-1&pageSize=10
+ * 
+ * @author TOTVS Labs
+ *
+ */
+public class CommandDataConsumption extends AuthenticatedCommand {
 	private String entityType;
 	private Integer pageSize;
 	private Integer counter;
 
+	/**
+	 * Creation of the command 
+	 * @param entityType
+	 * @param counter
+	 * @param pageSize
+	 */
 	public CommandDataConsumption(String entityType, Integer counter, Integer pageSize) {
 		this.entityType = entityType;
 		this.counter = counter;
@@ -26,6 +36,7 @@ public class CommandDataConsumption implements ICommand {
 
 	@Override
 	public void processReturn() {
+		//nothing to do
 	}
 
 	@Override
@@ -33,9 +44,8 @@ public class CommandDataConsumption implements ICommand {
 		return "api/v1/dataConsumption/entities/" + this.entityType + "/records?startCounter=" + this.counter + "&pageSize=" + this.pageSize;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public Class getResponseType() {
+	public Class<DataConsumptionVO> getResponseType() {
 		return DataConsumptionVO.class;
 	}
 

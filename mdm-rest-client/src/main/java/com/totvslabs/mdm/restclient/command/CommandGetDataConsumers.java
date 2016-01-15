@@ -5,12 +5,20 @@ import java.util.Map;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.DataConsumerVO;
 
-@AuthenticationRequired
-public class CommandGetDataConsumers implements ICommand {
-	private String dataConsumerID;
+/**
+ * Command to get existent Data Consumers
+ * @author TOTVS Labs
+ *
+ */
+public class CommandGetDataConsumers extends AuthenticatedCommand {
+	private String dataConsumerId;
 
-	public CommandGetDataConsumers(String dataConsumerID) {
-		this.dataConsumerID = dataConsumerID;
+	/**
+	 * Create command based on the consumer id
+	 * @param dataConsumerId
+	 */
+	public CommandGetDataConsumers(String dataConsumerId) {
+		this.dataConsumerId = dataConsumerId;
 	}
 
 	@Override
@@ -20,16 +28,16 @@ public class CommandGetDataConsumers implements ICommand {
 
 	@Override
 	public void processReturn() {
+		//nothing to do
 	}
 
 	@Override
 	public String getCommandURL() {
-		return "api/v1/dataConsumers/" + dataConsumerID;
+		return "api/v1/dataConsumers/" + dataConsumerId;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public Class getResponseType() {
+	public Class<DataConsumerVO> getResponseType() {
 		return DataConsumerVO.class;
 	}
 

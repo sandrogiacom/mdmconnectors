@@ -6,9 +6,18 @@ import java.util.Map;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.RefreshTokenVO;
 
+/**
+ * Command to refresh an access token
+ * @author TOTVS Labs
+ *
+ */
 public class CommandRefreshToken implements ICommand {
 	private String refreshToken;
 
+	/**
+	 * Create command based on the given refreshToken
+	 * @param refreshToken
+	 */
 	public CommandRefreshToken(String refreshToken) {
 		this.refreshToken = refreshToken;
 	}
@@ -20,6 +29,7 @@ public class CommandRefreshToken implements ICommand {
 
 	@Override
 	public void processReturn() {
+		//nothing to do
 	}
 
 	@Override
@@ -27,9 +37,8 @@ public class CommandRefreshToken implements ICommand {
 		return "api/v1/oauth2/token";
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public Class getResponseType() {
+	public Class<RefreshTokenVO> getResponseType() {
 		return RefreshTokenVO.class;
 	}
 
@@ -50,7 +59,7 @@ public class CommandRefreshToken implements ICommand {
 
 	@Override
 	public Map<String, String> getFormData() {
-		Map<String, String> parameters = new HashMap<String, String>();
+		Map<String, String> parameters = new HashMap<>();
 
 		parameters.put("refresh_token", this.refreshToken);
 

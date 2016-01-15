@@ -9,6 +9,7 @@ import org.junit.Test;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.totvslabs.mdm.restclient.command.AuthenticatedCommand;
 import com.totvslabs.mdm.restclient.command.CommandListDatasource;
 import com.totvslabs.mdm.restclient.command.CommandPostSchema;
 import com.totvslabs.mdm.restclient.command.CommandPostStaging;
@@ -30,6 +31,8 @@ public class StagingExecutorTest {
 
 	private MDMRestConnection connection;
 
+	private MDMRestAuthentication authentication;
+	
 	@Before
 	public void setUp() {
 		String password = System.getProperty("mdm.password");
@@ -38,11 +41,14 @@ public class StagingExecutorTest {
 		}
 
 		log.info("Configuring authentication properties...");
-		MDMRestAuthentication.getInstance(MDMTestingConstants.MDM_URL, 
+		authentication = MDMRestAuthentication.getInstance(MDMTestingConstants.MDM_URL, 
 				MDMTestingConstants.SUBDOMAIN,
 				MDMTestingConstants.DATASOURCE_ID, 
 				MDMTestingConstants.USERNAME, 
-				System.getProperty("mdm.password"));
+				System.getProperty("mdm.password"),
+				true);
+
+		
 
 		log.info("Connecting to RESTful Services...");
 
@@ -54,7 +60,9 @@ public class StagingExecutorTest {
 	public void execute() {
 
 		log.info("Listing Domain DataSources...");
-		ICommand tenantCommand = new CommandListDatasource(MDMTestingConstants.SUBDOMAIN);
+		AuthenticatedCommand tenantCommand = new CommandListDatasource(MDMTestingConstants.SUBDOMAIN);
+		tenantCommand.setAuthentication(authentication);
+		
 		EnvelopeVO envelope = connection.executeCommand(tenantCommand);
 
 		assertNotNull("Hits result should not be null", envelope.getHits());
@@ -94,9 +102,11 @@ public class StagingExecutorTest {
 			
 			schema.add("_mdmStagingMapping", mapping);
 			
-			CommandPostSchema schemaCommand = new CommandPostSchema(MDMRestAuthentication.getInstance().getAuthVO()
+			AuthenticatedCommand schemaCommand = new CommandPostSchema(MDMRestAuthentication.getInstance().getAuthVO()
 					.get_mdmTenantId(), MDMTestingConstants.DATASOURCE_ID, type,
 					schema);
+			schemaCommand.setAuthentication(authentication);
+
 			EnvelopeVO schemaCommandResponse = connection.executeCommand(schemaCommand);
 
 			log.info("Schema Command Response: " + schemaCommandResponse);
@@ -111,9 +121,11 @@ public class StagingExecutorTest {
 			testObject.addProperty("name", "Bruno-Java Client");
 			stagingArray.add(testObject);
 
-			CommandPostStaging stagingCommand = new CommandPostStaging(MDMRestAuthentication.getInstance().getAuthVO()
+			AuthenticatedCommand stagingCommand = new CommandPostStaging(MDMRestAuthentication.getInstance().getAuthVO()
 					.get_mdmTenantId(), MDMTestingConstants.DATASOURCE_ID, type,
 					stagingArray);
+			stagingCommand.setAuthentication(authentication);
+
 			EnvelopeVO stagingCommandResponse = connection.executeCommand(stagingCommand);
 
 			log.info("Staging Command Response: " + stagingCommandResponse);

@@ -5,12 +5,20 @@ import java.util.Map;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.FieldsVO;
 
-@AuthenticationRequired
-public class CommandGetField implements ICommand {
-	private String fieldID;
+/**
+ * Command to get specific field
+ * @author TOTVS Labs
+ *
+ */
+public class CommandGetField extends AuthenticatedCommand {
+	private String fieldId;
 
-	public CommandGetField(String fieldID) {
-		this.fieldID = fieldID;
+	/**
+	 * Create command based on the field id
+	 * @param fieldId
+	 */
+	public CommandGetField(String fieldId) {
+		this.fieldId = fieldId;
 	}
 
 	@Override
@@ -20,16 +28,16 @@ public class CommandGetField implements ICommand {
 
 	@Override
 	public void processReturn() {
+		//nothing to do
 	}
 
 	@Override
 	public String getCommandURL() {
-		return "api/v1/fields/" + fieldID;
+		return "api/v1/fields/" + fieldId;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public Class getResponseType() {
+	public Class<FieldsVO> getResponseType() {
 		return FieldsVO.class;
 	}
 

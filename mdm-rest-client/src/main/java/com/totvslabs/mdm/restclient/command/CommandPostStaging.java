@@ -6,13 +6,24 @@ import java.util.Map;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.DatasourceVO;
 
-@AuthenticationRequired
-public class CommandPostStaging implements ICommand {
+/**
+ * Command to store staging data
+ * @author TOTVS Labs
+ *
+ */
+public class CommandPostStaging extends AuthenticatedCommand {
 	private String tenantId;
 	private String datasourceId;
 	private String type;
 	private Object data;
 
+	/**
+	 * Create command based on given information
+	 * @param tenantId
+	 * @param datasourceId
+	 * @param type
+	 * @param data
+	 */
 	public CommandPostStaging(String tenantId, String datasourceId, String type, Object data) {
 		this.tenantId = tenantId;
 		this.datasourceId = datasourceId;
@@ -22,7 +33,7 @@ public class CommandPostStaging implements ICommand {
 
 	@Override
 	public Map<String, String> getParametersHeader() {
-		Map<String, String> parameters = new HashMap<String, String>();
+		Map<String, String> parameters = new HashMap<>();
 
 		parameters.put("tenant", this.tenantId);
 		parameters.put("datasource", datasourceId);
@@ -32,6 +43,7 @@ public class CommandPostStaging implements ICommand {
 
 	@Override
 	public void processReturn() {
+		//nothing to do
 	}
 
 	@Override
@@ -39,9 +51,8 @@ public class CommandPostStaging implements ICommand {
 		return "api/v1/staging/entities/types/" + type + "";
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public Class getResponseType() {
+	public Class<DatasourceVO> getResponseType() {
 		return DatasourceVO.class;
 	}
 

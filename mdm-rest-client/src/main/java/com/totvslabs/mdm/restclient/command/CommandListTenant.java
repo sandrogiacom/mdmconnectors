@@ -5,11 +5,22 @@ import java.util.Map;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.TenantVO;
 
-@AuthenticationRequired
-public class CommandListTenant implements ICommand {
+/**
+ * Command to list tenants
+ * @author TOTVS Labs
+ *
+ */
+public class CommandListTenant extends AuthenticatedCommand {
 
+	/**
+	 * Default constructor, no information needed
+	 */
+	public CommandListTenant() {
+	}
+	
 	@Override
 	public void processReturn() {
+		//nothing to do
 	}
 
 	@Override
@@ -17,9 +28,8 @@ public class CommandListTenant implements ICommand {
 		return "api/v1/admin/tenants?offset=0&pageSize=10&sortBy=_mdmId&sortOrder=ASC";
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public Class getResponseType() {
+	public Class<TenantVO> getResponseType() {
 		return TenantVO.class;
 	}
 

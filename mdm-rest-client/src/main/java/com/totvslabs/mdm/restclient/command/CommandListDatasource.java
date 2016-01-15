@@ -6,17 +6,25 @@ import java.util.Map;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.EnvelopeVO;
 
-@AuthenticationRequired
-public class CommandListDatasource implements ICommand {
+/**
+ * Command to list all the datasources
+ * @author TOTVS Labs
+ *
+ */
+public class CommandListDatasource extends AuthenticatedCommand {
 	private String tenantId;
 
-	public CommandListDatasource(String domain) {
-		this.tenantId = domain;
+	/**
+	 * Create command based on the tenantId
+	 * @param tenantId
+	 */
+	public CommandListDatasource(String tenantId) {
+		this.tenantId = tenantId;
 	}
 
 	@Override
 	public Map<String, String> getParametersHeader() {
-		Map<String, String> parameters = new HashMap<String, String>();
+		Map<String, String> parameters = new HashMap<>();
 
 		parameters.put("tenant", this.tenantId);
 
@@ -25,6 +33,7 @@ public class CommandListDatasource implements ICommand {
 
 	@Override
 	public void processReturn() {
+		//nothing to do
 	}
 
 	@Override
@@ -32,9 +41,8 @@ public class CommandListDatasource implements ICommand {
 		return "api/v1/dataSources?offset=0&pageSize=10&sortBy=_mdmId&sortOrder=ASC";
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public Class getResponseType() {
+	public Class<EnvelopeVO> getResponseType() {
 		return EnvelopeVO.class;
 	}
 
