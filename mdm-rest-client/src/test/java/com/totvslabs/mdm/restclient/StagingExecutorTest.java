@@ -103,7 +103,7 @@ public class StagingExecutorTest {
 			schema.add("_mdmStagingMapping", mapping);
 			
 			AuthenticatedCommand schemaCommand = new CommandPostSchema(MDMRestAuthentication.getInstance().getAuthVO()
-					.get_mdmTenantId(), MDMTestingConstants.DATASOURCE_ID, type,
+					.getMdmTenantId(), MDMTestingConstants.DATASOURCE_ID, type,
 					schema);
 			schemaCommand.setAuthentication(authentication);
 
@@ -122,7 +122,7 @@ public class StagingExecutorTest {
 			stagingArray.add(testObject);
 
 			AuthenticatedCommand stagingCommand = new CommandPostStaging(MDMRestAuthentication.getInstance().getAuthVO()
-					.get_mdmTenantId(), MDMTestingConstants.DATASOURCE_ID, type,
+					.getMdmTenantId(), MDMTestingConstants.DATASOURCE_ID, type,
 					stagingArray);
 			stagingCommand.setAuthentication(authentication);
 
