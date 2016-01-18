@@ -114,7 +114,7 @@ public class MDMRestConnection {
 				Map<String, String> formDataCommand = command.getFormData();
 				MultivaluedMap<String, String> formData = new MultivaluedHashMap<>();
 
-				if(formDataCommand != null && formDataCommand.size() > 0) {
+				if (formDataCommand != null && !formDataCommand.isEmpty()) {
 					Set<String> keySet = formDataCommand.keySet();
 
 					for (String key : keySet) {
@@ -132,7 +132,7 @@ public class MDMRestConnection {
 				request = request.accept(type);
 				
 				Entity<?> body;
-				if (formData.size() > 0) {
+				if (!formData.isEmpty()) {
 					body = Entity.form(formData);
 				} else {
 					body = Entity.entity(string, type);

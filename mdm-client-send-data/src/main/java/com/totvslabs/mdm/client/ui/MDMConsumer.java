@@ -775,7 +775,7 @@ public class MDMConsumer extends PanelAbstract implements MDMConnectionChangedLi
 
 		@Override
 		public Object getValueAt(int rowIndex, int columnIndex) {
-			if(this.data == null || this.data.size() == 0) {
+			if(this.data == null || this.data.isEmpty()) {
 				return null;
 			}
 
@@ -859,7 +859,7 @@ public class MDMConsumer extends PanelAbstract implements MDMConnectionChangedLi
 
 		@Override
 		public Object getValueAt(int rowIndex, int columnIndex) {
-			if(this.data == null || this.data.size() == 0) {
+			if(this.data == null || this.data.isEmpty()) {
 				return null;
 			}
 
@@ -951,7 +951,7 @@ public class MDMConsumer extends PanelAbstract implements MDMConnectionChangedLi
 
 		@Override
 		public Object getValueAt(int rowIndex, int columnIndex) {
-			if(this.data == null || this.data.size() == 0) {
+			if(this.data == null || this.data.isEmpty()) {
 				return null;
 			}
 
@@ -1012,7 +1012,7 @@ public class MDMConsumer extends PanelAbstract implements MDMConnectionChangedLi
 
 		List<GenericVO> hits = executeCommand.getHits();
 
-		if(hits != null && hits.size() > 0) {
+		if (hits != null && !hits.isEmpty()) {
 			if(hits.get(0) instanceof DataConsumerVO) {
 				List<String> entities = ((DataConsumerVO) hits.get(0)).getMdmEntitiesConsumed();
 

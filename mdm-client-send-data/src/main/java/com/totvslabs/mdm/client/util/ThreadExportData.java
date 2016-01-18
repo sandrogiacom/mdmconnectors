@@ -286,7 +286,7 @@ public class ThreadExportData implements Runnable {
 
 				System.out.println("Took '" + (System.currentTimeMillis() - initialTimeMD5) + "' for hash operatins..");
 
-				if(lote.size() > 0) {
+				if (lote.size() > 0) {
 					CommandPostStaging staging = null;
 
 					if(panelJDBCEntities == null || panelJDBCEntities.getCheckBoxCompress()) {

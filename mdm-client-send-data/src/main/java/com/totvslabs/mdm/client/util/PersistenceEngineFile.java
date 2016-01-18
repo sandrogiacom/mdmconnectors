@@ -133,7 +133,7 @@ public class PersistenceEngineFile {
 		if(instance instanceof StoredFluigDataProfileVO) {
 			List<StoredConfigurationVO> list = this.storedConfigurationVOByFluigInstance.get(((StoredFluigDataProfileVO) instance).getProfileName());
 
-			if(list != null && list.size() > 0) {
+			if (list != null && !list.isEmpty()) {
 				for (StoredConfigurationVO storedConfigurationVO : list) {
 					this.delete(storedConfigurationVO);
 				}
@@ -142,7 +142,7 @@ public class PersistenceEngineFile {
 		else if(instance instanceof StoredJDBCConnectionVO) {
 			List<StoredConfigurationVO> list = this.storedConfigurationVOByDatasource.get(((StoredJDBCConnectionVO) instance).getProfileName());
 
-			if(list != null && list.size() > 0) {
+			if (list != null && !list.isEmpty()) {
 				for (StoredConfigurationVO storedConfigurationVO : list) {
 					this.delete(storedConfigurationVO);
 				}
