@@ -45,5 +45,18 @@ public class GoldenRecordVO {
 	}
 	public void setMdmElasticsearchMappingType(String _mdmElasticsearchMappingType) {
 		this._mdmElasticsearchMappingType = _mdmElasticsearchMappingType;
+	}
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return String
+				.format("GoldenRecordVO [_mdmEntityTemplateId=%s, _mdmGoldenFieldAndValues=%s, _mdmCounterForEntity=%s, _mdmProfileTitle=%s, _mdmId=%s, _mdmElasticsearchMappingType=%s]",
+						_mdmEntityTemplateId, _mdmGoldenFieldAndValues,
+						_mdmCounterForEntity, _mdmProfileTitle, _mdmId,
+						_mdmElasticsearchMappingType);
 	}    
+	
+	
 }

@@ -173,7 +173,7 @@ public class MDMRestConnection {
 		} else {
 			envelopeVO = new EnvelopeVO();
 
-			List<GenericVO> genericVO = new ArrayList<GenericVO>();
+			List<GenericVO> genericVO = new ArrayList<>();
 			genericVO.add((GenericVO) resultVO);
 			envelopeVO.setHits(genericVO);
 		}
