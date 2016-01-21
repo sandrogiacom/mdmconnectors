@@ -14,8 +14,8 @@ import java.util.Map;
  */
 public class CommandDataConsumption extends AuthenticatedCommand {
 	private String entityType;
-	private Integer pageSize;
-	private Integer counter;
+	private int pageSize;
+	private int counter;
 
 	/**
 	 * Creation of the command 
@@ -23,7 +23,7 @@ public class CommandDataConsumption extends AuthenticatedCommand {
 	 * @param counter
 	 * @param pageSize
 	 */
-	public CommandDataConsumption(String entityType, Integer counter, Integer pageSize) {
+	public CommandDataConsumption(String entityType, int counter, int pageSize) {
 		this.entityType = entityType;
 		this.counter = counter;
 		this.pageSize = pageSize;
