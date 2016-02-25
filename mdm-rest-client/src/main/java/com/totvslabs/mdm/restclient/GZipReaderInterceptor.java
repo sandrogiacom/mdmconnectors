@@ -25,7 +25,7 @@ public class GZipReaderInterceptor implements ReaderInterceptor {
     @Override
     public Object aroundReadFrom(ReaderInterceptorContext context)
             throws IOException, WebApplicationException {
-        String encoding = context.getHeaders().getFirst(HttpHeaders.ACCEPT_ENCODING);
+        String encoding = context.getHeaders().getFirst(HttpHeaders.CONTENT_ENCODING);
         if (encoding != null && encoding.equalsIgnoreCase("gzip")) {
             final InputStream originalInputStream = context.getInputStream();
             context.setInputStream(new GZIPInputStream(originalInputStream));

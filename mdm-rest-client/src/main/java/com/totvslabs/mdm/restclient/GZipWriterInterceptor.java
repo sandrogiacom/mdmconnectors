@@ -15,7 +15,7 @@ public class GZipWriterInterceptor implements WriterInterceptor {
 
     @Override
     public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException {
-        String encoding = (String) context.getHeaders().getFirst(HttpHeaders.ACCEPT_ENCODING);
+        String encoding = (String) context.getHeaders().getFirst(HttpHeaders.CONTENT_ENCODING);
         if (encoding != null && encoding.equalsIgnoreCase("gzip")) {
             final OutputStream outputStream = context.getOutputStream();
             context.setOutputStream(new GZIPOutputStream(outputStream));
