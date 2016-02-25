@@ -4,11 +4,14 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -95,19 +98,44 @@ public class ThreadExportData implements Runnable {
 		List<MDMData> mdmData = panelSendFileFluigData.getData();
 		MDMRestConnection connection = MDMRestConnectionFactory.getConnection(mdmServerURL);
 
-		JsonObject completeSchema = new JsonObject();
-		JsonObject schema = new JsonObject();
-		JsonObject schemaCross = new JsonObject();
-		JsonObject schemas = new JsonObject();
-		JsonObject schemasCross = new JsonObject();
-		schema.add("properties", schemas);
-		schemaCross.add("_mdmCrossreference", schemasCross);
-		completeSchema.add("_mdmStagingMapping", schema);
-		completeSchema.add("_mdmCrosswalkTemplate", schemaCross);
-
 		for (int i = 0; i < mdmData.size(); i++) {
 			MDMData data = mdmData.get(i);
+
+			Long totalTimeSchema = System.currentTimeMillis();
+			JsonObject completeSchema = new JsonObject();
+			JsonObject schema = new JsonObject();
+			JsonObject schemaCross = new JsonObject();
+			JsonObject schemas = new JsonObject();
+			JsonObject schemasCross = new JsonObject();
+			schema.add("properties", schemas);
+			schemaCross.add("_mdmCrossreference", schemasCross);
+			completeSchema.add("_mdmStagingMapping", schema);
+			completeSchema.add("_mdmCrosswalkTemplate", schemaCross);
+
+			Set<Entry<String, JsonElement>> entrySet = data.getData().get(0).getAsJsonObject().entrySet();
+
+			for (Entry<String, JsonElement> entry : entrySet) {
+				JsonObject fieldDetail = new JsonObject();
+				fieldDetail.addProperty("type", "string");
+
+				schemas.add(entry.getKey(), fieldDetail);
+			}
+
+			CommandPostSchema schemaCommand = new CommandPostSchema(tenantId, datasourceId, data.getTemplateName(), completeSchema.toString());
+
+			try {
+				connection.executeCommand(schemaCommand);
+				LogManagerDispatcher.getInstance().register("Sent the schema for the type '" + (data.getTemplateName()) + "' in " + (totalTimeSchema - System.currentTimeMillis()) + "ms.");
+			}
+			catch(Exception e) {
+				System.err.println("Error sending schema: " + e.getMessage());
+				e.printStackTrace();
+			}
+
+			LogManagerDispatcher.getInstance().register("I am going to send " + data.getData().size() + " records...");
+
 			CommandPostStaging staging = null;
+
 
 			if(panelSendFileFluigData.getCheckBoxCompress().isSelected()) {
 				staging = new CommandPostStagingC(tenantId, datasourceId, data.getTemplateName().replaceAll(" ", ""), data.getData());
@@ -210,6 +238,9 @@ public class ThreadExportData implements Runnable {
 			else if(type.equals(Long.class.getCanonicalName())) {
 				type = "integer";
 			}
+			else if(type.equals(Timestamp.class.getCanonicalName())) {
+				type = "string";
+			}
 
 			fieldDetail.addProperty("type", type);
 
@@ -283,8 +314,6 @@ public class ThreadExportData implements Runnable {
 					} catch (NoSuchAlgorithmException e) {
 					}
 				}
-
-				System.out.println("Took '" + (System.currentTimeMillis() - initialTimeMD5) + "' for hash operatins..");
 
 				if(lote.size() > 0) {
 					CommandPostStaging staging = null;

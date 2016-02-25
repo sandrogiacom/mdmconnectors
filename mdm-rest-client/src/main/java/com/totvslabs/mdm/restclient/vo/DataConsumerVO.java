@@ -6,7 +6,7 @@ import java.util.Map;
 
 public class DataConsumerVO extends GenericVO {
 	private String _mdmName;
-	private String _mdmDescription;
+	private Map<String, String> _mdmDescription;
 	private List<String> _mdmEntitiesConsumed = new ArrayList<String>();
 	private Map<String, DataConsumerDetailsVO> _mdmEntityDetails;
 	private String _mdmElasticsearchMappingType;
@@ -17,10 +17,10 @@ public class DataConsumerVO extends GenericVO {
 	public void set_mdmName(String _mdmName) {
 		this._mdmName = _mdmName;
 	}
-	public String get_mdmDescription() {
+	public Map<String, String> get_mdmDescription() {
 		return _mdmDescription;
 	}
-	public void set_mdmDescription(String _mdmDescription) {
+	public void set_mdmDescription(Map<String, String> _mdmDescription) {
 		this._mdmDescription = _mdmDescription;
 	}
 	public List<String> get_mdmEntitiesConsumed() {

@@ -101,6 +101,7 @@ public class MDMRestConnection {
 				String additionalInformation = "";
 
 				if(command instanceof CommandPostStagingC) {
+					request.header(HttpHeaders.CONTENT_ENCODING, "gzip");
 					request.header(HttpHeaders.ACCEPT_ENCODING, "gzip");
 					additionalInformation = " - COMPRESS";
 				}
@@ -134,9 +135,9 @@ public class MDMRestConnection {
 		}
 
 		if (response.getStatus() != Response.Status.OK.getStatusCode()) {
-			if(command.getData() != null) {
-				log.info("Data response:" + command.getData().toString());
-			}
+//			if(command.getData() != null) {
+//				log.info("Data response:" + command.getData().toString());
+//			}
 
 			String readEntity = response.readEntity(String.class);
 

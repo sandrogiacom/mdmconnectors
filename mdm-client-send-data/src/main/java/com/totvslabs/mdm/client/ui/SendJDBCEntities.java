@@ -93,7 +93,7 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 		this.checkBoxIgnoreLocalCache = new JCheckBox("Yes!", true);
 
 		this.labelBatchSize = new JLabel("Batch Size (records): ");
-		this.textBatchSize = new JTextField("500", 20);
+		this.textBatchSize = new JTextField("100", 20);
 
 		this.buttonGenerateJsonFile = new JButton("Export Entity as Json File");
 		this.buttonGenerateJsonFile.setEnabled(false);
@@ -121,7 +121,7 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 		this.add(this.scrollBarEntitiesMDM, 2, true, 7, 2);
 
 //		this.add(new JLabel());
-//		this.add(this.buttonGenerateJsonFile);
+		this.add(this.buttonGenerateJsonFile);
 
 		this.initColumnSizes(this.tableFieldsJDBC);
 
@@ -233,7 +233,7 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 
 			JDBCConnectionStabilizedEvent event = jdbcConnectionStabilizedEvent;
 
-			JDBCConnectionFactory.loadFisicModelFields(event.getJdbcConnectionVO().getUrl(), event.getJdbcConnectionVO().getUsername(), event.getJdbcConnectionVO().getPassword(), vo);
+			JDBCConnectionFactory.loadFisicModelFields(event.getJdbcConnectionVO().getUrl(), event.getJdbcConnectionVO().getDriver(), event.getJdbcConnectionVO().getUsername(), event.getJdbcConnectionVO().getPassword(), vo);
 			List<JDBCFieldVO> fields = vo.getFields();
 
 			tableModel.addRows(fields);
@@ -329,7 +329,7 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 		if(event.getTables() != null) {
 			this.comboTable.removeAllItems();
 			this.textTemplateName.setText("");
-			this.textBatchSize.setText("500");
+			this.textBatchSize.setText("100");
 			
 			this.jdbcConnectionStabilizedEvent = event;
 			
