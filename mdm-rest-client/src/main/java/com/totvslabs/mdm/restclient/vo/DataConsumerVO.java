@@ -17,18 +17,8 @@ public class DataConsumerVO extends GenericVO {
 	public void setMdmName(String _mdmName) {
 		this._mdmName = _mdmName;
 	}
-<<<<<<< HEAD
 	public Map<String, String> get_mdmDescription() {
 		return _mdmDescription;
-	}
-	public void set_mdmDescription(Map<String, String> _mdmDescription) {
-=======
-	public String getMdmDescription() {
-		return _mdmDescription;
-	}
-	public void setMdmDescription(String _mdmDescription) {
->>>>>>> 081eaeb1530e05af7226c9baa042101ceef2b578
-		this._mdmDescription = _mdmDescription;
 	}
 	public List<String> getMdmEntitiesConsumed() {
 		return _mdmEntitiesConsumed;

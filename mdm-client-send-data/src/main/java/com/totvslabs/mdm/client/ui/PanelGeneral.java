@@ -2,7 +2,6 @@ package com.totvslabs.mdm.client.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -247,6 +246,10 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, C
 	public void onJDBCTableSelectedEvent(JDBCTableSelectedEvent event) {
 		this.tableVO = event.getTableVO();
 		this.jdbcConnectionVO = event.getJdbcConnectionVO();
+
+		if(tableVO.getName().equalsIgnoreCase("emitenteval")) {
+			this.panelJDBCEntities.getTextTemplateName().setText("emitente");
+		}
 	}
 
 	@Override

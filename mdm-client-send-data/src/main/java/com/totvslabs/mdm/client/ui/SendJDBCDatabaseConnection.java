@@ -51,10 +51,11 @@ public class SendJDBCDatabaseConnection extends PanelAbstract {
 	private JButton buttonDeleteJDBCConnection;
 	private JButton buttonConnectDisconnect;
 
-	private Map<String, JDBCDriverTypeVO> jdbcDrivers = new HashMap<String, JDBCDriverTypeVO>();
+	public static Map<String, JDBCDriverTypeVO> jdbcDrivers = new HashMap<String, JDBCDriverTypeVO>();
 	
-	public static final String DB_PROGRESS = "progress";
-	public static final String DB_SQLSERVER = "sqlserver";
+	public static final String DB_PROGRESS = "com.ddtek.jdbc.openedge.OpenEdgeDriver";
+	public static final String DB_SQLSERVER = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+	public static final String DB_ORACLE = "oracle.jdbc.driver.OracleDriver";
 
 	public SendJDBCDatabaseConnection(){
 		super(2, 12, " JDBC Connection Parameters");
@@ -73,9 +74,9 @@ public class SendJDBCDatabaseConnection extends PanelAbstract {
 		this.buttonDeleteJDBCConnection = new JButton("Delete");
 		this.buttonConnectDisconnect = new JButton("Connect!");
 
-		this.jdbcDrivers.put(SendJDBCDatabaseConnection.DB_SQLSERVER, new JDBCDriverTypeVO("sqlserver", "SQL Server", "", "jdbc:sqlserver://192.168.56.101:1433;DatabaseName=ems2cad1211", "sa", "sa"));
-		this.jdbcDrivers.put(SendJDBCDatabaseConnection.DB_PROGRESS, new JDBCDriverTypeVO("progress", "Progress", "com.ddtek.jdbc.openedge.OpenEdgeDriver", "jdbc:datadirect:openedge://192.168.56.101:2121;databaseName=marelli;defaultSchema=pub", "sysprogress", "sysprogress"));
-//		this.jdbcDrivers.put("oracle", new JDBCDriverTypeVO("oracle", "Oracle", "", "", "", ""));
+		this.jdbcDrivers.put(SendJDBCDatabaseConnection.DB_SQLSERVER, new JDBCDriverTypeVO("com.microsoft.sqlserver.jdbc.SQLServerDriver", "SQL Server", "com.microsoft.sqlserver.jdbc.SQLServerDriver", "jdbc:sqlserver://192.168.56.101:1433;DatabaseName=ems2cad1211", "sa", "sa"));
+		this.jdbcDrivers.put(SendJDBCDatabaseConnection.DB_PROGRESS, new JDBCDriverTypeVO("com.ddtek.jdbc.openedge.OpenEdgeDriver", "Progress", "com.ddtek.jdbc.openedge.OpenEdgeDriver", "jdbc:datadirect:openedge://192.168.56.101:2121;databaseName=marelli;defaultSchema=pub", "sysprogress", "sysprogress"));
+		this.jdbcDrivers.put(SendJDBCDatabaseConnection.DB_ORACLE, new JDBCDriverTypeVO("oracle.jdbc.driver.OracleDriver", "Oracle", "oracle.jdbc.driver.OracleDriver", "jdbc:oracle:thin:@cordas:1521:cordas", "ems2cad1154", "ems2cad1154"));
 //		this.jdbcDrivers.put("db2", new JDBCDriverTypeVO("db2", "DB2", "", "", "", ""));
 //		this.jdbcDrivers.put("informix", new JDBCDriverTypeVO("informix", "Informix", "", "", "", ""));
 
@@ -136,7 +137,7 @@ public class SendJDBCDatabaseConnection extends PanelAbstract {
 				return;
 			}
 
-        	JDBCDatabaseVO database = JDBCConnectionFactory.loadFisicModelTables(textJDBCURL.getText(), textJDBCUserName.getText(), textJDBCPassword.getText());
+        	JDBCDatabaseVO database = JDBCConnectionFactory.loadFisicModelTables(textJDBCURL.getText(), ((JDBCDriverTypeVO) comboDriver.getSelectedItem()).getDriverClass(), textJDBCUserName.getText(), textJDBCPassword.getText());
 
         	if(database == null) {
         		JOptionPane.showMessageDialog(this.parent, "An error occurred while establishing the connection, verify the error message.", "Connection Error", JOptionPane.ERROR_MESSAGE);
@@ -171,7 +172,7 @@ public class SendJDBCDatabaseConnection extends PanelAbstract {
 	public StoredAbstractVO getAllData() {
 		StoredJDBCConnectionVO instance = new StoredJDBCConnectionVO();
 		instance.setProfileName((String) this.comboConnectionProfile.getSelectedItem());
-		instance.setDriver(this.comboDriver.getSelectedItem() != null ? ((JDBCDriverTypeVO) this.comboDriver.getSelectedItem()).getId() : null);
+		instance.setDriver(this.comboDriver.getSelectedItem() != null ? ((JDBCDriverTypeVO) this.comboDriver.getSelectedItem()).getDriverClass() : null);
 		instance.setUrl(this.textJDBCURL.getText());
 		instance.setUsername(this.textJDBCUserName.getText());
 		instance.setPassword(this.textJDBCPassword.getText());

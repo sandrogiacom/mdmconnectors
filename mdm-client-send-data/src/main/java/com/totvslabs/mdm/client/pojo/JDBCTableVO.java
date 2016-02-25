@@ -8,6 +8,7 @@ import java.util.Map;
 
 public class JDBCTableVO {
 	private String name;
+	private String databaseName;
 	private String internalName;
 	private List<JDBCFieldVO> fields = new ArrayList<JDBCFieldVO>();
 	private Map<String, JDBCFieldVO> fieldsMap = new HashMap<String, JDBCFieldVO>();
@@ -15,8 +16,13 @@ public class JDBCTableVO {
 	private Integer totalRecords;
 
 	public JDBCTableVO(String name) {
+		this(name, null);
+	}
+
+	public JDBCTableVO(String name, String databaseName) {
 		super();
 		this.name = name;
+		this.databaseName = databaseName;
 
 		if(name.contains("-")) {
 			internalName = "\"" + name + "\"";
@@ -26,6 +32,9 @@ public class JDBCTableVO {
 		}
 	}
 
+	public String getDatabaseName() {
+		return databaseName;
+	}
 	public String getInternalName() {
 		return internalName;
 	}

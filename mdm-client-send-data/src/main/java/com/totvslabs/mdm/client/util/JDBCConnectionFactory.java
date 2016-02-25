@@ -1,5 +1,12 @@
 package com.totvslabs.mdm.client.util;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.sql.Blob;
+import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -10,6 +17,8 @@ import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
 
@@ -23,13 +32,22 @@ import com.totvslabs.mdm.client.pojo.StoredJDBCConnectionVO;
 import com.totvslabs.mdm.client.ui.SendJDBCDatabaseConnection;
 
 public class JDBCConnectionFactory {
+	private static Logger log = Logger.getLogger(JDBCConnectionFactory.class.getCanonicalName());
 
-	private static Connection getJDBCConnection(String url, String user, String password) {
+	private static Connection getJDBCConnection(String url, String driver, String user, String password) {
 	    Connection connection = null;
 	    Properties connectionProps = new Properties();
 	    connectionProps.put("user", user);
 	    connectionProps.put("password", password);
 
+	    if(driver != null && driver.trim().length() > 0) {
+	    	try {
+	    		Class.forName(driver);
+	    	} catch (ClassNotFoundException e) {
+	    		e.printStackTrace();
+	    	}
+	    }
+	    
         try {
 			connection = DriverManager.getConnection(url, connectionProps);
 		} catch (SQLException e1) {
@@ -43,9 +61,12 @@ public class JDBCConnectionFactory {
 		StringBuffer sql = new StringBuffer();
 
 		sql.append("SELECT count(*) FROM ");
+		if(tableVO.getDatabaseName() != null && !jdbcConnectionVO.getDriver().equals(SendJDBCDatabaseConnection.DB_SQLSERVER)) {
+			sql.append(tableVO.getDatabaseName() + ".");
+		}
 		sql.append(tableVO.getInternalName());
 
-		Connection connection = JDBCConnectionFactory.getJDBCConnection(jdbcConnectionVO.getUrl(), jdbcConnectionVO.getUsername(), jdbcConnectionVO.getPassword());
+		Connection connection = JDBCConnectionFactory.getJDBCConnection(jdbcConnectionVO.getUrl(), jdbcConnectionVO.getDriver(), jdbcConnectionVO.getUsername(), jdbcConnectionVO.getPassword());
 		Integer totalRecords = 0;
 
 		try {
@@ -63,6 +84,7 @@ public class JDBCConnectionFactory {
 					rs.close();
 				}
 			} catch (SQLException e) {
+				System.err.println("query: " + sql.toString());
 				e.printStackTrace();
 			}
 			finally {
@@ -118,30 +140,53 @@ public class JDBCConnectionFactory {
 			sql.append("SELECT " + fields.toString() + " FROM ");
 		}
 		else {
-			sql.append("SELECT * FROM ");
+			if(jdbcConnectionVO.getDriver().equals(SendJDBCDatabaseConnection.DB_ORACLE)) {
+				sql.append("SELECT rownum as rnum, e.* FROM ");
+			}
+			else {
+				sql.append("SELECT * FROM ");
+			}
 		}
 
-		sql.append(tableVO.getInternalName());
+		if(tableVO.getDatabaseName() != null && !jdbcConnectionVO.getDriver().equals(SendJDBCDatabaseConnection.DB_SQLSERVER)) {
+			sql.append(tableVO.getDatabaseName() + ".");
+		}
 
-		Connection connection = JDBCConnectionFactory.getJDBCConnection(jdbcConnectionVO.getUrl(), jdbcConnectionVO.getUsername(), jdbcConnectionVO.getPassword());
+		sql.append(tableVO.getInternalName() + " e ");
+
+		if(jdbcConnectionVO.getDriver().equals(SendJDBCDatabaseConnection.DB_ORACLE)) {
+			sql.append(" where rownum <= " + (initialRecord + quantity));
+
+			StringBuffer sqlNew = new StringBuffer();
+			sqlNew.append("SELECT * FROM (");
+			sqlNew.append(sql.toString());
+			sqlNew.append(") where rnum > " + initialRecord);
+			
+			sql = sqlNew;
+		}
+
+		Connection connection = JDBCConnectionFactory.getJDBCConnection(jdbcConnectionVO.getUrl(), jdbcConnectionVO.getDriver(), jdbcConnectionVO.getUsername(), jdbcConnectionVO.getPassword());
 
 		try {
 			Statement st = null;
 
 			try {
 				st = connection.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
+
 				ResultSet rs = st.executeQuery(sql.toString());
 				ResultSetMetaData metaData = rs.getMetaData();
 
 				int columnCount = metaData.getColumnCount();
 				int totalRecordsLoaded = 0;
 
-				if(quantity > 0) {
-					st.setMaxRows(quantity);
-				}
-
-				if(initialRecord > 0) {
-					rs.absolute(initialRecord);
+				if(!jdbcConnectionVO.getDriver().equals(SendJDBCDatabaseConnection.DB_ORACLE)) {
+					if(quantity > 0) {
+						st.setMaxRows(quantity);
+					}
+					
+					if(initialRecord > 0) {
+						rs.absolute(initialRecord);
+					}
 				}
 
 				System.out.println("Initial record: " + initialRecord);
@@ -153,7 +198,20 @@ public class JDBCConnectionFactory {
 						for(int i=1; i<=columnCount; i++) {
 							String columnName = metaData.getColumnName(i);
 
-							jsonRecord.addProperty(columnName, rs.getString(i));
+							if(tableVO.getField(columnName) != null && tableVO.getField(columnName).getType().equals("oracle.sql.CLOB")) {
+								jsonRecord.addProperty(columnName, clobToString(rs.getClob(i)));
+							}
+							else if(tableVO.getField(columnName) != null && tableVO.getField(columnName).getType().equals("oracle.sql.BLOB")) {
+								jsonRecord.addProperty(columnName, blobToString(rs.getBlob(i)));
+							}
+							else {
+								try {
+									jsonRecord.addProperty(columnName, rs.getString(i));
+								}
+								catch(Exception e) {
+									e.printStackTrace();
+								}
+							}
 						}
 
 						jsonRecords.add(jsonRecord);
@@ -194,21 +252,86 @@ public class JDBCConnectionFactory {
 		return jsonRecords;
 	}
 
+	private static String blobToString(Blob blob) {
+		if(blob == null) {
+			return null;
+		}
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		byte[] buf = new byte[1024];
+
+		InputStream in = null;
+
+		try {
+			in = blob.getBinaryStream();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		if(in != null) {
+			int n = 0;
+			try {
+				while ((n = in.read(buf)) >= 0) {
+					baos.write(buf, 0, n);
+				}
+
+				in.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		byte[] bytes = baos.toByteArray();
+		String blobString = new String(bytes);
+
+		return blobString;
+	}
+
+	private static String clobToString(Clob data) {
+		if(data == null)
+			return null;
+
+		final StringBuilder sb = new StringBuilder();
+
+		try {
+			final Reader reader = data.getCharacterStream();
+			final BufferedReader br = new BufferedReader(reader);
+
+			int b;
+			while (-1 != (b = br.read())) {
+				sb.append((char) b);
+			}
+
+			br.close();
+		} catch (SQLException e) {
+			log.log(Level.SEVERE, "SQL. Could not convert CLOB to string", e);
+			return e.toString();
+		} catch (IOException e) {
+			log.log(Level.SEVERE, "IO. Could not convert CLOB to string", e);
+			return e.toString();
+		}
+
+		return sb.toString();
+	}
+
 	public static JsonArray loadData(StoredJDBCConnectionVO jdbcConnectionVO, JDBCTableVO tableVO) {
 		return loadData(jdbcConnectionVO, tableVO, 0, 0);
 	}
 
 	public static void loadFisicModelFields(StoredJDBCConnectionVO jdbcConnectionVO, JDBCTableVO tableVO) {
-		JDBCConnectionFactory.loadFisicModelFields(jdbcConnectionVO.getUrl(), jdbcConnectionVO.getUsername(), jdbcConnectionVO.getPassword(), tableVO);
+		JDBCConnectionFactory.loadFisicModelFields(jdbcConnectionVO.getUrl(), jdbcConnectionVO.getDriver(), jdbcConnectionVO.getUsername(), jdbcConnectionVO.getPassword(), tableVO);
 	}
 
-	public static void loadFisicModelFields(String url, String user, String password, JDBCTableVO tableVO) {
+	public static void loadFisicModelFields(String url, String driver, String user, String password, JDBCTableVO tableVO) {
 		StringBuffer sql = new StringBuffer();
 
 		sql.append("SELECT * FROM ");
+		if(tableVO.getDatabaseName() != null && !driver.equals(SendJDBCDatabaseConnection.DB_SQLSERVER)) {
+			sql.append(tableVO.getDatabaseName() + ".");
+		}
 		sql.append(tableVO.getInternalName());
 		sql.append(" WHERE 1=0 ");
-		Connection connection = JDBCConnectionFactory.getJDBCConnection(url, user, password);
+		Connection connection = JDBCConnectionFactory.getJDBCConnection(url, driver, user, password);
 
 		try {
 			Statement st = null;
@@ -223,7 +346,17 @@ public class JDBCConnectionFactory {
 				for(int i=1; i<=columnCount; i++) {
 					String columnName = metaData.getColumnName(i);
 					String columnClassName = metaData.getColumnClassName(i);
-					int precision = metaData.getPrecision(i);
+					int precision = Integer.MAX_VALUE;
+
+					if(!columnClassName.equals("oracle.sql.CLOB") && !columnClassName.equals("oracle.sql.BLOB")) {
+						try {
+							precision = metaData.getPrecision(i);
+						}
+						catch(Exception e) {
+							e.printStackTrace(); 
+						}
+						finally {}
+					}
 
 					JDBCFieldVO fieldVO = new JDBCFieldVO();
 					fieldVO.setName(columnName);
@@ -295,8 +428,8 @@ public class JDBCConnectionFactory {
 		}
 	}
 
-	public static JDBCDatabaseVO loadFisicModelTables(String url, String user, String password) {
-		Connection connection = JDBCConnectionFactory.getJDBCConnection(url, user, password);
+	public static JDBCDatabaseVO loadFisicModelTables(String url, String driver, String user, String password) {
+		Connection connection = JDBCConnectionFactory.getJDBCConnection(url, driver, user, password);
 		JDBCDatabaseVO databaseByFisicModelVO = new JDBCDatabaseVO();
 
 		if(connection == null) {
@@ -310,9 +443,14 @@ public class JDBCConnectionFactory {
 				String databaseName = tables.getString("TABLE_CAT");
 				String tableName = tables.getString("TABLE_NAME");
 
+				//normally for Oracle
+				if(databaseName == null) {
+					databaseName = tables.getString("TABLE_SCHEM");
+				}
+
 				databaseByFisicModelVO.setName(databaseName);
 
-				JDBCTableVO tableVO = new JDBCTableVO(tableName.toLowerCase());
+				JDBCTableVO tableVO = new JDBCTableVO(tableName.toLowerCase(), databaseName);
 				if(tableName.contains("-")) {
 					tableVO.setInternalName("\"" + tableName + "\"");
 				}
