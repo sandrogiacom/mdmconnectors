@@ -107,8 +107,10 @@ public class MDMRestConnection {
 				String additionalInformation = "";
 
 				if(command instanceof CommandPostStagingC) {
-					request.header(HttpHeaders.CONTENT_ENCODING, "gzip");
-					request.header(HttpHeaders.ACCEPT_ENCODING, "gzip");
+					log.info("Adding compression (and forcing)...");
+					
+					request = request.header(HttpHeaders.CONTENT_ENCODING, "gzip");
+					request = request.header(HttpHeaders.ACCEPT_ENCODING, "gzip");
 					additionalInformation = " - COMPRESS";
 				}
 
@@ -139,7 +141,6 @@ public class MDMRestConnection {
 					body = Entity.entity(string, type);
 				}
 				
-				
 				if (command.getType() == CommandTypeEnum.PUT) {
 					response = request.put(body);
 				} else {
@@ -166,7 +167,9 @@ public class MDMRestConnection {
 		}
 
 		Gson gson = new Gson();
-		Object resultVO = gson.fromJson(response.readEntity(String.class), command.getResponseType());
+		String responseStr = response.readEntity(String.class);
+		log.info("Response --> " + responseStr);
+		Object resultVO = gson.fromJson(responseStr, command.getResponseType());
 		EnvelopeVO envelopeVO = null;
 
 		if (resultVO instanceof EnvelopeVO) {

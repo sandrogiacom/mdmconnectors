@@ -1,10 +1,6 @@
 package com.totvslabs.mdm.restclient;
 
-import static org.junit.Assert.*;
-
-import org.apache.log4j.Logger;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -12,12 +8,15 @@ import com.google.gson.JsonPrimitive;
 import com.totvslabs.mdm.restclient.command.AuthenticatedCommand;
 import com.totvslabs.mdm.restclient.command.CommandListDatasource;
 import com.totvslabs.mdm.restclient.command.CommandPostSchema;
-import com.totvslabs.mdm.restclient.command.CommandPostStaging;
-import com.totvslabs.mdm.restclient.command.ICommand;
+import com.totvslabs.mdm.restclient.command.CommandPostStagingC;
 import com.totvslabs.mdm.restclient.vo.EnvelopeVO;
 import com.totvslabs.mdm.restclient.vo.GenericVO;
 
 import java.util.Random;
+
+import org.apache.log4j.Logger;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Executes a MDM Staging using a simple row
@@ -88,14 +87,18 @@ public class StagingExecutorTest {
 			JsonObject crosswalk = new JsonObject();
 			crosswalk.add(type, crosswalkType);
 			
-			schema.add("_mdmCrosswalkTemplate", crosswalk);
+			JsonObject crossreference = new JsonObject();
+			crossreference.add("_mdmCrossreference", crosswalk);
 			
+			schema.add("_mdmCrosswalkTemplate", crossreference);
 			
 			JsonObject mapping = new JsonObject();
 			
 			JsonObject mappingProperties = new JsonObject();
 			JsonObject nameProperties = new JsonObject();
 			nameProperties.addProperty("type", "string");
+			nameProperties.addProperty("omit_norms", Boolean.TRUE);
+			
 			mappingProperties.add("name", nameProperties);
 			
 			mapping.add("properties", mappingProperties);
@@ -121,7 +124,7 @@ public class StagingExecutorTest {
 			testObject.addProperty("name", "Bruno-Java Client");
 			stagingArray.add(testObject);
 
-			AuthenticatedCommand stagingCommand = new CommandPostStaging(MDMRestAuthentication.getInstance().getAuthVO()
+			AuthenticatedCommand stagingCommand = new CommandPostStagingC(MDMRestAuthentication.getInstance().getAuthVO()
 					.getMdmTenantId(), MDMTestingConstants.DATASOURCE_ID, type,
 					stagingArray);
 			stagingCommand.setAuthentication(authentication);
