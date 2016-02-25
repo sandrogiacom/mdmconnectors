@@ -1,14 +1,14 @@
 package com.totvslabs.mdm.client.pojo;
 
+import com.totvslabs.mdm.client.util.PersistenceEngine;
+
+import java.util.Arrays;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 import javax.swing.JOptionPane;
-
-import sun.util.locale.StringTokenIterator;
-
-import com.totvslabs.mdm.client.util.PersistenceEngine;
 
 public class StoredConfigurationVO extends StoredAbstractVO {
 	private static final long serialVersionUID = 1L;
@@ -94,7 +94,7 @@ public class StoredConfigurationVO extends StoredAbstractVO {
 			return;
 		}
 
-		StringTokenIterator st = new StringTokenIterator(name, "||");
+		Iterator<String> st = Arrays.asList(name.split("\\|\\|")).iterator();
 		String datasourceID = null;
 		String fluigDataName = null;
 		String sourceName = null;

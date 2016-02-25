@@ -1,6 +1,7 @@
 package com.totvslabs.mdm.client.pojo;
 
-import sun.util.locale.StringTokenIterator;
+import java.util.Arrays;
+import java.util.Iterator;
 
 public class StoredDataConsumptionCounterVO extends StoredAbstractVO {
 	private static final long serialVersionUID = 1L;
@@ -57,7 +58,7 @@ public class StoredDataConsumptionCounterVO extends StoredAbstractVO {
 			return;
 		}
 
-		StringTokenIterator st = new StringTokenIterator(name, "||");
+		Iterator<String> st = Arrays.asList(name.split("\\|\\|")).iterator();
 		String datasourceID = null;
 		String fluigDataName = null;
 		String sourceName = null;

@@ -10,40 +10,53 @@ public class GoldenRecordVO {
     private String _mdmId;
     private String _mdmElasticsearchMappingType;
 
-	public String get_mdmEntityTemplateId() {
+	public String getMdmEntityTemplateId() {
 		return _mdmEntityTemplateId;
 	}
-	public void set_mdmEntityTemplateId(String _mdmEntityTemplateId) {
+	public void setMdmEntityTemplateId(String _mdmEntityTemplateId) {
 		this._mdmEntityTemplateId = _mdmEntityTemplateId;
 	}
-	public Map<String, Object> get_mdmGoldenFieldAndValues() {
+	public Map<String, Object> getMdmGoldenFieldAndValues() {
 		return _mdmGoldenFieldAndValues;
 	}
-	public void set_mdmGoldenFieldAndValues(Map<String, Object> _mdmGoldenFieldAndValues) {
+	public void setMdmGoldenFieldAndValues(Map<String, Object> _mdmGoldenFieldAndValues) {
 		this._mdmGoldenFieldAndValues = _mdmGoldenFieldAndValues;
 	}
-	public Integer get_mdmCounterForEntity() {
+	public Integer getMdmCounterForEntity() {
 		return _mdmCounterForEntity;
 	}
-	public void set_mdmCounterForEntity(Integer _mdmCounterForEntity) {
+	public void setMdmCounterForEntity(Integer _mdmCounterForEntity) {
 		this._mdmCounterForEntity = _mdmCounterForEntity;
 	}
-	public String get_mdmProfileTitle() {
+	public String getMdmProfileTitle() {
 		return _mdmProfileTitle;
 	}
-	public void set_mdmProfileTitle(String _mdmProfileTitle) {
+	public void setMdmProfileTitle(String _mdmProfileTitle) {
 		this._mdmProfileTitle = _mdmProfileTitle;
 	}
-	public String get_mdmId() {
+	public String getMdmId() {
 		return _mdmId;
 	}
-	public void set_mdmId(String _mdmId) {
+	public void setMdmId(String _mdmId) {
 		this._mdmId = _mdmId;
 	}
-	public String get_mdmElasticsearchMappingType() {
+	public String getMdmElasticsearchMappingType() {
 		return _mdmElasticsearchMappingType;
 	}
-	public void set_mdmElasticsearchMappingType(String _mdmElasticsearchMappingType) {
+	public void setMdmElasticsearchMappingType(String _mdmElasticsearchMappingType) {
 		this._mdmElasticsearchMappingType = _mdmElasticsearchMappingType;
+	}
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return String
+				.format("GoldenRecordVO [_mdmEntityTemplateId=%s, _mdmGoldenFieldAndValues=%s, _mdmCounterForEntity=%s, _mdmProfileTitle=%s, _mdmId=%s, _mdmElasticsearchMappingType=%s]",
+						_mdmEntityTemplateId, _mdmGoldenFieldAndValues,
+						_mdmCounterForEntity, _mdmProfileTitle, _mdmId,
+						_mdmElasticsearchMappingType);
 	}    
+	
+	
 }

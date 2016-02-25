@@ -6,27 +6,38 @@ import java.util.Map;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.EntityVO;
 
-public class CommandListEntity implements ICommand, AuthenticationRequired {
+/**
+ * Command to list entities
+ * @author TOTVS Labs
+ *
+ */
+public class CommandListEntity extends AuthenticatedCommand {
 	private String tenantId;
-	private String datasourceId;
+	private String dataSourceId;
 
-	public CommandListEntity(String tenantId, String datasourceId) {
+	/**
+	 * Create command based on the tenantId and dataSourceId
+	 * @param tenantId
+	 * @param dataSourceId
+	 */
+	public CommandListEntity(String tenantId, String dataSourceId) {
 		this.tenantId = tenantId;
-		this.datasourceId = datasourceId;
+		this.dataSourceId = dataSourceId;
 	}
 
 	@Override
 	public Map<String, String> getParametersHeader() {
-		Map<String, String> parameters = new HashMap<String, String>();
+		Map<String, String> parameters = new HashMap<>();
 
 		parameters.put("tenant", this.tenantId);
-		parameters.put("datasource", this.datasourceId);
+		parameters.put("datasource", this.dataSourceId);
 
 		return parameters;
 	}
 
 	@Override
 	public void processReturn() {
+		//nothing to do
 	}
 
 	@Override
@@ -34,9 +45,8 @@ public class CommandListEntity implements ICommand, AuthenticationRequired {
 		return "api/v1/admin/entities/templates?offset=0&pageSize=10&sortBy=_mdmId&sortOrder=ASC";
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public Class getResponseType() {
+	public Class<EntityVO> getResponseType() {
 		return EntityVO.class;
 	}
 

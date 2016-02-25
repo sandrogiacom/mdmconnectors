@@ -10,6 +10,9 @@ import com.totvslabs.mdm.restclient.vo.EnvelopeVO;
 import com.totvslabs.mdm.restclient.vo.GenericVO;
 import com.totvslabs.mdm.restclient.vo.RefreshTokenVO;
 
+/**
+ * Authentication object to consume MDM REST APIs
+ */
 public class MDMRestAuthentication {
 	private static MDMRestAuthentication instance;
 	private String mdmURL;
@@ -35,39 +38,39 @@ public class MDMRestAuthentication {
 	}
 
 	public static MDMRestAuthentication getInstance(String mdmURL, String subdomain, String datasourceId, String username, String password) {
-		return MDMRestAuthentication.getInstance(mdmURL, subdomain, datasourceId, username, password, false);
+		return getInstance(mdmURL, subdomain, datasourceId, username, password, false);
 	}
 
-	public static MDMRestAuthentication getInstance(String mdmURL, String subdomain, String datasourceId, String username, String password, Boolean forceAuth) {
-		if(forceAuth) {
-			MDMRestAuthentication.instance = null;
+	public static MDMRestAuthentication getInstance(String mdmURL, String subdomain, String datasourceId, String username, String password, boolean forceAuth) {
+		if (forceAuth) {
+			instance = null;
 		}
 
-		if(MDMRestAuthentication.instance == null) {
+		if(instance == null) {
 			AuthVO authVO = MDMRestAuthentication.authorization(mdmURL, subdomain, datasourceId, username, password);
-			MDMRestAuthentication.instance = new MDMRestAuthentication(mdmURL, authVO.getRefresh_token(), authVO.getAccess_token(), authVO.getClient_id(), authVO.getTimeIssuedInMillis(), authVO.getExpires_in());
+			instance = new MDMRestAuthentication(mdmURL, authVO.getRefresh_token(), authVO.getAccess_token(), authVO.getClient_id(), authVO.getTimeIssuedInMillis(), authVO.getExpires_in());
 		}
 		else {
-			MDMRestAuthentication.instance.refreshToken();
+			instance.refreshToken();
 		}
 
-		return MDMRestAuthentication.instance;
+		return instance;
 	}
 
 	public static MDMRestAuthentication getInstance(String mdmURL, String clientId, String accessToken, String refreshToken, Long timeIssuedInMillis, Long experiesIn) {
-		MDMRestAuthentication.instance = new MDMRestAuthentication(mdmURL, refreshToken, accessToken, clientId, timeIssuedInMillis, experiesIn);
+		instance = new MDMRestAuthentication(mdmURL, refreshToken, accessToken, clientId, timeIssuedInMillis, experiesIn);
 
-		return MDMRestAuthentication.instance;
+		return instance;
 	}
 
 	public static MDMRestAuthentication getInstance() {
-		if (MDMRestAuthentication.instance == null) {
+		if (instance == null) {
 			throw new RuntimeException("Authentication is required to use this operation.");
 		}
 		
-		MDMRestAuthentication.instance.refreshToken();
+		instance.refreshToken();
 
-		return MDMRestAuthentication.instance;
+		return instance;
 	}
 
 	private static AuthVO authorization(String mdmURL, String subdomain, String datasourceId, String username, String password) {

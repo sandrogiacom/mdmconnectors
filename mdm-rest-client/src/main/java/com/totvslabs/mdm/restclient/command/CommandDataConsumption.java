@@ -1,18 +1,29 @@
 package com.totvslabs.mdm.restclient.command;
 
-import java.util.Map;
-
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.DataConsumptionVO;
 
-//https://totvslabs.fluigdata.com:8443/mdm/api/v1/dataConsumption/entities/0423ece09c7811e5ab44ca46fae0c14f/records?startCounter=-1&pageSize=10
+import java.util.Map;
 
-public class CommandDataConsumption implements ICommand, AuthenticationRequired {
+/**
+ * Command to consume data from golden records.
+ * Sample request: /api/v1/dataConsumption/entities/0423ece09c7811e5ab44ca46fae0c14f/records?startCounter=-1&pageSize=10
+ * 
+ * @author TOTVS Labs
+ *
+ */
+public class CommandDataConsumption extends AuthenticatedCommand {
 	private String entityType;
-	private Integer pageSize;
-	private Integer counter;
+	private int pageSize;
+	private int counter;
 
-	public CommandDataConsumption(String entityType, Integer counter, Integer pageSize) {
+	/**
+	 * Creation of the command 
+	 * @param entityType
+	 * @param counter
+	 * @param pageSize
+	 */
+	public CommandDataConsumption(String entityType, int counter, int pageSize) {
 		this.entityType = entityType;
 		this.counter = counter;
 		this.pageSize = pageSize;
@@ -25,6 +36,7 @@ public class CommandDataConsumption implements ICommand, AuthenticationRequired 
 
 	@Override
 	public void processReturn() {
+		//nothing to do
 	}
 
 	@Override
@@ -32,9 +44,8 @@ public class CommandDataConsumption implements ICommand, AuthenticationRequired 
 		return "api/v1/dataConsumption/entities/" + this.entityType + "/records?startCounter=" + this.counter + "&pageSize=" + this.pageSize;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public Class getResponseType() {
+	public Class<DataConsumptionVO> getResponseType() {
 		return DataConsumptionVO.class;
 	}
 

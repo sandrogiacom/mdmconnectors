@@ -5,11 +5,20 @@ import java.util.Map;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.DataModelVO;
 
-public class CommandGetDataModel implements ICommand, AuthenticationRequired {
-	private String dataModelID;
+/**
+ * Command to get a specific data model
+ * @author TOTVS Labs
+ *
+ */
+public class CommandGetDataModel extends AuthenticatedCommand {
+	private String dataModelId;
 
-	public CommandGetDataModel(String dataModelID) {
-		this.dataModelID = dataModelID;
+	/**
+	 * Create the command based on the data model id
+	 * @param dataModelId
+	 */
+	public CommandGetDataModel(String dataModelId) {
+		this.dataModelId = dataModelId;
 	}
 
 	@Override
@@ -19,16 +28,16 @@ public class CommandGetDataModel implements ICommand, AuthenticationRequired {
 
 	@Override
 	public void processReturn() {
+		//nothing to do
 	}
 
 	@Override
 	public String getCommandURL() {
-		return "api/v1/entities/templates/" + dataModelID;
+		return "api/v1/entities/templates/" + dataModelId;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public Class getResponseType() {
+	public Class<DataModelVO> getResponseType() {
 		return DataModelVO.class;
 	}
 

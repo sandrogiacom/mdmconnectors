@@ -10,34 +10,34 @@ public class DataConsumerDetailsVO {
 	private Integer _mdmLastCounterConsumed;
 	private Integer _mdmNumOfPendingRecords;
 
-	public String get_mdmEntityConsumed() {
+	public String getMdmEntityConsumed() {
 		return _mdmEntityConsumed;
 	}
-	public void set_mdmEntityConsumed(String _mdmEntityConsumed) {
+	public void setMdmEntityConsumed(String _mdmEntityConsumed) {
 		this._mdmEntityConsumed = _mdmEntityConsumed;
 	}
-	public Map<String, String> get_mdmEntityName() {
+	public Map<String, String> getMdmEntityName() {
 		return _mdmEntityName;
 	}
-	public void set_mdmEntityName(Map<String, String> _mdmEntityName) {
+	public void setMdmEntityName(Map<String, String> _mdmEntityName) {
 		this._mdmEntityName = _mdmEntityName;
 	}
-	public List<String> get_mdmFieldsConsumed() {
+	public List<String> getMdmFieldsConsumed() {
 		return _mdmFieldsConsumed;
 	}
-	public void set_mdmFieldsConsumed(List<String> _mdmFieldsConsumed) {
+	public void setMdmFieldsConsumed(List<String> _mdmFieldsConsumed) {
 		this._mdmFieldsConsumed = _mdmFieldsConsumed;
 	}
-	public Integer get_mdmLastCounterConsumed() {
+	public Integer getMdmLastCounterConsumed() {
 		return _mdmLastCounterConsumed;
 	}
-	public void set_mdmLastCounterConsumed(Integer _mdmLastCounterConsumed) {
+	public void setMdmLastCounterConsumed(Integer _mdmLastCounterConsumed) {
 		this._mdmLastCounterConsumed = _mdmLastCounterConsumed;
 	}
-	public Integer get_mdmNumOfPendingRecords() {
+	public Integer getMdmNumOfPendingRecords() {
 		return _mdmNumOfPendingRecords;
 	}
-	public void set_mdmNumOfPendingRecords(Integer _mdmNumOfPendingRecords) {
+	public void setMdmNumOfPendingRecords(Integer _mdmNumOfPendingRecords) {
 		this._mdmNumOfPendingRecords = _mdmNumOfPendingRecords;
 	}
 }

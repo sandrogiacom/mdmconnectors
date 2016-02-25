@@ -10,10 +10,10 @@ public class GenericVO {
 	private String _mdmTenantId;
 	private String _mdmDataSourceId;
 
-	public String get_mdmType() {
+	public String getMdmType() {
 		return _mdmType;
 	}
-	public void set_mdmType(String _mdmType) {
+	public void setMdmType(String _mdmType) {
 		this._mdmType = _mdmType;
 	}
 	public String getName() {
@@ -28,13 +28,13 @@ public class GenericVO {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	public String get_mdmId() {
+	public String getMdmId() {
 		return _mdmId;
 	}
-	public void set_mdmId(String _mdmId) {
+	public void setMdmId(String _mdmId) {
 		this._mdmId = _mdmId;
 	}
-	public String get_mdmTenantId() {
+	public String getMdmTenantId() {
 		return _mdmTenantId;
 	}
 	@Override
@@ -45,25 +45,25 @@ public class GenericVO {
 				+ ", _mdmTenantId=" + _mdmTenantId + ", _mdmDataSourceId="
 				+ _mdmDataSourceId + "]";
 	}
-	public void set_mdmTenantId(String _mdmTenantId) {
+	public void setMdmTenantId(String _mdmTenantId) {
 		this._mdmTenantId = _mdmTenantId;
 	}
-	public String get_mdmDataSourceId() {
+	public String getMdmDataSourceId() {
 		return _mdmDataSourceId;
 	}
-	public void set_mdmDataSourceId(String _mdmDataSourceId) {
+	public void setMdmDataSourceId(String _mdmDataSourceId) {
 		this._mdmDataSourceId = _mdmDataSourceId;
 	}
-	public String get_mdmLastUpdated() {
+	public String getMdmLastUpdated() {
 		return _mdmLastUpdated;
 	}
-	public void set_mdmLastUpdated(String _mdmLastUpdated) {
+	public void setMdmLastUpdated(String _mdmLastUpdated) {
 		this._mdmLastUpdated = _mdmLastUpdated;
 	}
-	public String get_mdmCreated() {
+	public String getMdmCreated() {
 		return _mdmCreated;
 	}
-	public void set_mdmCreated(String _mdmCreated) {
+	public void setMdmCreated(String _mdmCreated) {
 		this._mdmCreated = _mdmCreated;
 	}
 }

@@ -12,52 +12,52 @@ public class FieldsVO extends GenericVO {
 	private Boolean _mdmIsGlobalField;
 	private String _mdmFieldType;
 
-	public String get_mdmName() {
+	public String getMdmName() {
 		return _mdmName;
 	}
-	public void set_mdmName(String _mdmName) {
+	public void setMdmName(String _mdmName) {
 		this._mdmName = _mdmName;
 	}
-	public Map<String, String> get_mdmLabel() {
+	public Map<String, String> getMdmLabel() {
 		return _mdmLabel;
 	}
-	public void set_mdmLabel(Map<String, String> _mdmLabel) {
+	public void setMdmLabel(Map<String, String> _mdmLabel) {
 		this._mdmLabel = _mdmLabel;
 	}
-	public Map<String, String> get_mdmDescription() {
+	public Map<String, String> getMdmDescription() {
 		return _mdmDescription;
 	}
-	public void set_mdmDescription(Map<String, String> _mdmDescription) {
+	public void setMdmDescription(Map<String, String> _mdmDescription) {
 		this._mdmDescription = _mdmDescription;
 	}
-	public String get_mdmIndex() {
+	public String getMdmIndex() {
 		return _mdmIndex;
 	}
-	public void set_mdmIndex(String _mdmIndex) {
+	public void setMdmIndex(String _mdmIndex) {
 		this._mdmIndex = _mdmIndex;
 	}
-	public String get_mdmAnalyzer() {
+	public String getMdmAnalyzer() {
 		return _mdmAnalyzer;
 	}
-	public void set_mdmAnalyzer(String _mdmAnalyzer) {
+	public void setMdmAnalyzer(String _mdmAnalyzer) {
 		this._mdmAnalyzer = _mdmAnalyzer;
 	}
-	public Map<String, FieldsVO> get_mdmFieldsFull() {
+	public Map<String, FieldsVO> getMdmFieldsFull() {
 		return _mdmFieldsFull;
 	}
-	public void set_mdmFieldsFull(Map<String, FieldsVO> _mdmFieldsFull) {
+	public void setMdmFieldsFull(Map<String, FieldsVO> _mdmFieldsFull) {
 		this._mdmFieldsFull = _mdmFieldsFull;
 	}
-	public Boolean get_mdmIsGlobalField() {
+	public Boolean getMdmIsGlobalField() {
 		return _mdmIsGlobalField;
 	}
-	public void set_mdmIsGlobalField(Boolean _mdmIsGlobalField) {
+	public void setMdmIsGlobalField(Boolean _mdmIsGlobalField) {
 		this._mdmIsGlobalField = _mdmIsGlobalField;
 	}
-	public String get_mdmFieldType() {
+	public String getMdmFieldType() {
 		return _mdmFieldType;
 	}
-	public void set_mdmFieldType(String _mdmFieldType) {
+	public void setMdmFieldType(String _mdmFieldType) {
 		this._mdmFieldType = _mdmFieldType;
 	}
 }

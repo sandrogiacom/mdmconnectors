@@ -1,5 +1,13 @@
 package com.totvslabs.mdm.restclient;
 
+import com.google.gson.Gson;
+import com.totvslabs.mdm.restclient.command.AuthenticatedCommand;
+import com.totvslabs.mdm.restclient.command.CommandPostStagingC;
+import com.totvslabs.mdm.restclient.command.ICommand;
+import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
+import com.totvslabs.mdm.restclient.vo.EnvelopeVO;
+import com.totvslabs.mdm.restclient.vo.GenericVO;
+
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -8,6 +16,7 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.net.ssl.HostnameVerifier;
@@ -27,13 +36,6 @@ import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.glassfish.jersey.client.JerseyClientBuilder;
-
-import com.google.gson.Gson;
-import com.totvslabs.mdm.restclient.command.AuthenticationRequired;
-import com.totvslabs.mdm.restclient.command.CommandPostStagingC;
-import com.totvslabs.mdm.restclient.command.ICommand;
-import com.totvslabs.mdm.restclient.vo.EnvelopeVO;
-import com.totvslabs.mdm.restclient.vo.GenericVO;
 
 /**
  * 
@@ -62,27 +64,30 @@ public class MDMRestConnection {
 		Map<String, String> parametersHeader = command.getParametersHeader();
 		Map<String, String> parameterPath = command.getParameterPath();
 
-		Set<String> keySetPath = parameterPath != null ? parameterPath.keySet() : null;
-		Set<String> keySetHeader = parametersHeader != null ? parametersHeader.keySet() : null;
+		Set<Entry<String, String>> entrySetPath = parameterPath != null ? parameterPath.entrySet() : null;
+		Set<Entry<String, String>> entrySetHeader = parametersHeader != null ? parametersHeader.entrySet() : null;
 
 		WebTarget webResource = this.client.target(mdmURL + command.getCommandURL());
 
-		if(keySetPath != null) {
-			for (String string : keySetPath) {
-				webResource = webResource.queryParam(string, parameterPath.get(string));
+		if (entrySetPath != null) {
+			for (Entry<String, String> param : entrySetPath) {
+				webResource = webResource.queryParam(param.getKey(), param.getValue());
 			}
 		}
 
 		Builder request = webResource.request(MediaType.APPLICATION_JSON);
 
-		if(keySetHeader != null) {
-			for (String string : keySetHeader) {
-				request = request.header(string, parametersHeader.get(string));
+		if (entrySetHeader != null) {
+			for (Entry<String, String> param : entrySetHeader) {
+				request = request.header(param.getKey(), param.getValue());
 			}
 		}
-
-		if(command instanceof AuthenticationRequired) {
-			request = request.header("Authorization", MDMRestAuthentication.getInstance().getAuthVO().getAccess_token());
+		
+		if (command instanceof AuthenticatedCommand) {
+			
+			AuthenticatedCommand authCommand = (AuthenticatedCommand) command;
+		    log.info("Adding Authorization header...");
+			request = request.header("Authorization", authCommand.getAuthentication().getAuthVO().getAccess_token());
 		}
 
 		Response response = null;
@@ -97,6 +102,7 @@ public class MDMRestConnection {
 				break;
 
 			case POST:
+			case PUT:
 				String type = MediaType.APPLICATION_JSON;
 				String additionalInformation = "";
 
@@ -107,9 +113,9 @@ public class MDMRestConnection {
 				}
 
 				Map<String, String> formDataCommand = command.getFormData();
-				MultivaluedMap<String, String> formData = new MultivaluedHashMap<String, String>();
+				MultivaluedMap<String, String> formData = new MultivaluedHashMap<>();
 
-				if(formDataCommand != null && formDataCommand.size() > 0) {
+				if (formDataCommand != null && !formDataCommand.isEmpty()) {
 					Set<String> keySet = formDataCommand.keySet();
 
 					for (String key : keySet) {
@@ -124,16 +130,31 @@ public class MDMRestConnection {
 				log.info("Time to convert the OBJECT to JSON: " + (System.currentTimeMillis() - initialTimeConvertJson) );
 				long initialTime = System.currentTimeMillis();
 
-				if (formData != null && formData.size() > 0) {
-					response = request.accept(type).post(Entity.form(formData));
+				request = request.accept(type);
+				
+				Entity<?> body;
+				if (!formData.isEmpty()) {
+					body = Entity.form(formData);
 				} else {
-					response = request.accept(type).post(Entity.entity(string, type));
+					body = Entity.entity(string, type);
 				}
-
+				
+				
+				if (command.getType() == CommandTypeEnum.PUT) {
+					response = request.put(body);
+				} else {
+					response = request.post(body);
+				}
+				
 				log.info("Time to execute the POST service ('" + command.getCommandURL() + "'" + additionalInformation + "): " + (System.currentTimeMillis() - initialTime) );
 				break;
 		}
 
+		
+		if (response == null) {
+			throw new RuntimeException("No response received.");
+		}
+		
 		if (response.getStatus() != Response.Status.OK.getStatusCode()) {
 //			if(command.getData() != null) {
 //				log.info("Data response:" + command.getData().toString());
@@ -153,7 +174,7 @@ public class MDMRestConnection {
 		} else {
 			envelopeVO = new EnvelopeVO();
 
-			List<GenericVO> genericVO = new ArrayList<GenericVO>();
+			List<GenericVO> genericVO = new ArrayList<>();
 			genericVO.add((GenericVO) resultVO);
 			envelopeVO.setHits(genericVO);
 		}

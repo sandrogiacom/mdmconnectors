@@ -303,7 +303,7 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 
 		@Override
 		public Object getValueAt(int rowIndex, int columnIndex) {
-			if(this.data == null || this.data.size() == 0) {
+			if(this.data == null || this.data.isEmpty()) {
 				return null;
 			}
 

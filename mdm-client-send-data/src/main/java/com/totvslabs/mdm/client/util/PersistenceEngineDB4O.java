@@ -192,7 +192,7 @@ public class PersistenceEngineDB4O extends PersistenceEngine {
 		try {
 			ObjectSet<StoredAbstractVO> objectSet = (ObjectSet<StoredAbstractVO>) this.db.query(clasz);
 
-			if(objectSet.size() > 0) {
+			if (!objectSet.isEmpty()) {
 				List<StoredAbstractVO> subList = objectSet.subList(0, objectSet.size());
 
 				if(subList != null) {

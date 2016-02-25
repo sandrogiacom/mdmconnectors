@@ -3,22 +3,22 @@ package com.totvslabs.mdm.restclient.command;
 import java.util.Map;
 
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
-import com.totvslabs.mdm.restclient.vo.FieldsVO;
+import com.totvslabs.mdm.restclient.vo.DataModelVO;
 
 /**
- * Command to get specific field
+ * Command to get a specific data model
  * @author TOTVS Labs
  *
  */
-public class CommandGetField extends AuthenticatedCommand {
-	private String fieldId;
+public class CommandGetDataModelByName extends AuthenticatedCommand {
+	private String name;
 
 	/**
-	 * Create command based on the field id
-	 * @param fieldId
+	 * Create the command based on the data model name
+	 * @param name
 	 */
-	public CommandGetField(String fieldId) {
-		this.fieldId = fieldId;
+	public CommandGetDataModelByName(String name) {
+		this.name = name;
 	}
 
 	@Override
@@ -33,12 +33,12 @@ public class CommandGetField extends AuthenticatedCommand {
 
 	@Override
 	public String getCommandURL() {
-		return "api/v1/fields/" + fieldId;
+		return "api/v1/entities/templates/name/" + name;
 	}
 
 	@Override
-	public Class<FieldsVO> getResponseType() {
-		return FieldsVO.class;
+	public Class<DataModelVO> getResponseType() {
+		return DataModelVO.class;
 	}
 
 	@Override

@@ -6,6 +6,11 @@ import java.util.Map;
 import com.totvslabs.mdm.restclient.vo.AuthVO;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 
+/**
+ * Authentication Command
+ * @author TOTVS Labs
+ *
+ */
 public class CommandAuth implements ICommand {
 	private final static String GRANT_TYPE_DEFAULT = "password";
 	private String username;
@@ -14,10 +19,25 @@ public class CommandAuth implements ICommand {
 	private String tenantId;
 	private String datasourceId;
 
+	/**
+	 * Create an authentication command with login values
+	 * @param tenantId
+	 * @param datasourceId
+	 * @param username
+	 * @param password
+	 */
 	public CommandAuth(String tenantId, String datasourceId, String username, String password) {
 		this(tenantId, datasourceId, username, password, "password");
 	}
 
+	/**
+	 * Create an authentication command with login values
+	 * @param tenantId
+	 * @param datasourceId
+	 * @param username
+	 * @param password
+	 * @param grantType
+	 */
 	public CommandAuth(String tenantId, String datasourceId, String username, String password, String grantType) {
 		this.tenantId = tenantId;
 		this.datasourceId = datasourceId;
@@ -28,7 +48,7 @@ public class CommandAuth implements ICommand {
 
 	@Override
 	public Map<String, String> getParametersHeader() {
-		Map<String, String> parameters = new HashMap<String, String>();
+		Map<String, String> parameters = new HashMap<>();
 
 		parameters.put("tenant", this.tenantId);
 		parameters.put("datasource", this.datasourceId);
@@ -38,6 +58,7 @@ public class CommandAuth implements ICommand {
 
 	@Override
 	public void processReturn() {
+		//nothing
 	}
 
 	@Override
@@ -45,9 +66,8 @@ public class CommandAuth implements ICommand {
 		return "api/v1/oauth2/auth";
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public Class getResponseType() {
+	public Class<AuthVO> getResponseType() {
 		return AuthVO.class;
 	}
 
@@ -68,7 +88,7 @@ public class CommandAuth implements ICommand {
 
 	@Override
 	public Map<String, String> getFormData() {
-		Map<String, String> parameters = new HashMap<String, String>();
+		Map<String, String> parameters = new HashMap<>();
 
 		parameters.put("grant_type", this.grantType);
 		parameters.put("username", this.username);

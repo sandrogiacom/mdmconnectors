@@ -6,12 +6,24 @@ import java.util.Map;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.DatasourceVO;
 
-public class CommandPostSchema implements ICommand, AuthenticationRequired {
+/**
+ * Command to post staging schema
+ * @author TOTVS Labs
+ *
+ */
+public class CommandPostSchema extends AuthenticatedCommand {
 	private String tenantId;
 	private String datasourceId;
 	private String type;
 	private Object schema;
 
+	/**
+	 * Create command based on given information
+	 * @param tenantId
+	 * @param datasourceId
+	 * @param type
+	 * @param schema
+	 */
 	public CommandPostSchema(String tenantId, String datasourceId, String type, Object schema) {
 		this.tenantId = tenantId;
 		this.datasourceId = datasourceId;
@@ -21,7 +33,7 @@ public class CommandPostSchema implements ICommand, AuthenticationRequired {
 
 	@Override
 	public Map<String, String> getParametersHeader() {
-		Map<String, String> parameters = new HashMap<String, String>();
+		Map<String, String> parameters = new HashMap<>();
 
 		parameters.put("tenant", this.tenantId);
 		parameters.put("datasource", datasourceId);
@@ -31,6 +43,7 @@ public class CommandPostSchema implements ICommand, AuthenticationRequired {
 
 	@Override
 	public void processReturn() {
+		//nothing to do
 	}
 
 	@Override
@@ -38,9 +51,8 @@ public class CommandPostSchema implements ICommand, AuthenticationRequired {
 		return "api/v1/staging/entities/types/" + this.type + "/schema";
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public Class getResponseType() {
+	public Class<DatasourceVO> getResponseType() {
 		return DatasourceVO.class;
 	}
 

@@ -178,17 +178,17 @@ public class MDMConsumer extends PanelAbstract implements MDMConnectionChangedLi
 				tableModelFieldsFD.clearData();
 				comboBoxNestedFieldModel.removeAllElements();
 
-				List<String> get_mdmFieldsConsumed = selectedRowMDMEntity.getFieldsDetail().get_mdmFieldsConsumed();
-				if(get_mdmFieldsConsumed != null) {
-					for (String string : get_mdmFieldsConsumed) {
+				List<String> getMdmFieldsConsumed = selectedRowMDMEntity.getFieldsDetail().getMdmFieldsConsumed();
+				if(getMdmFieldsConsumed != null) {
+					for (String string : getMdmFieldsConsumed) {
 						CommandGetField commandGetField = new CommandGetField(string);
 						EnvelopeVO executeCommandGetField = MDMRestConnectionFactory.getConnection(fluigDataProfile.getServerURL()).executeCommand(commandGetField);
 						FieldsVO fieldVO = ((FieldsVO) executeCommandGetField.getHits().get(0));
 
-						System.out.println(fieldVO.get_mdmName());
+						System.out.println(fieldVO.getMdmName());
 						
-						if(fieldVO.get_mdmType().equals("NESTED")) {//father fields
-							Iterator<FieldsVO> iterator = fieldVO.get_mdmFieldsFull().values().iterator();
+						if(fieldVO.getMdmType().equals("NESTED")) {//father fields
+							Iterator<FieldsVO> iterator = fieldVO.getMdmFieldsFull().values().iterator();
 							List<FDFieldVO> childrenFields = new ArrayList<FDFieldVO>();
 
 							while(iterator.hasNext()) {
@@ -196,25 +196,25 @@ public class MDMConsumer extends PanelAbstract implements MDMConnectionChangedLi
 
 								FDFieldVO fdFieldVO = new FDFieldVO();
 								fdFieldVO.setChildren(true);
-								fdFieldVO.setDescription(next.get_mdmDescription().values().iterator().next());
+								fdFieldVO.setDescription(next.getMdmDescription().values().iterator().next());
 								fdFieldVO.setInstance(null);
-								fdFieldVO.setName(next.get_mdmName());
+								fdFieldVO.setName(next.getMdmName());
 								fdFieldVO.setProtheusField(null);
-								fdFieldVO.setType(next.get_mdmType());
+								fdFieldVO.setType(next.getMdmType());
 
 								childrenFields.add(fdFieldVO);
 							}
 
-							comboBoxNestedFieldModel.addElement(new FDNestedFieldVO(fieldVO.get_mdmName(), fieldVO.get_mdmDescription().values().iterator().next(), childrenFields));
+							comboBoxNestedFieldModel.addElement(new FDNestedFieldVO(fieldVO.getMdmName(), fieldVO.getMdmDescription().values().iterator().next(), childrenFields));
 						}
 						else {//normal fields
 							FDFieldVO fdFieldVO = new FDFieldVO();
 							fdFieldVO.setChildren(false);
-							fdFieldVO.setDescription(fieldVO.get_mdmDescription().values().iterator().next());
+							fdFieldVO.setDescription(fieldVO.getMdmDescription().values().iterator().next());
 							fdFieldVO.setInstance(null);
-							fdFieldVO.setName(fieldVO.get_mdmName());
-							fdFieldVO.setProtheusField(MappingUtil.mappings.get(MappingUtil.TYPE_CUSTOMER).get(MappingUtil.PROD_PROTHEUS).get(MappingUtil.NESTED_INSTANCE_DEFAULT).get(fieldVO.get_mdmName()));
-							fdFieldVO.setType(fieldVO.get_mdmType());
+							fdFieldVO.setName(fieldVO.getMdmName());
+							fdFieldVO.setProtheusField(MappingUtil.mappings.get(MappingUtil.TYPE_CUSTOMER).get(MappingUtil.PROD_PROTHEUS).get(MappingUtil.NESTED_INSTANCE_DEFAULT).get(fieldVO.getMdmName()));
+							fdFieldVO.setType(fieldVO.getMdmType());
 
 							tableModelFieldsFD.addRow(fdFieldVO);
 						}
@@ -242,9 +242,9 @@ public class MDMConsumer extends PanelAbstract implements MDMConnectionChangedLi
 					EnvelopeVO executeCommand = MDMRestConnectionFactory.getConnection(fluigDataProfile.getServerURL()).executeCommand(consumer);
 
 					List<GenericVO> hits = executeCommand.getHits();
-					object.setFieldsDetail(((DataConsumerVO) hits.get(0)).get_mdmEntityDetails().get(object.getEntityId()));
+					object.setFieldsDetail(((DataConsumerVO) hits.get(0)).getMdmEntityDetails().get(object.getEntityId()));
 					
-					labelCounter.setText("Fluig Data Counter (Actual: " + object.getFieldsDetail().get_mdmLastCounterConsumed() + ", pending records: " + object.getFieldsDetail().get_mdmNumOfPendingRecords() + "): ");;
+					labelCounter.setText("Fluig Data Counter (Actual: " + object.getFieldsDetail().getMdmLastCounterConsumed() + ", pending records: " + object.getFieldsDetail().getMdmNumOfPendingRecords() + "): ");;
 				}
 
 				//adding nested types for this project (TODO: remove it)
@@ -320,12 +320,12 @@ public class MDMConsumer extends PanelAbstract implements MDMConnectionChangedLi
 
 					if(goldenRecords != null) {
 						for (GoldenRecordVO goldenRecordVO : goldenRecords) {
-							boolean result = consumptionProcess(protheusColumns, mappedFields, entity, goldenRecordVO.get_mdmGoldenFieldAndValues());
+							boolean result = consumptionProcess(protheusColumns, mappedFields, entity, goldenRecordVO.getMdmGoldenFieldAndValues());
 	
 							//TODO: understand why it's generating error saving the new object.
 							//It's related with the new index by name, maybe there is other record with same name?
 		//					if(result) {
-		//						Integer processedlCounter = goldenRecordVO.get_mdmCounterForEntity(); //to store locally and show when start again - use the same value on the service above (acima).
+		//						Integer processedlCounter = goldenRecordVO.getMdmCounterForEntity(); //to store locally and show when start again - use the same value on the service above (acima).
 		//						StoredDataConsumptionCounterVO actualCounter = new StoredDataConsumptionCounterVO();
 		//						actualCounter.setCounter(processedlCounter);
 		//						actualCounter.setDatasourceID(fluigDataProfile.getDatasourceID());
@@ -775,7 +775,7 @@ public class MDMConsumer extends PanelAbstract implements MDMConnectionChangedLi
 
 		@Override
 		public Object getValueAt(int rowIndex, int columnIndex) {
-			if(this.data == null || this.data.size() == 0) {
+			if(this.data == null || this.data.isEmpty()) {
 				return null;
 			}
 
@@ -859,7 +859,7 @@ public class MDMConsumer extends PanelAbstract implements MDMConnectionChangedLi
 
 		@Override
 		public Object getValueAt(int rowIndex, int columnIndex) {
-			if(this.data == null || this.data.size() == 0) {
+			if(this.data == null || this.data.isEmpty()) {
 				return null;
 			}
 
@@ -951,7 +951,7 @@ public class MDMConsumer extends PanelAbstract implements MDMConnectionChangedLi
 
 		@Override
 		public Object getValueAt(int rowIndex, int columnIndex) {
-			if(this.data == null || this.data.size() == 0) {
+			if(this.data == null || this.data.isEmpty()) {
 				return null;
 			}
 
@@ -1012,9 +1012,9 @@ public class MDMConsumer extends PanelAbstract implements MDMConnectionChangedLi
 
 		List<GenericVO> hits = executeCommand.getHits();
 
-		if(hits != null && hits.size() > 0) {
+		if (hits != null && !hits.isEmpty()) {
 			if(hits.get(0) instanceof DataConsumerVO) {
-				List<String> entities = ((DataConsumerVO) hits.get(0)).get_mdmEntitiesConsumed();
+				List<String> entities = ((DataConsumerVO) hits.get(0)).getMdmEntitiesConsumed();
 
 				if(entities != null) {
 					tableModelEntitiesFD.clear();
@@ -1023,12 +1023,12 @@ public class MDMConsumer extends PanelAbstract implements MDMConnectionChangedLi
 						CommandGetDataModel dataModel = new CommandGetDataModel(string);
 						EnvelopeVO executeCommandGetDataModel = MDMRestConnectionFactory.getConnection(fluigDataProfile.getServerURL()).executeCommand(dataModel);
 
-						String next = ((DataModelVO) executeCommandGetDataModel.getHits().get(0)).get_mdmLabel().keySet().iterator().next();
+						String next = ((DataModelVO) executeCommandGetDataModel.getHits().get(0)).getMdmLabel().keySet().iterator().next();
 						
 						FDEntityVO entity = new FDEntityVO();
-						entity.setDescription(((DataModelVO) executeCommandGetDataModel.getHits().get(0)).get_mdmLabel().get(next));
-						entity.setName(((DataModelVO) executeCommandGetDataModel.getHits().get(0)).get_mdmName());
-						entity.setFieldsDetail(((DataConsumerVO) hits.get(0)).get_mdmEntityDetails().get(string));
+						entity.setDescription(((DataModelVO) executeCommandGetDataModel.getHits().get(0)).getMdmLabel().get(next));
+						entity.setName(((DataModelVO) executeCommandGetDataModel.getHits().get(0)).getMdmName());
+						entity.setFieldsDetail(((DataConsumerVO) hits.get(0)).getMdmEntityDetails().get(string));
 						entity.setEntityId(string);
 
 						if(entity.getName().equalsIgnoreCase("mdmcustomer")) {
