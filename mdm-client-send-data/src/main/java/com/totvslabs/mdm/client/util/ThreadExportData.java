@@ -113,12 +113,27 @@ public class ThreadExportData implements Runnable {
 			completeSchema.add("_mdmCrosswalkTemplate", schemaCross);
 
 			Set<Entry<String, JsonElement>> entrySet = data.getData().get(0).getAsJsonObject().entrySet();
+			int fieldCount = 0;
 
 			for (Entry<String, JsonElement> entry : entrySet) {
 				JsonObject fieldDetail = new JsonObject();
 				fieldDetail.addProperty("type", "string");
 
 				schemas.add(entry.getKey(), fieldDetail);
+				
+				if(fieldCount == 0) {
+					JsonArray fieldIndex = schemasCross.getAsJsonArray(data.getTemplateName());
+
+					if(fieldIndex == null) {
+						fieldIndex = new JsonArray();
+					}
+
+					fieldIndex.add(new JsonPrimitive(entry.getKey()));
+					
+					schemasCross.add(data.getTemplateName(), fieldIndex);
+				}
+
+				fieldCount++;
 			}
 
 			CommandPostSchema schemaCommand = new CommandPostSchema(tenantId, datasourceId, data.getTemplateName(), completeSchema.toString());

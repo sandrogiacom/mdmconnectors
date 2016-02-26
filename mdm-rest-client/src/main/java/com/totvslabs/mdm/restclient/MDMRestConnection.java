@@ -109,8 +109,6 @@ public class MDMRestConnection {
 				if(command instanceof CommandPostStagingC) {
 					log.info("Adding compression (and forcing)...");
 					
-					request = request.header(HttpHeaders.CONTENT_ENCODING, "gzip");
-					request = request.header(HttpHeaders.ACCEPT_ENCODING, "gzip");
 					additionalInformation = " - COMPRESS";
 				}
 

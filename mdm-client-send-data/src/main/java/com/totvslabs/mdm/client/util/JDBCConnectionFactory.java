@@ -61,7 +61,7 @@ public class JDBCConnectionFactory {
 		StringBuffer sql = new StringBuffer();
 
 		sql.append("SELECT count(*) FROM ");
-		if(tableVO.getDatabaseName() != null && !jdbcConnectionVO.getDriver().equals(SendJDBCDatabaseConnection.DB_SQLSERVER)) {
+		if(tableVO.getDatabaseName() != null && !jdbcConnectionVO.getDriver().equals(SendJDBCDatabaseConnection.DB_SQLSERVER) && !jdbcConnectionVO.getDriver().equals(SendJDBCDatabaseConnection.DB_PROGRESS)) {
 			sql.append(tableVO.getDatabaseName() + ".");
 		}
 		sql.append(tableVO.getInternalName());
@@ -148,7 +148,7 @@ public class JDBCConnectionFactory {
 			}
 		}
 
-		if(tableVO.getDatabaseName() != null && !jdbcConnectionVO.getDriver().equals(SendJDBCDatabaseConnection.DB_SQLSERVER)) {
+		if(tableVO.getDatabaseName() != null && !jdbcConnectionVO.getDriver().equals(SendJDBCDatabaseConnection.DB_SQLSERVER) && !jdbcConnectionVO.getDriver().equals(SendJDBCDatabaseConnection.DB_PROGRESS)) {
 			sql.append(tableVO.getDatabaseName() + ".");
 		}
 
@@ -326,7 +326,7 @@ public class JDBCConnectionFactory {
 		StringBuffer sql = new StringBuffer();
 
 		sql.append("SELECT * FROM ");
-		if(tableVO.getDatabaseName() != null && !driver.equals(SendJDBCDatabaseConnection.DB_SQLSERVER)) {
+		if(tableVO.getDatabaseName() != null && !driver.equals(SendJDBCDatabaseConnection.DB_SQLSERVER) && !driver.equals(SendJDBCDatabaseConnection.DB_PROGRESS)) {
 			sql.append(tableVO.getDatabaseName() + ".");
 		}
 		sql.append(tableVO.getInternalName());
