@@ -8,12 +8,22 @@ public class SendDataFluigDataDoneEvent {
 	private Date when;
 	private String jsonData;
 	private ProcessTypeEnum processTypeEnum;
+	private ProcessStatusEnum processStatusEnum;
 
-	public SendDataFluigDataDoneEvent(ProcessTypeEnum processTypeEnum, String string) {
+	public SendDataFluigDataDoneEvent(ProcessTypeEnum processTypeEnum, ProcessStatusEnum status, String string) {
 		super();
 		this.when = new Date();
 		this.jsonData = string;
 		this.processTypeEnum = processTypeEnum;
+		this.processStatusEnum = status;
+	}
+
+	public ProcessStatusEnum getProcessStatusEnum() {
+		return processStatusEnum;
+	}
+
+	public void setProcessStatusEnum(ProcessStatusEnum processStatusEnum) {
+		this.processStatusEnum = processStatusEnum;
 	}
 
 	public ProcessTypeEnum getProcessTypeEnum() {

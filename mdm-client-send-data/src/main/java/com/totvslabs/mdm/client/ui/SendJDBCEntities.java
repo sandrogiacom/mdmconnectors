@@ -7,6 +7,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ import com.totvslabs.mdm.client.ui.events.JDBCConnectionStabilizedListener;
 import com.totvslabs.mdm.client.ui.events.JDBCTableSelectedDispatcher;
 import com.totvslabs.mdm.client.ui.events.JDBCTableSelectedEvent;
 import com.totvslabs.mdm.client.ui.events.JDBCTableSelectedListener;
+import com.totvslabs.mdm.client.ui.events.ProcessStatusEnum;
 import com.totvslabs.mdm.client.ui.events.SendDataFluigDataDoneDispatcher;
 import com.totvslabs.mdm.client.ui.events.SendDataFluigDataDoneEvent;
 import com.totvslabs.mdm.client.ui.events.SendDataFluigDataDoneListener;
@@ -93,7 +95,7 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 		this.checkBoxIgnoreLocalCache = new JCheckBox("Yes!", true);
 
 		this.labelBatchSize = new JLabel("Batch Size (records): ");
-		this.textBatchSize = new JTextField("100", 20);
+		this.textBatchSize = new JTextField("1000", 20);
 
 		this.buttonGenerateJsonFile = new JButton("Export Entity as Json File");
 		this.buttonGenerateJsonFile.setEnabled(false);
@@ -157,6 +159,7 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 		private JDBCTableVO tableVO;
 		private SendJDBCEntities panelJDBCEntities;
 		private File file;
+		private PrintWriter pw;
 
 		public GenerateJSonFileClick(SendJDBCEntities panelJDBCEntities) {
 			this.panelJDBCEntities = panelJDBCEntities;
@@ -209,15 +212,23 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 		public void onSendDataFluigDataDone(SendDataFluigDataDoneEvent event) {
 			try {
 				String jsonData = event.getJsonData();
-				
+
 				if(event.getProcessTypeEnum().equals(ProcessTypeEnum.EXPORT_DATA)) {
-					PrintWriter pw = new PrintWriter(file);
-					pw.write(jsonData);
-					pw.close();
-					JOptionPane.showMessageDialog(null, "The json file was generated successfully at: " + file.getAbsolutePath());
+					if(pw == null) {
+						pw = new PrintWriter(new FileOutputStream(file), false);
+					}
+
+					pw.append(jsonData);
+
+					if(ProcessStatusEnum.DONE.equals(event.getProcessStatusEnum())) {
+						JOptionPane.showMessageDialog(null, "The json file was generated successfully at: " + file.getAbsolutePath());
+						pw.close();
+					}
 				}
 
-				buttonGenerateJsonFile.setEnabled(true);
+				if(ProcessStatusEnum.DONE.equals(event.getProcessStatusEnum())) {
+					buttonGenerateJsonFile.setEnabled(true);
+				}
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}
@@ -329,7 +340,7 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 		if(event.getTables() != null) {
 			this.comboTable.removeAllItems();
 			this.textTemplateName.setText("");
-			this.textBatchSize.setText("100");
+			this.textBatchSize.setText("1000");
 			
 			this.jdbcConnectionStabilizedEvent = event;
 			

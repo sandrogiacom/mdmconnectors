@@ -437,7 +437,7 @@ public class JDBCConnectionFactory {
 		}
 
 		try {
-			ResultSet tables = connection.getMetaData().getTables(null, "%", "%", new String[] { "TABLE" });
+			ResultSet tables = connection.getMetaData().getTables(null, "%", "%", new String[] { "TABLE", "VIEW" });
 
 			while (tables.next()) {
 				String databaseName = tables.getString("TABLE_CAT");

@@ -38,7 +38,7 @@ public class CommandListDatasource extends AuthenticatedCommand {
 
 	@Override
 	public String getCommandURL() {
-		return "api/v1/dataSources?offset=0&pageSize=10&sortBy=_mdmId&sortOrder=ASC";
+		return "api/v1/dataSources?offset=0&pageSize=10&sortBy=mdmId&sortOrder=ASC";
 	}
 
 	@Override

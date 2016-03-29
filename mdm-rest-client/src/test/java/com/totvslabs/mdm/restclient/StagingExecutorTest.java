@@ -78,8 +78,8 @@ public class StagingExecutorTest {
 
 		try {
 			JsonObject schema = new JsonObject();
-			schema.addProperty("_mdmStagingDataSourceId", MDMTestingConstants.DATASOURCE_ID);
-			schema.addProperty("_mdmStagingType", type);
+			schema.addProperty("mdmStagingDataSourceId", MDMTestingConstants.DATASOURCE_ID);
+			schema.addProperty("mdmStagingType", type);
 
 			JsonArray crosswalkType = new JsonArray();
 			crosswalkType.add(new JsonPrimitive("name"));
@@ -88,9 +88,9 @@ public class StagingExecutorTest {
 			crosswalk.add(type, crosswalkType);
 			
 			JsonObject crossreference = new JsonObject();
-			crossreference.add("_mdmCrossreference", crosswalk);
+			crossreference.add("mdmCrossreference", crosswalk);
 			
-			schema.add("_mdmCrosswalkTemplate", crossreference);
+			schema.add("mdmCrosswalkTemplate", crossreference);
 			
 			JsonObject mapping = new JsonObject();
 			
@@ -103,7 +103,7 @@ public class StagingExecutorTest {
 			
 			mapping.add("properties", mappingProperties);
 			
-			schema.add("_mdmStagingMapping", mapping);
+			schema.add("mdmStagingMapping", mapping);
 			
 			AuthenticatedCommand schemaCommand = new CommandPostSchema(MDMRestAuthentication.getInstance().getAuthVO()
 					.getMdmTenantId(), MDMTestingConstants.DATASOURCE_ID, type,

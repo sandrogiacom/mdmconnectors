@@ -27,6 +27,7 @@ import com.totvslabs.mdm.client.pojo.StoredRecordHashVO;
 import com.totvslabs.mdm.client.ui.SendFileFluigData;
 import com.totvslabs.mdm.client.ui.SendJDBCEntities;
 import com.totvslabs.mdm.client.ui.events.LogManagerDispatcher;
+import com.totvslabs.mdm.client.ui.events.ProcessStatusEnum;
 import com.totvslabs.mdm.client.ui.events.SendDataFluigDataDoneDispatcher;
 import com.totvslabs.mdm.client.ui.events.SendDataFluigDataDoneEvent;
 import com.totvslabs.mdm.client.ui.events.SendDataFluigDataUpdateProcessDispatcher;
@@ -108,9 +109,9 @@ public class ThreadExportData implements Runnable {
 			JsonObject schemas = new JsonObject();
 			JsonObject schemasCross = new JsonObject();
 			schema.add("properties", schemas);
-			schemaCross.add("_mdmCrossreference", schemasCross);
-			completeSchema.add("_mdmStagingMapping", schema);
-			completeSchema.add("_mdmCrosswalkTemplate", schemaCross);
+			schemaCross.add("mdmCrossreference", schemasCross);
+			completeSchema.add("mdmStagingMapping", schema);
+			completeSchema.add("mdmCrosswalkTemplate", schemaCross);
 
 			Set<Entry<String, JsonElement>> entrySet = data.getData().get(0).getAsJsonObject().entrySet();
 			int fieldCount = 0;
@@ -183,7 +184,7 @@ public class ThreadExportData implements Runnable {
 
 			LogManagerDispatcher.getInstance().register("Finished the process now: " + df.format(Calendar.getInstance().getTime()) + "\n\n");
 
-			SendDataFluigDataDoneDispatcher.getInstance().fireSendDataFluigDataDoneEvent(new SendDataFluigDataDoneEvent(ProcessTypeEnum.SEND_DATA, data.getData().toString()));
+			SendDataFluigDataDoneDispatcher.getInstance().fireSendDataFluigDataDoneEvent(new SendDataFluigDataDoneEvent(ProcessTypeEnum.SEND_DATA, ProcessStatusEnum.DONE, data.getData().toString()));
 		}
 	}
 
@@ -191,7 +192,6 @@ public class ThreadExportData implements Runnable {
 		DateFormat df = new SimpleDateFormat("yyyy.MM.dd 'at' HH:mm:ss z");
 
 		LogManagerDispatcher.getInstance().register("Starting the process now: " + df.format(Calendar.getInstance().getTime()));
-		StringBuffer totalDataJSon = new StringBuffer();
 		Integer batchSize = 500;
 		Integer totalRecords = tableVO.getTotalRecords();
 
@@ -212,11 +212,12 @@ public class ThreadExportData implements Runnable {
 		JsonObject schemas = new JsonObject();
 		JsonObject schemasCross = new JsonObject();
 		schema.add("properties", schemas);
-		schemaCross.add("_mdmCrossreference", schemasCross);
-		completeSchema.add("_mdmStagingMapping", schema);
-		completeSchema.add("_mdmCrosswalkTemplate", schemaCross);
+		schemaCross.add("mdmCrossreference", schemasCross);
+		completeSchema.add("mdmStagingMapping", schema);
+		completeSchema.add("mdmCrosswalkTemplate", schemaCross);
 
 		List<JDBCFieldVO> fields = this.tableVO.getFields();
+		String firstField = null;
 
 		for (JDBCFieldVO jdbcFieldVO : fields) {
 			JsonObject fieldDetail = new JsonObject();
@@ -260,6 +261,10 @@ public class ThreadExportData implements Runnable {
 			fieldDetail.addProperty("type", type);
 
 			schemas.add(jdbcFieldVO.getName(), fieldDetail);
+			
+			if(firstField == null) {
+				firstField = jdbcFieldVO.getName();
+			}
 
 			if(jdbcFieldVO.getIdentifier() != null && jdbcFieldVO.getIdentifier()) {
 				JsonArray fieldIndex = schemasCross.getAsJsonArray(tableVO.getName());
@@ -272,6 +277,12 @@ public class ThreadExportData implements Runnable {
 				
 				schemasCross.add(tableVO.getName(), fieldIndex);
 			}
+		}
+
+		if(schemasCross.getAsJsonArray(tableVO.getName()) == null) {
+			JsonArray fieldIndex = new JsonArray();
+			fieldIndex.add(new JsonPrimitive(firstField));
+			schemasCross.add(tableVO.getName(), fieldIndex);
 		}
 
 		if(!this.justExportJSonData) {
@@ -294,7 +305,7 @@ public class ThreadExportData implements Runnable {
 			JsonArray lote = new JsonArray();
 
 			if(this.justExportJSonData) {
-				totalDataJSon.append(loteInitial.toString() + "\n");
+				SendDataFluigDataDoneDispatcher.getInstance().fireSendDataFluigDataDoneEvent(new SendDataFluigDataDoneEvent(ProcessTypeEnum.EXPORT_DATA, ProcessStatusEnum.WORKING, loteInitial.toString()));
 				totalDataSend += loteInitial.size();
 			}
 			else {
@@ -391,7 +402,7 @@ public class ThreadExportData implements Runnable {
 			processTypeEnum = ProcessTypeEnum.EXPORT_DATA;
 		}
 
-		SendDataFluigDataDoneDispatcher.getInstance().fireSendDataFluigDataDoneEvent(new SendDataFluigDataDoneEvent(processTypeEnum, totalDataJSon.toString()));
+		SendDataFluigDataDoneDispatcher.getInstance().fireSendDataFluigDataDoneEvent(new SendDataFluigDataDoneEvent(processTypeEnum, ProcessStatusEnum.DONE, ""));
 	}
 
 	public Integer getQuantityRecords() {

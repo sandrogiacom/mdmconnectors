@@ -31,6 +31,7 @@ import com.totvslabs.mdm.client.ui.events.LogManagerDispatcher;
 import com.totvslabs.mdm.client.ui.events.MDMConnectionChangedDispatcher;
 import com.totvslabs.mdm.client.ui.events.MDMConnectionChangedEvent;
 import com.totvslabs.mdm.client.ui.events.MDMConnectionChangedListener;
+import com.totvslabs.mdm.client.ui.events.ProcessStatusEnum;
 import com.totvslabs.mdm.client.ui.events.SendDataFluigDataDoneDispatcher;
 import com.totvslabs.mdm.client.ui.events.SendDataFluigDataDoneEvent;
 import com.totvslabs.mdm.client.ui.events.SendDataFluigDataDoneListener;
@@ -229,9 +230,11 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, C
 
 		@Override
 		public void onSendDataFluigDataDone(SendDataFluigDataDoneEvent event) {
-			tabbedPane.setSelectedIndex(0);
-			buttonExecute.setEnabled(true);
-			JOptionPane.showMessageDialog(null, "Send data process finished sucessfully!");
+			if(ProcessStatusEnum.DONE.equals(event.getProcessStatusEnum())) {
+				tabbedPane.setSelectedIndex(0);
+				buttonExecute.setEnabled(true);
+				JOptionPane.showMessageDialog(null, "Send data process finished sucessfully!");
+			}
 		}
 	}
 

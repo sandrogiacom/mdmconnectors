@@ -371,10 +371,10 @@ public class MDMConsumer extends PanelAbstract implements MDMConnectionChangedLi
 							if(result != null) {
 								String value = (String) result.get(fdFieldVO.getName());
 								
-								if(fdFieldVO.getName().equals("_mdmcountry") && value != null && value.length() > 3) { //TODO: fixme
+								if(fdFieldVO.getName().equals("mdmcountry") && value != null && value.length() > 3) { //TODO: fixme
 									value = value.substring(0, 3);
 								}
-								if(fdFieldVO.getName().equals("_mdmcity") && value != null && value.length() > 15) { //TODO: fixme
+								if(fdFieldVO.getName().equals("mdmcity") && value != null && value.length() > 15) { //TODO: fixme
 									value = value.substring(0, 15);
 								}
 								if(value != null && value.trim().length() > 0) {
@@ -389,23 +389,23 @@ public class MDMConsumer extends PanelAbstract implements MDMConnectionChangedLi
 									value = value.replaceAll("-", "");
 								}
 							}
-							if (fdFieldVO.getName().equals("_mdmentitytype") && value != null) {// TODO: Fixme
+							if (fdFieldVO.getName().equals("mdmentitytype") && value != null) {// TODO: Fixme
 								value = value.trim().toUpperCase();
 							}
-							if (fdFieldVO.getName().equals("_mdmdba") && (value == null || value.trim().length() == 0)) {// TODO: Fixme
-								value = (String) data.get("_mdmname");
+							if (fdFieldVO.getName().equals("mdmdba") && (value == null || value.trim().length() == 0)) {// TODO: Fixme
+								value = (String) data.get("mdmname");
 								if(value.length() > 20) {
 									value = value.substring(0, 20);
 								}
 							}
-//							if(fdFieldVO.getName().equals("_mdmdba") && value != null) {//TODO: Fixme I applied this rule on MDM
+//							if(fdFieldVO.getName().equals("mdmdba") && value != null) {//TODO: Fixme I applied this rule on MDM
 //								value = value.trim();
 //
 //								if(value.length() > 20) {
 //									value = value.substring(0, 20);
 //								}
 //							}
-//							if(fdFieldVO.getName().equals("_mdmphonenumber") && value != null) {//TODO: Fixme I applied this rule on MDM
+//							if(fdFieldVO.getName().equals("mdmphonenumber") && value != null) {//TODO: Fixme I applied this rule on MDM
 //								value = value.trim();
 //
 //								if(value.length() > 15) {
@@ -458,13 +458,13 @@ public class MDMConsumer extends PanelAbstract implements MDMConnectionChangedLi
 				}
 
 				//workarround:
-				if(data.get("_mdmaddress1") == null || ((String) data.get("_mdmaddress1")).trim().length() == 0) {
+				if(data.get("mdmaddress1") == null || ((String) data.get("mdmaddress1")).trim().length() == 0) {
 					this.workArround("A1_END", map, mappedFields, data);
 				}
-				if(data.get("_mdmstate") == null || ((String) data.get("_mdmstate")).trim().length() == 0) {
+				if(data.get("mdmstate") == null || ((String) data.get("mdmstate")).trim().length() == 0) {
 					this.workArround("A1_EST", map, mappedFields, data);
 				}
-				if(data.get("_mdmcity") == null || ((String) data.get("_mdmcity")).trim().length() == 0) {
+				if(data.get("mdmcity") == null || ((String) data.get("mdmcity")).trim().length() == 0) {
 					this.workArround("A1_MUN", map, mappedFields, data);
 				}
 
