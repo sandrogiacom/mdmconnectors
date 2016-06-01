@@ -25,6 +25,8 @@
 			<artifactId>sqljdbc4</artifactId>
 			<version>4.0.2206.100</version>
 		</dependency>
+		
+		<!-- http://dev.anyframejava.org/maven/repo/com/oracle/ojdbc14/9.0.2.0.0/ojdbc14-9.0.2.0.0.jar -->
 		<dependency>
 			<groupId>oracle</groupId>
 			<artifactId>oracle-jdbc</artifactId>
