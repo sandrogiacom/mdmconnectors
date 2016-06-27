@@ -38,7 +38,7 @@ public class MDMEntities extends PanelAbstract {
 		this.labelSyncType = new JLabel("Sync Type: ");
 		this.comboSyncType = new JComboBox<MDMEntitySyncTypeVO>();
 
-		this.comboSyncType.addItem(new MDMEntitySyncTypeVO(1l,"Database"));
+		this.comboSyncType.addItem(new MDMEntitySyncTypeVO(1L,"Database"));
 
 		this.initializeLayout();
 	}
@@ -82,8 +82,8 @@ public class MDMEntities extends PanelAbstract {
 			MDMEntityBO bo = new MDMEntityBO();
 
 			bo.setDescription("Desc");
-			bo.setMdmTenantId(23432424l);
-			bo.setMdmDatasourceId(234324l);
+			bo.setMdmTenantId(23432424L);
+			bo.setMdmDatasourceId(234324L);
 			bo.setName("sdfsfsf");
 
 			this.data.add(bo);
