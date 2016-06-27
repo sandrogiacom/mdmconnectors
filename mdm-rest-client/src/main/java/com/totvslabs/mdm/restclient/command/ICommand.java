@@ -52,4 +52,6 @@ public interface ICommand {
 	 * @return get data of the command
 	 */
 	public Object getData();
+
+	public Boolean isResultJson();
 }

@@ -8,7 +8,7 @@ import java.util.Map;
 public class MappingUtil {
 	public static final Map<String, Map<String, Map<String, Map<String, String>>>> mappings = new HashMap<String, Map<String, Map<String, Map<String, String>>>>();
 	
-	public static final String TYPE_CUSTOMER = "customer";
+	public static final String TYPE_CUSTOMER = "mdmcustomer";
 	public static final String PROD_PROTHEUS = "protheus";
 
 	public static final String NESTED_INSTANCE_DEFAULT = "DEFAULT";

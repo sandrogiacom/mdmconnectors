@@ -1,6 +1,6 @@
 package com.totvslabs.mdm.client.util;
 
-import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -11,18 +11,24 @@ import com.db4o.Db4oIOException;
 import com.db4o.ObjectContainer;
 import com.db4o.ObjectSet;
 import com.db4o.config.Configuration;
-import com.db4o.constraints.UniqueFieldValueConstraint;
+import com.db4o.defragment.AvailableClassFilter;
+import com.db4o.defragment.Defragment;
+import com.db4o.defragment.DefragmentConfig;
 import com.db4o.ext.Db4oException;
 import com.totvslabs.mdm.client.pojo.StoredAbstractVO;
 import com.totvslabs.mdm.client.pojo.StoredConfigurationVO;
+import com.totvslabs.mdm.client.pojo.StoredDataConsumptionCounterVO;
 import com.totvslabs.mdm.client.pojo.StoredFluigDataProfileVO;
 import com.totvslabs.mdm.client.pojo.StoredJDBCConnectionVO;
 import com.totvslabs.mdm.client.pojo.StoredRecordHashVO;
 
-public class PersistenceEngineDB4O extends PersistenceEngine {
+public class PersistenceEngineDB4O extends PersistenceEngine implements Runnable {
 	private static final Logger LOGGER = Logger.getLogger( PersistenceEngineDB4O.class.getName() );
 	private ObjectContainer db;
 	private String location;
+	private Boolean isClose = Boolean.TRUE;
+	private Boolean wasChanged = Boolean.FALSE;
+	private Thread threadCommit;
 
 	protected PersistenceEngineDB4O() {
 		this.location = "data/data.yap";
@@ -35,51 +41,59 @@ public class PersistenceEngineDB4O extends PersistenceEngine {
 			configuration.setOut(System.out);
 			configuration.messageLevel(1);
 			configuration.lockDatabaseFile(false);
-			configuration.add(new UniqueFieldValueConstraint(StoredRecordHashVO.class,"name"));
-			configuration.add(new UniqueFieldValueConstraint(StoredAbstractVO.class,"name"));
+
+			configuration.objectClass(StoredRecordHashVO.class).updateDepth(2);
+
 			configuration.objectClass(StoredAbstractVO.class).objectField("name").indexed(true);
+			configuration.objectClass(StoredJDBCConnectionVO.class).objectField("name").indexed(true);
+			configuration.objectClass(StoredFluigDataProfileVO.class).objectField("name").indexed(true);
+			configuration.objectClass(StoredDataConsumptionCounterVO.class).objectField("name").indexed(true);
 			configuration.objectClass(StoredRecordHashVO.class).objectField("name").indexed(true);
 			configuration.objectClass(StoredRecordHashVO.class).objectField("fluigDataProfile").indexed(true);
 			configuration.objectClass(StoredRecordHashVO.class).objectField("jdbcConnection").indexed(true);
 			configuration.objectClass(StoredConfigurationVO.class).objectField("fluigDataName").indexed(true);
 			configuration.objectClass(StoredConfigurationVO.class).objectField("datasourceID").indexed(true);
 
-			this.db = Db4o.openFile(configuration, this.location );
-		} catch( ArrayIndexOutOfBoundsException e) {
-			this.workArround();
-		} catch ( Db4oException de ){
-			this.workArround();
-		} catch ( Exception e ) {
-			LOGGER.log(Level.SEVERE, "Erro abrindo banco DB4O -> path: " + this.location, e );
-		}
-	}
+			this.db = Db4o.openFile(configuration, this.location);
 
-	private void workArround() {
-		File directory = new File("data");
-		File files[] = directory.listFiles();
-		if(files != null){
-			for (File file : files) {
-				String fileName = file.getName();
-				if(fileName.length() > 4 && fileName.substring(fileName.length() - 4, fileName.length()).equalsIgnoreCase(".yap")){
-					file.delete();
-				}
-			}
+			this.threadCommit = new Thread(this);
+			this.threadCommit.start();
+		} catch( ArrayIndexOutOfBoundsException e) {
+			e.printStackTrace();
+		} catch (Db4oException e) {
+			e.printStackTrace();
+		} catch ( Exception e ) {
+			LOGGER.log(Level.SEVERE, "Error when oppening the db4o file: path ---> " + this.location, e );
 		}
-		else{
-			LOGGER.log(Level.SEVERE, "Data file not found: " + this.location);
-		}
-		LOGGER.log(Level.SEVERE, "Error opening the data file, please try again or try to repair the data file: " + this.location);
-		this.open();
 	}
 
 	public synchronized void close() {
 		try {
 			this.db.close();
+			this.isClose = Boolean.TRUE;
 		} catch ( Exception e ) {
 			LOGGER.log(Level.SEVERE, e.getMessage(), e );
 		} finally {
 			this.db = null;
 			instance = null;
+		}
+	}
+
+	@Override
+	public void run() {
+		while(!this.isClose) {
+			try {
+				if(this.wasChanged) {
+					long initialTime = System.currentTimeMillis();
+					this.db.commit();
+					this.wasChanged = Boolean.FALSE;					
+					LOGGER.log(Level.INFO, "--> |COMMIT THREAD| It took '" + (System.currentTimeMillis() - initialTime) + "' ms to commit the session.");
+				}
+
+				Thread.sleep(50000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -90,9 +104,16 @@ public class PersistenceEngineDB4O extends PersistenceEngine {
 			return null;
 		}
 
+		long partialTime = System.currentTimeMillis();
 		StoredAbstractVO tempObj = this.getByName(instance.getName(), instance.getClass());
+
+		LOGGER.log(Level.INFO, "--> |SAVE| Partial time to find the record: " + (System.currentTimeMillis()-partialTime));
+
 		if(tempObj != null && tempObj.getName().equals(instance.getName())) {
+			partialTime = System.currentTimeMillis();
 			this.delete(tempObj);
+
+			LOGGER.log(Level.INFO, "--> |SAVE| Partial time to delete the record (deleting because it exists before save the actual instance): " + (System.currentTimeMillis()-partialTime));
 		}
 
 		if(!instance.validate()) {
@@ -100,14 +121,17 @@ public class PersistenceEngineDB4O extends PersistenceEngine {
 		}
 
 		try {
+			partialTime = System.currentTimeMillis();
 			this.db.set( instance );
-			this.db.commit();
+			this.wasChanged = Boolean.TRUE;
+
+			LOGGER.log(Level.INFO, "--> |SAVE| Partial time to set the record in Db4o: " + (System.currentTimeMillis()-partialTime));
 		} catch ( Exception e ) {
-			LOGGER.log(Level.SEVERE,"Error when saving records: " + instance.toString(), e );
+			LOGGER.log(Level.SEVERE,"|SAVE| Error when saving record: " + instance.toString(), e );
 			this.close();
 		}
 
-		LOGGER.log(Level.INFO, "Took '" + (System.currentTimeMillis() - initialTime) + "' to save data.");
+		LOGGER.log(Level.INFO, "--> |SAVE| It took '" + (System.currentTimeMillis() - initialTime) + "' ms to save the record.");
 
 		return instance;
 	}
@@ -142,9 +166,9 @@ public class PersistenceEngineDB4O extends PersistenceEngine {
 		}
 
 		this.db.delete(instance);
-		this.db.commit();
+		this.wasChanged = Boolean.TRUE;
 
-		LOGGER.log(Level.INFO, "Took '" + (System.currentTimeMillis() - initialTime) + "' to delete data.");
+		LOGGER.log(Level.INFO, "--> |DELETE| It took '" + (System.currentTimeMillis() - initialTime) + "' ms to delete the record.");
 
 		return instance;
 	}
@@ -152,10 +176,8 @@ public class PersistenceEngineDB4O extends PersistenceEngine {
 	private void searchAndDelete(StoredAbstractVO instance) {
 		ObjectSet<StoredAbstractVO> querySet = this.db.get(instance);
 
-		if(querySet != null && querySet.size() >= 0) {
-			for(int i=0; i<querySet.size(); i++) {
-				this.delete(querySet.get(i));
-			}
+		while(querySet.hasNext()) {
+			this.delete(querySet.next());
 		}
 	}
 
@@ -175,12 +197,12 @@ public class PersistenceEngineDB4O extends PersistenceEngine {
 		ObjectSet<StoredAbstractVO> objectSet = db.get(instance);
 
         if(objectSet != null && !objectSet.isEmpty()) {
-    		LOGGER.log(Level.INFO, "Took '" + (System.currentTimeMillis() - initialTime) + "' to find data '" + objectSet.size() + "'.");
+    		LOGGER.log(Level.INFO, "--> |FIND_NAME| It took '" + (System.currentTimeMillis() - initialTime) + "' ms to find '" + objectSet.size() + "' record(s).");
 
         	return objectSet.get(0);
         }
 
-		LOGGER.log(Level.INFO, "Took '" + (System.currentTimeMillis() - initialTime) + "' to find data (no records).");
+		LOGGER.log(Level.INFO, "--> |FIND_NAME| It took '" + (System.currentTimeMillis() - initialTime) + "' ms to find no records.");
 
 		return null;
 	}
@@ -195,15 +217,9 @@ public class PersistenceEngineDB4O extends PersistenceEngine {
 			if (!objectSet.isEmpty()) {
 				List<StoredAbstractVO> subList = objectSet.subList(0, objectSet.size());
 
-				if(subList != null) {
-					for (StoredAbstractVO storedAbstractVO : subList) {
-						System.out.println(storedAbstractVO);
-					}
-				}
+				LOGGER.log(Level.INFO, "--> |FIND_ALL| It took '" + (System.currentTimeMillis() - initialTime) + "' ms to find all records of '" + clasz + "'. It found '" + objectSet.size() + "' records.");
 
-				LOGGER.log(Level.INFO, "Took '" + (System.currentTimeMillis() - initialTime) + "' to findAll records (" + clasz + ") - found '" + objectSet.size() + "' records.");
-
-				return objectSet.subList(0, objectSet.size());
+				return subList;
 			}
 		} catch (Db4oIOException e) {
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);
@@ -211,8 +227,22 @@ public class PersistenceEngineDB4O extends PersistenceEngine {
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 		}
 
-		LOGGER.log(Level.INFO, "Took '" + (System.currentTimeMillis() - initialTime) + "' to findAll records (" + clasz + ") - found no records.");
+		LOGGER.log(Level.INFO, "--> |FIND_ALL| It took '" + (System.currentTimeMillis() - initialTime) + "' ms to find no records of '" + clasz + "'.");
 
 		return null;
+	}
+
+	@Override
+	public void defragDatabase() {
+	    try {
+	        DefragmentConfig config = new DefragmentConfig(this.location, this.location + ".bak");
+	        config.storedClassFilter(new AvailableClassFilter());
+	        config.forceBackupDelete(false);
+	        config.objectCommitFrequency(1000);
+	        Defragment.defrag(config);
+	        System.out.println("Defrag completed");
+	    } catch (IOException ex) {
+	        ex.printStackTrace();
+	    }
 	}
 }

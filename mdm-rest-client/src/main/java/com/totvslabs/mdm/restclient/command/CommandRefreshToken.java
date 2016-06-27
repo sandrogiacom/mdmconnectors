@@ -65,5 +65,10 @@ public class CommandRefreshToken implements ICommand {
 
 		return parameters;
 	}
+
+	@Override
+	public Boolean isResultJson() {
+		return Boolean.TRUE;
+	}
 }
 

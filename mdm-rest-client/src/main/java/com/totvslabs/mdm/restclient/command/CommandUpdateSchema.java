@@ -8,15 +8,15 @@ import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.DatasourceVO;
 
 /**
- * Command to store staging data
+ * Command to post staging schema
  * @author TOTVS Labs
  *
  */
-public class CommandPostStaging extends AuthenticatedCommand {
+public class CommandUpdateSchema extends AuthenticatedCommand {
 	private String tenantId;
 	private String datasourceId;
 	private String type;
-	private Object data;
+	private Object schema;
 
 	@Override
 	public MDMRestConnectionTypeEnum getAuthenticationType() {
@@ -28,13 +28,13 @@ public class CommandPostStaging extends AuthenticatedCommand {
 	 * @param tenantId
 	 * @param datasourceId
 	 * @param type
-	 * @param data
+	 * @param schema
 	 */
-	public CommandPostStaging(String tenantId, String datasourceId, String type, Object data) {
+	public CommandUpdateSchema(String tenantId, String datasourceId, String type, Object schema) {
 		this.tenantId = tenantId;
 		this.datasourceId = datasourceId;
 		this.type = type;
-		this.data = data;
+		this.schema = schema;
 	}
 
 	@Override
@@ -54,12 +54,17 @@ public class CommandPostStaging extends AuthenticatedCommand {
 
 	@Override
 	public String getCommandURL() {
-		return "api/v1/staging/entities/types/" + type + "";
+		return "api/v1/staging/entities/types/" + this.type + "/schema";
 	}
 
 	@Override
 	public Class<DatasourceVO> getResponseType() {
-		return DatasourceVO.class;
+		return null;
+	}
+
+	@Override
+	public Boolean isResultJson() {
+		return Boolean.FALSE;
 	}
 
 	@Override
@@ -69,21 +74,22 @@ public class CommandPostStaging extends AuthenticatedCommand {
 
 	@Override
 	public CommandTypeEnum getType() {
-		return CommandTypeEnum.POST;
+		return CommandTypeEnum.PUT;
 	}
 
 	@Override
 	public Object getData() {
-		return data;
+		return schema;
 	}
 
 	@Override
 	public Map<String, String> getFormData() {
 		return null;
 	}
+
 	@Override
 	public String toString() {
-		return "CommandPostStaging [tenantId=" + tenantId + ", datasourceId="
-				+ datasourceId + ", type=" + type + ", data=" + data + "]";
+		return "CommandUpdateSchema [tenantId=" + tenantId + ", datasourceId="
+				+ datasourceId + ", type=" + type + ", schema=" + schema + "]";
 	}
 }

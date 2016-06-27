@@ -3,48 +3,48 @@ package com.totvslabs.mdm.restclient.vo;
 import java.util.Map;
 
 public class GoldenRecordVO {
-	private String _mdmEntityTemplateId;
-    private Map<String, Object> _mdmGoldenFieldAndValues;
-    private Integer _mdmCounterForEntity;
-    private String _mdmProfileTitle;
-    private String _mdmId;
-    private String _mdmElasticsearchMappingType;
+	private String mdmEntityTemplateId;
+    private Map<String, Object> mdmGoldenFieldAndValues;
+    private Integer mdmCounterForEntity;
+    private String mdmProfileTitle;
+    private String mdmId;
+    private String mdmElasticsearchMappingType;
 
 	public String getMdmEntityTemplateId() {
-		return _mdmEntityTemplateId;
+		return mdmEntityTemplateId;
 	}
-	public void setMdmEntityTemplateId(String _mdmEntityTemplateId) {
-		this._mdmEntityTemplateId = _mdmEntityTemplateId;
+	public void setMdmEntityTemplateId(String mdmEntityTemplateId) {
+		this.mdmEntityTemplateId = mdmEntityTemplateId;
 	}
 	public Map<String, Object> getMdmGoldenFieldAndValues() {
-		return _mdmGoldenFieldAndValues;
+		return mdmGoldenFieldAndValues;
 	}
-	public void setMdmGoldenFieldAndValues(Map<String, Object> _mdmGoldenFieldAndValues) {
-		this._mdmGoldenFieldAndValues = _mdmGoldenFieldAndValues;
+	public void setMdmGoldenFieldAndValues(Map<String, Object> mdmGoldenFieldAndValues) {
+		this.mdmGoldenFieldAndValues = mdmGoldenFieldAndValues;
 	}
 	public Integer getMdmCounterForEntity() {
-		return _mdmCounterForEntity;
+		return mdmCounterForEntity;
 	}
-	public void setMdmCounterForEntity(Integer _mdmCounterForEntity) {
-		this._mdmCounterForEntity = _mdmCounterForEntity;
+	public void setMdmCounterForEntity(Integer mdmCounterForEntity) {
+		this.mdmCounterForEntity = mdmCounterForEntity;
 	}
 	public String getMdmProfileTitle() {
-		return _mdmProfileTitle;
+		return mdmProfileTitle;
 	}
-	public void setMdmProfileTitle(String _mdmProfileTitle) {
-		this._mdmProfileTitle = _mdmProfileTitle;
+	public void setMdmProfileTitle(String mdmProfileTitle) {
+		this.mdmProfileTitle = mdmProfileTitle;
 	}
 	public String getMdmId() {
-		return _mdmId;
+		return mdmId;
 	}
-	public void setMdmId(String _mdmId) {
-		this._mdmId = _mdmId;
+	public void setMdmId(String mdmId) {
+		this.mdmId = mdmId;
 	}
 	public String getMdmElasticsearchMappingType() {
-		return _mdmElasticsearchMappingType;
+		return mdmElasticsearchMappingType;
 	}
-	public void setMdmElasticsearchMappingType(String _mdmElasticsearchMappingType) {
-		this._mdmElasticsearchMappingType = _mdmElasticsearchMappingType;
+	public void setMdmElasticsearchMappingType(String mdmElasticsearchMappingType) {
+		this.mdmElasticsearchMappingType = mdmElasticsearchMappingType;
 	}
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
@@ -52,10 +52,10 @@ public class GoldenRecordVO {
 	@Override
 	public String toString() {
 		return String
-				.format("GoldenRecordVO [_mdmEntityTemplateId=%s, _mdmGoldenFieldAndValues=%s, _mdmCounterForEntity=%s, _mdmProfileTitle=%s, _mdmId=%s, _mdmElasticsearchMappingType=%s]",
-						_mdmEntityTemplateId, _mdmGoldenFieldAndValues,
-						_mdmCounterForEntity, _mdmProfileTitle, _mdmId,
-						_mdmElasticsearchMappingType);
+				.format("GoldenRecordVO [mdmEntityTemplateId=%s, mdmGoldenFieldAndValues=%s, mdmCounterForEntity=%s, mdmProfileTitle=%s, mdmId=%s, mdmElasticsearchMappingType=%s]",
+						mdmEntityTemplateId, mdmGoldenFieldAndValues,
+						mdmCounterForEntity, mdmProfileTitle, mdmId,
+						mdmElasticsearchMappingType);
 	}    
 	
 	

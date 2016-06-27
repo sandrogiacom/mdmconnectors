@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MATA030 Operation="3" version="1.01">
+  <MATA030_SA1 modeltype="FIELDS" >
+    <A1_FILIAL order="1">
+      <value></value>
+    </A1_FILIAL>
+    <A1_COD order="2">
+      <value></value>
+    </A1_COD>
+    <A1_LOJA order="3">
+      <value>00</value>
+    </A1_LOJA>
+    <A1_NOME order="4">
+      <value></value>
+    </A1_NOME>
+    <A1_PESSOA order="5">
+      <value></value>
+    </A1_PESSOA>
+    <A1_END order="6">
+      <value>.</value>
+    </A1_END>
+    <A1_NREDUZ order="7">
+      <value>.</value>
+    </A1_NREDUZ>
+    <A1_BAIRRO order="8">
+      <value></value>
+    </A1_BAIRRO>
+    <A1_TIPO order="9">
+      <value>R</value>
+    </A1_TIPO>
+    <A1_EST order="10">
+      <value>.</value>
+    </A1_EST>
+    <A1_CEP order="12">
+      <value></value>
+    </A1_CEP>
+    <A1_COD_MUN order="13">
+      <value>00001</value>
+    </A1_COD_MUN>
+    <A1_MUN order="14">
+      <value>.</value>
+    </A1_MUN>
+    <A1_ENDCOB order="19">
+      <value></value>
+    </A1_ENDCOB>
+    <A1_DDD order="21">
+      <value></value>
+    </A1_DDD>
+    <A1_ENDENT order="23">
+      <value></value>
+    </A1_ENDENT>
+    <A1_TEL order="24">
+      <value></value>
+    </A1_TEL>
+    <A1_CGC order="28">
+      <value></value>
+    </A1_CGC>
+    <A1_INSCR order="31">
+      <value></value>
+    </A1_INSCR>
+    <A1_INSCRM order="32">
+      <value></value>
+    </A1_INSCRM>
+    <A1_PAIS order="33">
+      <value></value>
+    </A1_PAIS>
+    <A1_VEND order="35">
+      <value></value>
+    </A1_VEND>
+    <A1_TRANSP order="43">
+      <value></value>
+    </A1_TRANSP>
+    <A1_BAIRROC order="100">
+      <value></value>
+    </A1_BAIRROC>
+    <A1_CEPC order="101">
+      <value></value>
+    </A1_CEPC>
+    <A1_MUNC order="102">
+      <value></value>
+    </A1_MUNC>
+    <A1_ESTC order="103">
+      <value></value>
+    </A1_ESTC>
+    <A1_BAIRROE order="104">
+      <value></value>
+    </A1_BAIRROE>
+    <A1_CEPE order="105">
+      <value></value>
+    </A1_CEPE>
+    <A1_MUNE order="106">
+      <value></value>
+    </A1_MUNE>
+    <A1_ESTE order="107">
+      <value></value>
+    </A1_ESTE>
+    <A1_EMAIL order="132">
+      <value></value>
+    </A1_EMAIL>
+    <A1_COMPLEM order="159">
+      <value></value>
+    </A1_COMPLEM>
+    <A1_DTCAD order="161">
+      <value></value>
+    </A1_DTCAD>
+  </MATA030_SA1>
+</MATA030>

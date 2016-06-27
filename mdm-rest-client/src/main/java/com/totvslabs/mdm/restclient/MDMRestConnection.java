@@ -1,13 +1,5 @@
 package com.totvslabs.mdm.restclient;
 
-import com.google.gson.Gson;
-import com.totvslabs.mdm.restclient.command.AuthenticatedCommand;
-import com.totvslabs.mdm.restclient.command.CommandPostStagingC;
-import com.totvslabs.mdm.restclient.command.ICommand;
-import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
-import com.totvslabs.mdm.restclient.vo.EnvelopeVO;
-import com.totvslabs.mdm.restclient.vo.GenericVO;
-
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -28,7 +20,6 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
@@ -36,6 +27,18 @@ import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.glassfish.jersey.client.JerseyClientBuilder;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.totvslabs.mdm.restclient.command.AuthenticatedCommand;
+import com.totvslabs.mdm.restclient.command.CommandDataConsumption;
+import com.totvslabs.mdm.restclient.command.CommandPostStagingC;
+import com.totvslabs.mdm.restclient.command.ICommand;
+import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
+import com.totvslabs.mdm.restclient.vo.DataConsumptionEntitiesRecordVO;
+import com.totvslabs.mdm.restclient.vo.DataConsumptionVO;
+import com.totvslabs.mdm.restclient.vo.EnvelopeVO;
+import com.totvslabs.mdm.restclient.vo.GenericVO;
 
 /**
  * 
@@ -145,7 +148,7 @@ public class MDMRestConnection {
 					response = request.post(body);
 				}
 				
-				log.info("Time to execute the POST service ('" + command.getCommandURL() + "'" + additionalInformation + "): " + (System.currentTimeMillis() - initialTime) );
+				log.info("Time to execute the POST service ('" + command.getCommandURL() + "'" + additionalInformation + ": " + formData + "): " + (System.currentTimeMillis() - initialTime) );
 				break;
 		}
 
@@ -155,29 +158,38 @@ public class MDMRestConnection {
 		}
 		
 		if (response.getStatus() != Response.Status.OK.getStatusCode()) {
-//			if(command.getData() != null) {
-//				log.info("Data response:" + command.getData().toString());
-//			}
+			if(command.getData() != null) {
+				log.error("Data response:" + command.getData().toString());
+			}
 
 			String readEntity = response.readEntity(String.class);
 
 			throw new RuntimeException("Failed : HTTP error code : " + response.getStatus() + " -> " + readEntity);
 		}
 
+		EnvelopeVO envelopeVO = null;
+		Object resultVO = null;
 		Gson gson = new Gson();
 		String responseStr = response.readEntity(String.class);
-		log.info("Response --> " + responseStr);
-		Object resultVO = gson.fromJson(responseStr, command.getResponseType());
-		EnvelopeVO envelopeVO = null;
 
-		if (resultVO instanceof EnvelopeVO) {
+		if(command.isResultJson()) {
+			resultVO = gson.fromJson(responseStr, command.getResponseType());
+		}
+
+		if (resultVO != null && resultVO instanceof EnvelopeVO) {
 			envelopeVO = (EnvelopeVO) resultVO;
 		} else {
 			envelopeVO = new EnvelopeVO();
 
-			List<GenericVO> genericVO = new ArrayList<>();
-			genericVO.add((GenericVO) resultVO);
-			envelopeVO.setHits(genericVO);
+			if(command.getResponseType() != null && command.getResponseType().equals(DataConsumptionVO.class)) {
+				resultVO = gson.fromJson(gson.fromJson(responseStr, JsonElement.class).getAsJsonObject().get(((CommandDataConsumption) command).getEntityType()), DataConsumptionEntitiesRecordVO.class);
+			}
+
+			if(command.getResponseType() != null) {
+				List<GenericVO> genericVO = new ArrayList<>();
+				genericVO.add((GenericVO) resultVO);
+				envelopeVO.setHits(genericVO);
+			}
 		}
 
 		return envelopeVO;

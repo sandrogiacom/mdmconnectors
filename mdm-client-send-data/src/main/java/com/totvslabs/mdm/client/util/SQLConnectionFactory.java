@@ -28,36 +28,49 @@ import com.totvslabs.mdm.client.pojo.JDBCDatabaseVO;
 import com.totvslabs.mdm.client.pojo.JDBCFieldVO;
 import com.totvslabs.mdm.client.pojo.JDBCIndexVO;
 import com.totvslabs.mdm.client.pojo.JDBCTableVO;
+import com.totvslabs.mdm.client.pojo.MDMJsonData;
 import com.totvslabs.mdm.client.pojo.StoredJDBCConnectionVO;
 import com.totvslabs.mdm.client.ui.SendJDBCDatabaseConnection;
 
-public class JDBCConnectionFactory {
-	private static Logger log = Logger.getLogger(JDBCConnectionFactory.class.getCanonicalName());
+public class SQLConnectionFactory extends DBConnectionFactory {
+	private static Logger log = Logger.getLogger(SQLConnectionFactory.class.getCanonicalName());
+	private static Map<String, Connection> connections = new HashMap<String, Connection>();
 
-	private static Connection getJDBCConnection(String url, String driver, String user, String password) {
-	    Connection connection = null;
-	    Properties connectionProps = new Properties();
-	    connectionProps.put("user", user);
-	    connectionProps.put("password", password);
+	public Connection getConnection(String url, String driver, String user, String password) {
+		StringBuffer key = new StringBuffer();
+		key.append(url);
+		key.append(driver);
+		key.append(user);
+		key.append(password);
 
-	    if(driver != null && driver.trim().length() > 0) {
-	    	try {
-	    		Class.forName(driver);
-	    	} catch (ClassNotFoundException e) {
-	    		e.printStackTrace();
-	    	}
-	    }
-	    
-        try {
-			connection = DriverManager.getConnection(url, connectionProps);
-		} catch (SQLException e1) {
-			e1.printStackTrace();
+		Connection connection = connections.get(key.toString());
+
+		if(null == null) {
+			Properties connectionProps = new Properties();
+			connectionProps.put("user", user);
+			connectionProps.put("password", password);
+			
+			if(driver != null && driver.trim().length() > 0) {
+				try {
+					Class.forName(driver);
+				} catch (ClassNotFoundException e) {
+					e.printStackTrace();
+				}
+			}
+			
+			try {
+				connection = DriverManager.getConnection(url, connectionProps);
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+
+			connections.put(key.toString(), connection);
 		}
 
 		return connection;
 	}
 
-	public static Integer getTotalRecords(StoredJDBCConnectionVO jdbcConnectionVO, JDBCTableVO tableVO) {
+	public Long getTotalRecords(StoredJDBCConnectionVO jdbcConnectionVO, JDBCTableVO tableVO) {
 		StringBuffer sql = new StringBuffer();
 
 		sql.append("SELECT count(*) FROM ");
@@ -66,8 +79,8 @@ public class JDBCConnectionFactory {
 		}
 		sql.append(tableVO.getInternalName());
 
-		Connection connection = JDBCConnectionFactory.getJDBCConnection(jdbcConnectionVO.getUrl(), jdbcConnectionVO.getDriver(), jdbcConnectionVO.getUsername(), jdbcConnectionVO.getPassword());
-		Integer totalRecords = 0;
+		Connection connection = this.getConnection(jdbcConnectionVO.getUrl(), jdbcConnectionVO.getDriver(), jdbcConnectionVO.getUsername(), jdbcConnectionVO.getPassword());
+		Long totalRecords = 0l;
 
 		try {
 			Statement st = null;
@@ -77,7 +90,7 @@ public class JDBCConnectionFactory {
 				ResultSet rs = st.executeQuery(sql.toString());
 
 				while(rs.next()) {
-					totalRecords = rs.getInt(1);
+					totalRecords = rs.getLong(1);
 				}
 
 				if(rs != null) {
@@ -110,8 +123,9 @@ public class JDBCConnectionFactory {
 		return totalRecords;
 	}
 
-	public static JsonArray loadData(StoredJDBCConnectionVO jdbcConnectionVO, JDBCTableVO tableVO, int initialRecord, int quantity) {
+	public MDMJsonData loadData(StoredJDBCConnectionVO jdbcConnectionVO, JDBCTableVO tableVO, int initialRecord, int quantity) {
 		JsonArray jsonRecords = new JsonArray();
+		MDMJsonData returnObj = new MDMJsonData(tableVO.getInternalName(), jsonRecords);
 		StringBuffer sql = new StringBuffer();
 
 		if(jdbcConnectionVO.getDriver().equals(SendJDBCDatabaseConnection.DB_PROGRESS)) {
@@ -165,7 +179,7 @@ public class JDBCConnectionFactory {
 			sql = sqlNew;
 		}
 
-		Connection connection = JDBCConnectionFactory.getJDBCConnection(jdbcConnectionVO.getUrl(), jdbcConnectionVO.getDriver(), jdbcConnectionVO.getUsername(), jdbcConnectionVO.getPassword());
+		Connection connection = this.getConnection(jdbcConnectionVO.getUrl(), jdbcConnectionVO.getDriver(), jdbcConnectionVO.getUsername(), jdbcConnectionVO.getPassword());
 
 		try {
 			Statement st = null;
@@ -249,7 +263,7 @@ public class JDBCConnectionFactory {
 			}
 		}
 
-		return jsonRecords;
+		return returnObj;
 	}
 
 	private static String blobToString(Blob blob) {
@@ -314,15 +328,15 @@ public class JDBCConnectionFactory {
 		return sb.toString();
 	}
 
-	public static JsonArray loadData(StoredJDBCConnectionVO jdbcConnectionVO, JDBCTableVO tableVO) {
+	public MDMJsonData loadData(StoredJDBCConnectionVO jdbcConnectionVO, JDBCTableVO tableVO) {
 		return loadData(jdbcConnectionVO, tableVO, 0, 0);
 	}
 
-	public static void loadFisicModelFields(StoredJDBCConnectionVO jdbcConnectionVO, JDBCTableVO tableVO) {
-		JDBCConnectionFactory.loadFisicModelFields(jdbcConnectionVO.getUrl(), jdbcConnectionVO.getDriver(), jdbcConnectionVO.getUsername(), jdbcConnectionVO.getPassword(), tableVO);
+	public void loadFisicModelFields(StoredJDBCConnectionVO jdbcConnectionVO, JDBCTableVO tableVO) {
+		this.loadFisicModelFields(jdbcConnectionVO.getUrl(), jdbcConnectionVO.getDriver(), jdbcConnectionVO.getUsername(), jdbcConnectionVO.getPassword(), tableVO);
 	}
 
-	public static void loadFisicModelFields(String url, String driver, String user, String password, JDBCTableVO tableVO) {
+	public void loadFisicModelFields(String url, String driver, String user, String password, JDBCTableVO tableVO) {
 		StringBuffer sql = new StringBuffer();
 
 		sql.append("SELECT * FROM ");
@@ -331,7 +345,7 @@ public class JDBCConnectionFactory {
 		}
 		sql.append(tableVO.getInternalName());
 		sql.append(" WHERE 1=0 ");
-		Connection connection = JDBCConnectionFactory.getJDBCConnection(url, driver, user, password);
+		Connection connection = this.getConnection(url, driver, user, password);
 
 		try {
 			Statement st = null;
@@ -370,15 +384,11 @@ public class JDBCConnectionFactory {
 					rs.close();
 				}
 
-//				ResultSet indexInformation = connection.getMetaData().getIndexInfo(connection.getCatalog(), null, tableVO.getInternalName(), false, true);
 				ResultSet primaryKey = connection.getMetaData().getPrimaryKeys(null, null, tableVO.getInternalName());
 				Map<String, JDBCIndexVO> mapIndex = new HashMap<String, JDBCIndexVO>();
 
 				try {
 					while (primaryKey.next()) {
-//						String dbIndexName = indexInformation.getString("INDEX_NAME");
-//						String dbColumnName = indexInformation.getString("COLUMN_NAME");
-//						Boolean dbUnique = indexInformation.getBoolean("NON_UNIQUE");
 						String primaryKeyFeild = primaryKey.getString("COLUMN_NAME");
 						String dbIndexName = "PK";
 
@@ -428,8 +438,8 @@ public class JDBCConnectionFactory {
 		}
 	}
 
-	public static JDBCDatabaseVO loadFisicModelTables(String url, String driver, String user, String password) {
-		Connection connection = JDBCConnectionFactory.getJDBCConnection(url, driver, user, password);
+	public JDBCDatabaseVO loadFisicModelTables(String url, String driver, String user, String password) {
+		Connection connection = this.getConnection(url, driver, user, password);
 		JDBCDatabaseVO databaseByFisicModelVO = new JDBCDatabaseVO();
 
 		if(connection == null) {

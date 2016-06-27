@@ -2,6 +2,7 @@ package com.totvslabs.mdm.restclient.command;
 
 import java.util.Map;
 
+import com.totvslabs.mdm.restclient.MDMRestConnectionTypeEnum;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.DataModelVO;
 
@@ -19,6 +20,11 @@ public class CommandGetDataModelByName extends AuthenticatedCommand {
 	 */
 	public CommandGetDataModelByName(String name) {
 		this.name = name;
+	}
+
+	@Override
+	public MDMRestConnectionTypeEnum getAuthenticationType() {
+		return MDMRestConnectionTypeEnum.NORMAL;
 	}
 
 	@Override

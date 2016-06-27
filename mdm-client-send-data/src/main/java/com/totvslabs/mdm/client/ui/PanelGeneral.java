@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -43,6 +44,7 @@ import com.totvslabs.mdm.client.ui.events.StoredConfigurationChangedEvent;
 import com.totvslabs.mdm.client.ui.events.StoredConfigurationSelectedDispatcher;
 import com.totvslabs.mdm.client.ui.events.StoredConfigurationSelectedEvent;
 import com.totvslabs.mdm.client.ui.events.StoredConfigurationSelectedListener;
+import com.totvslabs.mdm.client.util.FileConsume;
 import com.totvslabs.mdm.client.util.PersistenceEngine;
 import com.totvslabs.mdm.client.util.ProcessTypeEnum;
 import com.totvslabs.mdm.client.util.ThreadExportData;
@@ -219,12 +221,19 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, C
 			tabbedPane.setSelectedIndex(4);
 
 			if(panelMDMConnection.isDatabaseData()) {
-				Thread th = new Thread(new ThreadExportData((StoredFluigDataProfileVO) panelMDMConnection.getAllData(), tableVO, jdbcConnectionVO, panelJDBCEntities));
+				Thread th = new Thread(new ThreadExportData((StoredFluigDataProfileVO) panelMDMConnection.getAllData(), tableVO, jdbcConnectionVO));
 				th.start();
 			}
 			else {
-				Thread th = new Thread(new ThreadExportData((StoredFluigDataProfileVO) panelMDMConnection.getAllData(), panelSendFileFluigData));
-				th.start();
+				String connectionName = panelSendFileFluigData.getFilenamePath();
+				List<String> filesToSend = FileConsume.getInstance(connectionName).getFilesToSend();
+
+				for(int i=0; i<3; i++) {
+					for (String string : filesToSend) {
+						Thread th = new Thread(new ThreadExportData((StoredFluigDataProfileVO) panelMDMConnection.getAllData(), connectionName, string));
+						th.start();
+					}
+				}
 			}
 		}
 
@@ -249,10 +258,6 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, C
 	public void onJDBCTableSelectedEvent(JDBCTableSelectedEvent event) {
 		this.tableVO = event.getTableVO();
 		this.jdbcConnectionVO = event.getJdbcConnectionVO();
-
-		if(tableVO.getName().equalsIgnoreCase("emitenteval")) {
-			this.panelJDBCEntities.getTextTemplateName().setText("emitente");
-		}
 	}
 
 	@Override

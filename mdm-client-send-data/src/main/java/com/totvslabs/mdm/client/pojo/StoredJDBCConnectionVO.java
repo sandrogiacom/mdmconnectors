@@ -55,4 +55,10 @@ public class StoredJDBCConnectionVO extends StoredAbstractVO {
 	public String generateHash() {
 		return profileName;
 	}
+	@Override
+	public String toString() {
+		return "StoredJDBCConnectionVO [profileName=" + profileName
+				+ ", driver=" + driver + ", url=" + url + ", username="
+				+ username + ", password=" + password + "]";
+	}
 }

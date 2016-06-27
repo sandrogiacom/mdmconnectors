@@ -2,6 +2,7 @@ package com.totvslabs.mdm.restclient.command;
 
 import java.util.Map;
 
+import com.totvslabs.mdm.restclient.MDMRestConnectionTypeEnum;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.FieldsVO;
 
@@ -19,6 +20,11 @@ public class CommandGetField extends AuthenticatedCommand {
 	 */
 	public CommandGetField(String fieldId) {
 		this.fieldId = fieldId;
+	}
+
+	@Override
+	public MDMRestConnectionTypeEnum getAuthenticationType() {
+		return MDMRestConnectionTypeEnum.NORMAL;
 	}
 
 	@Override

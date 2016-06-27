@@ -14,14 +14,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.JTextField;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
@@ -41,7 +39,8 @@ import com.totvslabs.mdm.client.ui.events.ProcessStatusEnum;
 import com.totvslabs.mdm.client.ui.events.SendDataFluigDataDoneDispatcher;
 import com.totvslabs.mdm.client.ui.events.SendDataFluigDataDoneEvent;
 import com.totvslabs.mdm.client.ui.events.SendDataFluigDataDoneListener;
-import com.totvslabs.mdm.client.util.JDBCConnectionFactory;
+import com.totvslabs.mdm.client.util.DBConnectionFactory;
+import com.totvslabs.mdm.client.util.SQLConnectionFactory;
 import com.totvslabs.mdm.client.util.ProcessTypeEnum;
 import com.totvslabs.mdm.client.util.ThreadExportData;
 
@@ -55,18 +54,6 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 	private JTable tableFieldsJDBC;
 	private JDBCFieldsTableModel tableModel;
 	private JScrollPane scrollBarEntitiesMDM;
-
-	private JLabel labelTemplateName;
-	private JTextField textTemplateName;
-
-	private JLabel labelBatchSize;
-	private JTextField textBatchSize;
-
-	private JLabel labelCompressOption;
-	private JCheckBox checkBoxCompress;
-
-	private JLabel labelIgnoreLocalCache;
-	private JCheckBox checkBoxIgnoreLocalCache;
 
 	private JDBCConnectionStabilizedEvent jdbcConnectionStabilizedEvent;
 
@@ -85,18 +72,6 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 
 		this.scrollBarEntitiesMDM = new JScrollPane(this.tableFieldsJDBC);
 
-		this.labelTemplateName = new JLabel("Type: ");
-		this.textTemplateName = new JTextField(20);
-
-		this.labelCompressOption = new JLabel("Compress: ");
-		this.checkBoxCompress = new JCheckBox("Yes!", true);
-
-		this.labelIgnoreLocalCache = new JLabel("Ignore Local Cache: ");
-		this.checkBoxIgnoreLocalCache = new JCheckBox("Yes!", true);
-
-		this.labelBatchSize = new JLabel("Batch Size (records): ");
-		this.textBatchSize = new JTextField("1000", 20);
-
 		this.buttonGenerateJsonFile = new JButton("Export Entity as Json File");
 		this.buttonGenerateJsonFile.setEnabled(false);
 
@@ -107,28 +82,16 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 		this.add(this.labelTable);
 		this.add(this.comboTable);
 
-//		this.add(this.labelTemplateName);
-//		this.add(this.textTemplateName);
-//
-//		this.add(this.labelBatchSize);
-//		this.add(this.textBatchSize);
-//
-//		this.add(this.labelCompressOption);
-//		this.add(this.checkBoxCompress);
-
-		this.add(this.labelIgnoreLocalCache);
-		this.add(this.checkBoxIgnoreLocalCache);
-
 		this.add(this.labelFields);
 		this.add(this.scrollBarEntitiesMDM, 2, true, 7, 2);
 
-//		this.add(new JLabel());
+		this.add(new JLabel());
 		this.add(this.buttonGenerateJsonFile);
 
 		this.initColumnSizes(this.tableFieldsJDBC);
 
 		this.comboTable.addItemListener(new JDBCTableSelectClick());
-		this.buttonGenerateJsonFile.addActionListener(new GenerateJSonFileClick(this));
+		this.buttonGenerateJsonFile.addActionListener(new GenerateJSonFileClick());
 
 		JDBCConnectionStabilizedDispatcher.getInstance().addJDBCConnectionStabilizedListener(this);
 	}
@@ -157,12 +120,10 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 	class GenerateJSonFileClick implements ActionListener, JDBCTableSelectedListener, JDBCConnectionStabilizedListener, SendDataFluigDataDoneListener {
 		private StoredJDBCConnectionVO jdbcConnectionVO;
 		private JDBCTableVO tableVO;
-		private SendJDBCEntities panelJDBCEntities;
 		private File file;
 		private PrintWriter pw;
 
-		public GenerateJSonFileClick(SendJDBCEntities panelJDBCEntities) {
-			this.panelJDBCEntities = panelJDBCEntities;
+		public GenerateJSonFileClick() {
 			JDBCTableSelectedDispatcher.getInstance().addJDBCTableSelectedListener(this);
 			JDBCConnectionStabilizedDispatcher.getInstance().addJDBCConnectionStabilizedListener(this);
 			SendDataFluigDataDoneDispatcher.getInstance().addSendDataFluigDataDoneListener(this);
@@ -172,7 +133,7 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 		public void actionPerformed(ActionEvent e) {
 			buttonGenerateJsonFile.setEnabled(false);
 			JFileChooser fileChooser = new JFileChooser();
-			fileChooser.setSelectedFile(new File(textTemplateName.getText() + ".json"));
+			fileChooser.setSelectedFile(new File(tableVO.getInternalName() + ".json"));
 			fileChooser.setFileFilter(new FileNameExtensionFilter("json", "json"));
 
 			int returnValue = fileChooser.showSaveDialog(null);
@@ -189,7 +150,7 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 
 	            this.file = file;
 
-	            Thread threadExportData = new Thread(new ThreadExportData(this.tableVO, this.jdbcConnectionVO, this.panelJDBCEntities));
+	            Thread threadExportData = new Thread(new ThreadExportData(this.tableVO, this.jdbcConnectionVO));
 	            threadExportData.start();
 			}
 			else {
@@ -240,21 +201,21 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 		public void itemStateChanged(ItemEvent e) {
 			JDBCTableVO vo = (JDBCTableVO) e.getItem();
 
-			textTemplateName.setText(vo.getName());
+			if(!vo.getInternalName().equals("<<all>>")) {
+				JDBCConnectionStabilizedEvent event = jdbcConnectionStabilizedEvent;
 
-			JDBCConnectionStabilizedEvent event = jdbcConnectionStabilizedEvent;
+				DBConnectionFactory.getDb(event.getJdbcConnectionVO().getDriver()).loadFisicModelFields(event.getJdbcConnectionVO().getUrl(), event.getJdbcConnectionVO().getDriver(), event.getJdbcConnectionVO().getUsername(), event.getJdbcConnectionVO().getPassword(), vo);
+				List<JDBCFieldVO> fields = vo.getFields();
 
-			JDBCConnectionFactory.loadFisicModelFields(event.getJdbcConnectionVO().getUrl(), event.getJdbcConnectionVO().getDriver(), event.getJdbcConnectionVO().getUsername(), event.getJdbcConnectionVO().getPassword(), vo);
-			List<JDBCFieldVO> fields = vo.getFields();
+				tableModel.addRows(fields);
+				tableFieldsJDBC.updateUI();
 
-			tableModel.addRows(fields);
-			tableFieldsJDBC.updateUI();
+				JDBCTableSelectedEvent eventTableSelected = new JDBCTableSelectedEvent(vo, event.getJdbcConnectionVO());
+				JDBCTableSelectedDispatcher.getInstance().fireJDBCTableSelectedEvent(eventTableSelected);
 
-			JDBCTableSelectedEvent eventTableSelected = new JDBCTableSelectedEvent(vo, event.getJdbcConnectionVO());
-			JDBCTableSelectedDispatcher.getInstance().fireJDBCTableSelectedEvent(eventTableSelected);
-
-			Integer totalRecords = JDBCConnectionFactory.getTotalRecords(event.getJdbcConnectionVO(), vo);
-			vo.setTotalRecords(totalRecords);
+				Long totalRecords = DBConnectionFactory.getDb(event.getJdbcConnectionVO().getDriver()).getTotalRecords(event.getJdbcConnectionVO(), vo);
+				vo.setTotalRecords(totalRecords);
+			}
 		}
 	}
 
@@ -339,35 +300,22 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 	public void onDataLoadedEvent(JDBCConnectionStabilizedEvent event) {
 		if(event.getTables() != null) {
 			this.comboTable.removeAllItems();
-			this.textTemplateName.setText("");
-			this.textBatchSize.setText("1000");
-			
+
 			this.jdbcConnectionStabilizedEvent = event;
-			
 			this.comboTable.removeAllItems();
-			
-			for (JDBCTableVO tables : event.getTables()) {
-				this.comboTable.addItem(tables);
+
+			this.comboTable.addItem(new JDBCTableVO("<<all>>"));
+
+			for (JDBCTableVO table : event.getTables()) {
+				this.comboTable.addItem(table);
 			}
-			
+
 			this.buttonGenerateJsonFile.setEnabled(true);
 		}
 	}
 
-	public JTextField getTextTemplateName() {
-		return textTemplateName;
-	}
-
-	public JTextField getTextBatchSize() {
-		return textBatchSize;
-	}
-
-	public Boolean getCheckBoxCompress() {
-		return checkBoxCompress.isSelected();
-	}
-
-	public Boolean getIgnoreLocalCache() {
-		return this.checkBoxIgnoreLocalCache.isSelected();
+	public String getTextTemplateName() {
+		return this.comboTable.getSelectedItem().toString();
 	}
 
 	@Override
@@ -377,11 +325,9 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 
 	@Override
 	public void loadAllData(StoredAbstractVO intance) {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public void loadDefaultData() {
-		// TODO Auto-generated method stub
 	}
 }

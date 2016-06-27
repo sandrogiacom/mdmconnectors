@@ -3,61 +3,68 @@ package com.totvslabs.mdm.restclient.vo;
 import java.util.Map;
 
 public class FieldsVO extends GenericVO {
-	private String _mdmName;
-	private Map<String, String> _mdmLabel;
-	private Map<String, String> _mdmDescription;
-	private String _mdmIndex;
-	private String _mdmAnalyzer;
-	private Map<String, FieldsVO> _mdmFieldsFull;
-	private Boolean _mdmIsGlobalField;
-	private String _mdmFieldType;
+	private String mdmName;
+	private Map<String, String> mdmLabel;
+	private Map<String, String> mdmDescription;
+	private String mdmIndex;
+	private String mdmAnalyzer;
+	private String mdmForeignKeyField;
+	private Map<String, FieldsVO> mdmFieldsFull;
+	private Boolean mdmIsGlobalField;
+	private String mdmFieldType;
 
-	public String getMdmName() {
-		return _mdmName;
+	public void setMdmForeignKeyField(String mdmForeignKeyField) {
+		this.mdmForeignKeyField=mdmForeignKeyField;
 	}
-	public void setMdmName(String _mdmName) {
-		this._mdmName = _mdmName;
+	public String getMdmForeignKeyField() {
+		return this.mdmForeignKeyField;
+	}
+	public String getMdmName() {
+		return mdmName;
+	}
+	public void setMdmName(String mdmName) {
+		this.mdmName = mdmName;
 	}
 	public Map<String, String> getMdmLabel() {
-		return _mdmLabel;
+		return mdmLabel;
 	}
-	public void setMdmLabel(Map<String, String> _mdmLabel) {
-		this._mdmLabel = _mdmLabel;
+	public void setMdmLabel(Map<String, String> mdmLabel) {
+		this.mdmLabel = mdmLabel;
 	}
 	public Map<String, String> getMdmDescription() {
-		return _mdmDescription;
+		return mdmDescription;
 	}
-	public void setMdmDescription(Map<String, String> _mdmDescription) {
-		this._mdmDescription = _mdmDescription;
+	public void setMdmDescription(Map<String, String> mdmDescription) {
+		this.mdmDescription = mdmDescription;
 	}
 	public String getMdmIndex() {
-		return _mdmIndex;
+		return mdmIndex;
 	}
-	public void setMdmIndex(String _mdmIndex) {
-		this._mdmIndex = _mdmIndex;
+	public void setMdmIndex(String mdmIndex) {
+		this.mdmIndex = mdmIndex;
 	}
 	public String getMdmAnalyzer() {
-		return _mdmAnalyzer;
+		return mdmAnalyzer;
 	}
-	public void setMdmAnalyzer(String _mdmAnalyzer) {
-		this._mdmAnalyzer = _mdmAnalyzer;
+	public void setMdmAnalyzer(String mdmAnalyzer) {
+		this.mdmAnalyzer = mdmAnalyzer;
 	}
 	public Map<String, FieldsVO> getMdmFieldsFull() {
-		return _mdmFieldsFull;
+		return mdmFieldsFull;
 	}
-	public void setMdmFieldsFull(Map<String, FieldsVO> _mdmFieldsFull) {
-		this._mdmFieldsFull = _mdmFieldsFull;
+	public void setMdmFieldsFull(Map<String, FieldsVO> mdmFieldsFull) {
+		this.mdmFieldsFull = mdmFieldsFull;
 	}
 	public Boolean getMdmIsGlobalField() {
-		return _mdmIsGlobalField;
+		return mdmIsGlobalField;
 	}
-	public void setMdmIsGlobalField(Boolean _mdmIsGlobalField) {
-		this._mdmIsGlobalField = _mdmIsGlobalField;
+	public void setMdmIsGlobalField(Boolean mdmIsGlobalField) {
+		this.mdmIsGlobalField = mdmIsGlobalField;
 	}
 	public String getMdmFieldType() {
-		return _mdmFieldType;
+		return mdmFieldType;
 	}
-	public void setMdmFieldType(String _mdmFieldType) {
-		this._mdmFieldType = _mdmFieldType;
+	public void setMdmFieldType(String mdmFieldType) {
+		this.mdmFieldType = mdmFieldType;
 	}
 }

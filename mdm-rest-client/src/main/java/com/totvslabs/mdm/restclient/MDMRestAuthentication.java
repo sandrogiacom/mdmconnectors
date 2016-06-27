@@ -1,7 +1,9 @@
 package com.totvslabs.mdm.restclient;
 
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.totvslabs.mdm.restclient.command.CommandAuth;
 import com.totvslabs.mdm.restclient.command.CommandRefreshToken;
@@ -14,7 +16,7 @@ import com.totvslabs.mdm.restclient.vo.RefreshTokenVO;
  * Authentication object to consume MDM REST APIs
  */
 public class MDMRestAuthentication {
-	private static MDMRestAuthentication instance;
+	private static Map<MDMRestConnectionTypeEnum, MDMRestAuthentication> cache = new HashMap<MDMRestConnectionTypeEnum, MDMRestAuthentication>();
 	private String mdmURL;
 	private AuthVO authVO;
 	private Calendar experiedCalend = Calendar.getInstance();
@@ -32,45 +34,47 @@ public class MDMRestAuthentication {
 		this.updateIssueCalend(timeIssuedMs, expiresInSeconds);
 	}
 
-	private void updateIssueCalend(Long timeIssuedMs, Long expiresInSeconds) {
+	private void updateIssueCalend(Long timeIssuedMs, Long expiresInSeconds) {//experiedCalend.getTime()
 		experiedCalend.setTimeInMillis(timeIssuedMs);
 		experiedCalend.add(Calendar.SECOND, expiresInSeconds.intValue());
 	}
 
-	public static MDMRestAuthentication getInstance(String mdmURL, String subdomain, String datasourceId, String username, String password) {
-		return getInstance(mdmURL, subdomain, datasourceId, username, password, false);
-	}
+	public static MDMRestAuthentication getInstance(MDMRestConnectionTypeEnum type, String mdmURL, String subdomain, String datasourceId, String username, String password) {
+		MDMRestAuthentication mdmRestAuthentication = cache.get(type);
 
-	public static MDMRestAuthentication getInstance(String mdmURL, String subdomain, String datasourceId, String username, String password, boolean forceAuth) {
-		if (forceAuth) {
-			instance = null;
-		}
-
-		if(instance == null) {
+		if((mdmRestAuthentication == null) || (mdmRestAuthentication != null && !mdmRestAuthentication.getAuthVO().getClient_id().equals(datasourceId))) {
 			AuthVO authVO = MDMRestAuthentication.authorization(mdmURL, subdomain, datasourceId, username, password);
-			instance = new MDMRestAuthentication(mdmURL, authVO.getRefresh_token(), authVO.getAccess_token(), authVO.getClient_id(), authVO.getTimeIssuedInMillis(), authVO.getExpires_in());
+			mdmRestAuthentication = new MDMRestAuthentication(mdmURL, authVO.getRefresh_token(), authVO.getAccess_token(), authVO.getClient_id(), Calendar.getInstance().getTimeInMillis(), authVO.getExpires_in());
+			cache.put(type, mdmRestAuthentication);
 		}
 		else {
-			instance.refreshToken();
+			mdmRestAuthentication.refreshToken();
 		}
 
-		return instance;
+		return mdmRestAuthentication;
 	}
 
-	public static MDMRestAuthentication getInstance(String mdmURL, String clientId, String accessToken, String refreshToken, Long timeIssuedInMillis, Long experiesIn) {
-		instance = new MDMRestAuthentication(mdmURL, refreshToken, accessToken, clientId, timeIssuedInMillis, experiesIn);
+	public static MDMRestAuthentication getInstance(MDMRestConnectionTypeEnum type, String mdmURL, String clientId, String accessToken, String refreshToken, Long timeIssuedInMillis, Long experiesIn) {
+		MDMRestAuthentication mdmRestAuthentication = cache.get(type);
 
-		return instance;
+		if((mdmRestAuthentication == null) || (mdmRestAuthentication != null && !mdmRestAuthentication.getAuthVO().getClient_id().equals(clientId))) {
+			mdmRestAuthentication = new MDMRestAuthentication(mdmURL, refreshToken, accessToken, clientId, timeIssuedInMillis, experiesIn);
+			cache.put(type, mdmRestAuthentication);
+		}
+
+		return mdmRestAuthentication;
 	}
 
-	public static MDMRestAuthentication getInstance() {
-		if (instance == null) {
+	public static MDMRestAuthentication getInstance(MDMRestConnectionTypeEnum type) {
+		MDMRestAuthentication mdmRestAuthentication = cache.get(type);
+
+		if(mdmRestAuthentication == null) {
 			throw new RuntimeException("Authentication is required to use this operation.");
 		}
-		
-		instance.refreshToken();
 
-		return instance;
+		mdmRestAuthentication.refreshToken();
+
+		return mdmRestAuthentication;
 	}
 
 	private static AuthVO authorization(String mdmURL, String subdomain, String datasourceId, String username, String password) {

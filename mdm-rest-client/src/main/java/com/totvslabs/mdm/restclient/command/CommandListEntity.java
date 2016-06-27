@@ -3,6 +3,7 @@ package com.totvslabs.mdm.restclient.command;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.totvslabs.mdm.restclient.MDMRestConnectionTypeEnum;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.EntityVO;
 
@@ -14,6 +15,11 @@ import com.totvslabs.mdm.restclient.vo.EntityVO;
 public class CommandListEntity extends AuthenticatedCommand {
 	private String tenantId;
 	private String dataSourceId;
+
+	@Override
+	public MDMRestConnectionTypeEnum getAuthenticationType() {
+		return MDMRestConnectionTypeEnum.NORMAL;
+	}
 
 	/**
 	 * Create command based on the tenantId and dataSourceId

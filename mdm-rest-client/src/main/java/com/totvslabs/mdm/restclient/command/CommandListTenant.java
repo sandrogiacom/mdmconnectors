@@ -2,6 +2,7 @@ package com.totvslabs.mdm.restclient.command;
 
 import java.util.Map;
 
+import com.totvslabs.mdm.restclient.MDMRestConnectionTypeEnum;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.TenantVO;
 
@@ -18,6 +19,11 @@ public class CommandListTenant extends AuthenticatedCommand {
 	public CommandListTenant() {
 	}
 	
+	@Override
+	public MDMRestConnectionTypeEnum getAuthenticationType() {
+		return MDMRestConnectionTypeEnum.NORMAL;
+	}
+
 	@Override
 	public void processReturn() {
 		//nothing to do

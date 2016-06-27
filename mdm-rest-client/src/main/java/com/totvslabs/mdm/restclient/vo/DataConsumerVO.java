@@ -5,38 +5,38 @@ import java.util.List;
 import java.util.Map;
 
 public class DataConsumerVO extends GenericVO {
-	private String _mdmName;
-	private Map<String, String> _mdmDescription;
-	private List<String> _mdmEntitiesConsumed = new ArrayList<String>();
-	private Map<String, DataConsumerDetailsVO> _mdmEntityDetails;
-	private String _mdmElasticsearchMappingType;
+	private String mdmName;
+	private Map<String, String> mdmDescription;
+	private List<String> mdmEntitiesConsumed = new ArrayList<String>();
+	private Map<String, DataConsumerDetailsVO> mdmEntityDetails;
+	private String mdmElasticsearchMappingType;
 
 	public String getMdmName() {
-		return _mdmName;
+		return mdmName;
 	}
-	public void setMdmName(String _mdmName) {
-		this._mdmName = _mdmName;
+	public void setMdmName(String mdmName) {
+		this.mdmName = mdmName;
 	}
-	public Map<String, String> get_mdmDescription() {
-		return _mdmDescription;
+	public Map<String, String> getmdmDescription() {
+		return mdmDescription;
 	}
 	public List<String> getMdmEntitiesConsumed() {
-		return _mdmEntitiesConsumed;
+		return mdmEntitiesConsumed;
 	}
-	public void setMdmEntitiesConsumed(List<String> _mdmEntitiesConsumed) {
-		this._mdmEntitiesConsumed = _mdmEntitiesConsumed;
+	public void setMdmEntitiesConsumed(List<String> mdmEntitiesConsumed) {
+		this.mdmEntitiesConsumed = mdmEntitiesConsumed;
 	}
 	public String getMdmElasticsearchMappingType() {
-		return _mdmElasticsearchMappingType;
+		return mdmElasticsearchMappingType;
 	}
-	public void setMdmElasticsearchMappingType(String _mdmElasticsearchMappingType) {
-		this._mdmElasticsearchMappingType = _mdmElasticsearchMappingType;
+	public void setMdmElasticsearchMappingType(String mdmElasticsearchMappingType) {
+		this.mdmElasticsearchMappingType = mdmElasticsearchMappingType;
 	}
 	public Map<String, DataConsumerDetailsVO> getMdmEntityDetails() {
-		return _mdmEntityDetails;
+		return mdmEntityDetails;
 	}
 	public void setMdmEntityDetails(
-			Map<String, DataConsumerDetailsVO> _mdmEntityDetails) {
-		this._mdmEntityDetails = _mdmEntityDetails;
+			Map<String, DataConsumerDetailsVO> mdmEntityDetails) {
+		this.mdmEntityDetails = mdmEntityDetails;
 	}
 }

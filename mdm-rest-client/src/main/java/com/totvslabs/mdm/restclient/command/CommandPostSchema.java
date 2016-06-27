@@ -3,6 +3,7 @@ package com.totvslabs.mdm.restclient.command;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.totvslabs.mdm.restclient.MDMRestConnectionTypeEnum;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.DatasourceVO;
 
@@ -16,6 +17,11 @@ public class CommandPostSchema extends AuthenticatedCommand {
 	private String datasourceId;
 	private String type;
 	private Object schema;
+
+	@Override
+	public MDMRestConnectionTypeEnum getAuthenticationType() {
+		return MDMRestConnectionTypeEnum.NORMAL;
+	}
 
 	/**
 	 * Create command based on given information

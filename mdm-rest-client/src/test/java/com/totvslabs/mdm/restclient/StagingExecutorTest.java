@@ -40,12 +40,11 @@ public class StagingExecutorTest {
 		}
 
 		log.info("Configuring authentication properties...");
-		authentication = MDMRestAuthentication.getInstance(MDMTestingConstants.MDM_URL, 
+		authentication = MDMRestAuthentication.getInstance(MDMRestConnectionTypeEnum.NORMAL, MDMTestingConstants.MDM_URL, 
 				MDMTestingConstants.SUBDOMAIN,
 				MDMTestingConstants.DATASOURCE_ID, 
 				MDMTestingConstants.USERNAME, 
-				System.getProperty("mdm.password"),
-				true);
+				System.getProperty("mdm.password"));
 
 		
 
@@ -105,9 +104,7 @@ public class StagingExecutorTest {
 			
 			schema.add("mdmStagingMapping", mapping);
 			
-			AuthenticatedCommand schemaCommand = new CommandPostSchema(MDMRestAuthentication.getInstance().getAuthVO()
-					.getMdmTenantId(), MDMTestingConstants.DATASOURCE_ID, type,
-					schema);
+			AuthenticatedCommand schemaCommand = new CommandPostSchema(MDMRestAuthentication.getInstance(MDMRestConnectionTypeEnum.NORMAL).getAuthVO().getMdmTenantId(), MDMTestingConstants.DATASOURCE_ID, type, schema);
 			schemaCommand.setAuthentication(authentication);
 
 			EnvelopeVO schemaCommandResponse = connection.executeCommand(schemaCommand);
@@ -124,7 +121,7 @@ public class StagingExecutorTest {
 			testObject.addProperty("name", "Bruno-Java Client");
 			stagingArray.add(testObject);
 
-			AuthenticatedCommand stagingCommand = new CommandPostStagingC(MDMRestAuthentication.getInstance().getAuthVO()
+			AuthenticatedCommand stagingCommand = new CommandPostStagingC(MDMRestAuthentication.getInstance(MDMRestConnectionTypeEnum.NORMAL).getAuthVO()
 					.getMdmTenantId(), MDMTestingConstants.DATASOURCE_ID, type,
 					stagingArray);
 			stagingCommand.setAuthentication(authentication);

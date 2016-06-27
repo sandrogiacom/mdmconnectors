@@ -1,5 +1,7 @@
 package com.totvslabs.mdm.client.pojo;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 public class StoredRecordHashVO extends StoredAbstractVO {
@@ -7,15 +9,15 @@ public class StoredRecordHashVO extends StoredAbstractVO {
 	private String fluigDataProfile;
 	private String jdbcConnection;
 	private String entityName;
-	private String hash;
+	private Set<String> recordsHash;
 
 	public StoredRecordHashVO() {}
-	public StoredRecordHashVO(String fluigDataProfile, String jdbcConnection, String entityName, String hash) {
+	public StoredRecordHashVO(String fluigDataProfile, String jdbcConnection, String entityName) {
 		super();
 		this.fluigDataProfile = fluigDataProfile;
 		this.jdbcConnection = jdbcConnection;
 		this.entityName = entityName;
-		this.hash = hash;
+		this.recordsHash = new LinkedHashSet<String>();
 		this.updateName();
 	}
 
@@ -36,8 +38,8 @@ public class StoredRecordHashVO extends StoredAbstractVO {
 		this.entityName = entityName;
 		this.updateName();
 	}
-	public String getHash() {
-		return hash;
+	public Set<String> getRecordsHash() {
+		return recordsHash;
 	}
 	public String getJdbcConnection() {
 		return jdbcConnection;
@@ -45,13 +47,12 @@ public class StoredRecordHashVO extends StoredAbstractVO {
 	public void setJdbcConnection(String jdbcConnection) {
 		this.jdbcConnection = jdbcConnection;
 	}
-	public void setHash(String hash) {
-		this.hash = hash;
-		this.updateName();
+	public void setHash(Set<String> recordsHash) {
+		this.recordsHash = recordsHash;
 	}
 	@Override
 	public String generateHash() {
-		return fluigDataProfile + "||" + jdbcConnection + "||" + entityName + "||" + hash;
+		return fluigDataProfile + "||" + jdbcConnection + "||" + entityName;
 	}
 	@Override
 	public void setName(String name) {
@@ -64,7 +65,6 @@ public class StoredRecordHashVO extends StoredAbstractVO {
 		String fluigDataProfile = null;
 		String jdbcConnection = null;
 		String entityName = null;
-		String hash = null;
 		int counter = 0;
 
 		while(st.hasMoreElements()) {
@@ -79,9 +79,6 @@ public class StoredRecordHashVO extends StoredAbstractVO {
 			else if(counter == 2) {
 				entityName = string;
 			}
-			else if(counter == 3) {
-				hash = string;
-			}
 
 			counter++;
 		}
@@ -89,7 +86,6 @@ public class StoredRecordHashVO extends StoredAbstractVO {
 		this.fluigDataProfile = fluigDataProfile;
 		this.jdbcConnection = jdbcConnection;
 		this.entityName = entityName;
-		this.hash = hash;
 		this.name = generateHash();
 	}
 	private void updateName() {

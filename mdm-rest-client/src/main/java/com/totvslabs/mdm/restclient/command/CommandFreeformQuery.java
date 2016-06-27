@@ -3,6 +3,7 @@ package com.totvslabs.mdm.restclient.command;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.totvslabs.mdm.restclient.MDMRestConnectionTypeEnum;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.DatasourceVO;
 
@@ -30,6 +31,11 @@ public class CommandFreeformQuery extends AuthenticatedCommand {
 		this.type = type;
 		this.filter = filter;
 		this.fields = fields;
+	}
+
+	@Override
+	public MDMRestConnectionTypeEnum getAuthenticationType() {
+		return MDMRestConnectionTypeEnum.NORMAL;
 	}
 
 	@Override

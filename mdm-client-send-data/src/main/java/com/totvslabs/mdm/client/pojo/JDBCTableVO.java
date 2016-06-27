@@ -13,7 +13,7 @@ public class JDBCTableVO {
 	private List<JDBCFieldVO> fields = new ArrayList<JDBCFieldVO>();
 	private Map<String, JDBCFieldVO> fieldsMap = new HashMap<String, JDBCFieldVO>();
 	private Collection<JDBCIndexVO> primaryKey = new ArrayList<JDBCIndexVO>();
-	private Integer totalRecords;
+	private Long totalRecords;
 
 	public JDBCTableVO(String name) {
 		this(name, null);
@@ -60,10 +60,10 @@ public class JDBCTableVO {
 	public void setFields(List<JDBCFieldVO> fields) {
 		this.fields = fields;
 	}
-	public Integer getTotalRecords() {
+	public Long getTotalRecords() {
 		return totalRecords;
 	}
-	public void setTotalRecords(Integer totalRecords) {
+	public void setTotalRecords(Long totalRecords) {
 		this.totalRecords = totalRecords;
 	}
 	public Collection<JDBCIndexVO> getPrimaryKey() {

@@ -1,8 +1,14 @@
 package com.totvslabs.mdm.restclient.command;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.totvslabs.mdm.restclient.MDMRestConnectionTypeEnum;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.DataConsumptionVO;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -30,6 +36,11 @@ public class CommandDataConsumption extends AuthenticatedCommand {
 	}
 
 	@Override
+	public MDMRestConnectionTypeEnum getAuthenticationType() {
+		return MDMRestConnectionTypeEnum.CONSUME;
+	}
+
+	@Override
 	public Map<String, String> getParametersHeader() {
 		return null;
 	}
@@ -41,7 +52,7 @@ public class CommandDataConsumption extends AuthenticatedCommand {
 
 	@Override
 	public String getCommandURL() {
-		return "api/v1/dataConsumption/entities/" + this.entityType + "/records?startCounter=" + this.counter + "&pageSize=" + this.pageSize;
+		return "api/v1/dataConsumption/entities/records";
 	}
 
 	@Override
@@ -51,7 +62,23 @@ public class CommandDataConsumption extends AuthenticatedCommand {
 
 	@Override
 	public Map<String, String> getParameterPath() {
-		return null;
+		Map<String, String> param = new HashMap<String, String>();
+		//[{"entityId": "d2551b10fc0f11e59e240242ac110003", "startCounter": -1}]
+
+		JsonObject entityList = new JsonObject();
+		JsonArray entityArray = new JsonArray();
+		entityList.addProperty("entityId", entityType);
+		entityList.addProperty("startCounter", this.counter);
+		entityArray.add(entityList);
+
+		try {
+			param.put("entityList", URLEncoder.encode(entityArray.toString(), "UTF-8"));
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		param.put("pageSize", Integer.toString(this.pageSize));
+
+		return param;
 	}
 
 	@Override
@@ -62,6 +89,10 @@ public class CommandDataConsumption extends AuthenticatedCommand {
 	@Override
 	public Object getData() {
 		return null;
+	}
+
+	public String getEntityType() {
+		return this.entityType;
 	}
 
 	@Override

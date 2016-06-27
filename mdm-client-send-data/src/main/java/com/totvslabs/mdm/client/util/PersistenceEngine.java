@@ -22,4 +22,6 @@ public abstract class PersistenceEngine {
 	public abstract StoredAbstractVO getByName(String name, Class<? extends StoredAbstractVO> clasz);
 
 	public abstract List<StoredAbstractVO> findAll(Class<? extends StoredAbstractVO> clasz);
+
+	public abstract void defragDatabase();
 }

@@ -1,8 +1,8 @@
 package com.totvslabs.mdm.client.util;
 
-import java.util.Date;
 import java.util.List;
 
+import com.totvslabs.mdm.client.pojo.JDBCDatabaseVO;
 import com.totvslabs.mdm.client.pojo.JDBCTableVO;
 import com.totvslabs.mdm.client.pojo.StoredAbstractVO;
 import com.totvslabs.mdm.client.pojo.StoredConfigurationVO;
@@ -10,6 +10,7 @@ import com.totvslabs.mdm.client.pojo.StoredFluigDataProfileVO;
 import com.totvslabs.mdm.client.pojo.StoredJDBCConnectionVO;
 import com.totvslabs.mdm.restclient.MDMRestAuthentication;
 import com.totvslabs.mdm.restclient.MDMRestConnectionFactory;
+import com.totvslabs.mdm.restclient.MDMRestConnectionTypeEnum;
 
 public class ThreadProcessBatch implements Runnable {
 	@Override
@@ -17,28 +18,25 @@ public class ThreadProcessBatch implements Runnable {
 		List<StoredAbstractVO> batchConfiguration = PersistenceEngine.getInstance().findAll(StoredConfigurationVO.class);
 
 		for (StoredAbstractVO storedAbstractVO : batchConfiguration) {
-			long initialTime = System.currentTimeMillis();
 			StoredConfigurationVO conf = (StoredConfigurationVO) storedAbstractVO;
 			StoredJDBCConnectionVO jdbcConnection = (StoredJDBCConnectionVO) PersistenceEngine.getInstance().getByName(conf.getDatasourceID(), StoredJDBCConnectionVO.class);
 			StoredFluigDataProfileVO fluigProfile = (StoredFluigDataProfileVO) PersistenceEngine.getInstance().getByName(conf.getFluigDataName(), StoredFluigDataProfileVO.class);
 
-			MDMRestAuthentication.getInstance(fluigProfile.getServerURL(), fluigProfile.getDomain(), fluigProfile.getDatasourceID(), fluigProfile.getUsername(), fluigProfile.getPassword());
+			JDBCDatabaseVO database = DBConnectionFactory.getDb(jdbcConnection.getDriver()).loadFisicModelTables(jdbcConnection.getUrl(), jdbcConnection.getDriver(), jdbcConnection.getUsername(), jdbcConnection.getPassword());
+
+			MDMRestAuthentication.getInstance(MDMRestConnectionTypeEnum.NORMAL, fluigProfile.getServerURL(), fluigProfile.getDomain(), fluigProfile.getDatasourceID(), fluigProfile.getUsername(), fluigProfile.getPassword());
 			MDMRestConnectionFactory.getConnection(fluigProfile.getServerURL());
 
-			JDBCTableVO tableVO = new JDBCTableVO(conf.getSourceName());
+			JDBCTableVO tableVO = database.getTable(conf.getSourceName());
 
-			Integer totalRecords = JDBCConnectionFactory.getTotalRecords(jdbcConnection, tableVO);
-			JDBCConnectionFactory.loadFisicModelFields(jdbcConnection, tableVO);
+			Long totalRecords = DBConnectionFactory.getDb(jdbcConnection.getDriver()).getTotalRecords(jdbcConnection, tableVO);
+			DBConnectionFactory.getDb(jdbcConnection.getDriver()).loadFisicModelFields(jdbcConnection, tableVO);
 
 			tableVO.setTotalRecords(totalRecords);
 
-			/* Running as processor not thread */
-			ThreadExportData thread = new ThreadExportData(fluigProfile, tableVO, jdbcConnection);
-			thread.run();
-			conf.setLastExecution(new Date());
-			conf.setQuantity(thread.getQuantityRecords());
-			PersistenceEngine.getInstance().save(conf);
-			System.out.println("took '" + (System.currentTimeMillis() - initialTime) + "' ms to run the process for " + conf.getName());
+			/* Running as process not thread */
+			Thread thread = new Thread(new ThreadExportData(conf, fluigProfile, tableVO, jdbcConnection));
+			thread.start();
 		}
 	}
 }

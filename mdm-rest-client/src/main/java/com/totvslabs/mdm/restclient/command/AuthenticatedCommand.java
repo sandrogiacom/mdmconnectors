@@ -1,6 +1,7 @@
 package com.totvslabs.mdm.restclient.command;
 
 import com.totvslabs.mdm.restclient.MDMRestAuthentication;
+import com.totvslabs.mdm.restclient.MDMRestConnectionTypeEnum;
 
 /**
  * Command that stores authentication data
@@ -18,11 +19,18 @@ public abstract class AuthenticatedCommand implements ICommand {
 	public MDMRestAuthentication getAuthentication() {
 		//if authentication isn't defined, grab the singleton
 		if (authentication == null) {
-			return MDMRestAuthentication.getInstance();
+			return MDMRestAuthentication.getInstance(getAuthenticationType());
 		}
 		
 		return authentication;
 	}
+
+	@Override
+	public Boolean isResultJson() {
+		return Boolean.TRUE;
+	}
+
+	public abstract MDMRestConnectionTypeEnum getAuthenticationType();
 
 	/**
 	 * @param authentication

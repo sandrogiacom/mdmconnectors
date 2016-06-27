@@ -17,7 +17,7 @@ public class CommandAuth implements ICommand {
 	private String password;
 	private String grantType = CommandAuth.GRANT_TYPE_DEFAULT;
 	private String tenantId;
-	private String datasourceId;
+	private String applicationId;
 
 	/**
 	 * Create an authentication command with login values
@@ -38,9 +38,9 @@ public class CommandAuth implements ICommand {
 	 * @param password
 	 * @param grantType
 	 */
-	public CommandAuth(String tenantId, String datasourceId, String username, String password, String grantType) {
+	public CommandAuth(String tenantId, String applicationId, String username, String password, String grantType) {
 		this.tenantId = tenantId;
-		this.datasourceId = datasourceId;
+		this.applicationId = applicationId;
 		this.username = username;
 		this.password = password;
 		this.grantType = grantType;
@@ -51,7 +51,7 @@ public class CommandAuth implements ICommand {
 		Map<String, String> parameters = new HashMap<>();
 
 		parameters.put("tenant", this.tenantId);
-		parameters.put("datasource", this.datasourceId);
+		parameters.put("applicationId", this.applicationId);
 
 		return parameters;
 	}
@@ -63,7 +63,7 @@ public class CommandAuth implements ICommand {
 
 	@Override
 	public String getCommandURL() {
-		return "api/v1/oauth2/auth";
+		return "api/v1/oauth2/token";
 	}
 
 	@Override
@@ -94,9 +94,14 @@ public class CommandAuth implements ICommand {
 		parameters.put("username", this.username);
 		parameters.put("password", this.password);
 		parameters.put("subdomain", this.tenantId);
-		parameters.put("dataSourceId", datasourceId);
+		parameters.put("applicationId", applicationId);
 
 		return parameters;
+	}
+
+	@Override
+	public Boolean isResultJson() {
+		return Boolean.TRUE;
 	}
 }
 

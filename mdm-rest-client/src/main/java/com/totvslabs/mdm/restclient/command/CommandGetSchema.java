@@ -1,5 +1,6 @@
 package com.totvslabs.mdm.restclient.command;
 
+import com.totvslabs.mdm.restclient.MDMRestConnectionTypeEnum;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.StagingSchemaVO;
 
@@ -21,6 +22,11 @@ public class CommandGetSchema extends AuthenticatedCommand {
 	 */
 	public CommandGetSchema(String type) {
 		this.type = type;
+	}
+
+	@Override
+	public MDMRestConnectionTypeEnum getAuthenticationType() {
+		return MDMRestConnectionTypeEnum.NORMAL;
 	}
 
 	@Override

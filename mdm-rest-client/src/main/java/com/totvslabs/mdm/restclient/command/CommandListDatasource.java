@@ -3,6 +3,7 @@ package com.totvslabs.mdm.restclient.command;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.totvslabs.mdm.restclient.MDMRestConnectionTypeEnum;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.EnvelopeVO;
 
@@ -20,6 +21,11 @@ public class CommandListDatasource extends AuthenticatedCommand {
 	 */
 	public CommandListDatasource(String tenantId) {
 		this.tenantId = tenantId;
+	}
+
+	@Override
+	public MDMRestConnectionTypeEnum getAuthenticationType() {
+		return MDMRestConnectionTypeEnum.NORMAL;
 	}
 
 	@Override

@@ -2,6 +2,7 @@ package com.totvslabs.mdm.restclient.command;
 
 import java.util.Map;
 
+import com.totvslabs.mdm.restclient.MDMRestConnectionTypeEnum;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
 import com.totvslabs.mdm.restclient.vo.DataConsumerVO;
 
@@ -19,6 +20,11 @@ public class CommandGetDataConsumers extends AuthenticatedCommand {
 	 */
 	public CommandGetDataConsumers(String dataConsumerId) {
 		this.dataConsumerId = dataConsumerId;
+	}
+
+	@Override
+	public MDMRestConnectionTypeEnum getAuthenticationType() {
+		return MDMRestConnectionTypeEnum.NORMAL;
 	}
 
 	@Override
