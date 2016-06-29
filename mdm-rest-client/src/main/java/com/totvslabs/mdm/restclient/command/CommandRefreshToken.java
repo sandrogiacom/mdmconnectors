@@ -61,6 +61,7 @@ public class CommandRefreshToken implements ICommand {
 	public Map<String, String> getFormData() {
 		Map<String, String> parameters = new HashMap<>();
 
+		parameters.put("grant_type", "refresh_token");
 		parameters.put("refresh_token", this.refreshToken);
 
 		return parameters;
