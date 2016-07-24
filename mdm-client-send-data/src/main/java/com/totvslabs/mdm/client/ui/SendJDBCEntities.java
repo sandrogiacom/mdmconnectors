@@ -180,6 +180,7 @@ public class SendJDBCEntities extends PanelAbstract implements JDBCConnectionSta
 					}
 
 					pw.append(jsonData);
+					pw.append('\n');
 
 					if(ProcessStatusEnum.DONE.equals(event.getProcessStatusEnum())) {
 						JOptionPane.showMessageDialog(null, "The json file was generated successfully at: " + file.getAbsolutePath());

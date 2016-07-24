@@ -139,7 +139,7 @@ public class NoSQLConnectionFactory extends DBConnectionFactory {
 					key = "className";
 				}
 
-				if(document.get(string).getClass() != null && document.get(string).getClass().equals(java.util.Date.class)) {
+				if(document.get(string) != null && document.get(string).getClass() != null && document.get(string).getClass().equals(java.util.Date.class)) {
 					DateFormat df = new SimpleDateFormat();
 					parse.remove(string);
 					if(document.getDate(string) != null) {
@@ -159,11 +159,11 @@ public class NoSQLConnectionFactory extends DBConnectionFactory {
 					Object instanceSample = document.get(string);
 					Boolean wasModified = Boolean.FALSE;
 
-					if(instanceSample.getClass().equals(Document.class)) {
+					if(instanceSample != null && instanceSample.getClass() != null && instanceSample.getClass().equals(Document.class)) {
 						Boolean tempWasModified = verifyFieldChanges(tableVO.getField(key).getMembers(), (Document) instanceSample);
 						wasModified = (wasModified ? wasModified : tempWasModified);
 					}
-					else if(instanceSample.getClass().equals(ArrayList.class)) {
+					else if(instanceSample != null && instanceSample.getClass() != null && instanceSample.getClass().equals(ArrayList.class)) {
 						ArrayList array = (ArrayList) instanceSample;
 
 						if(array.size() > 0) {

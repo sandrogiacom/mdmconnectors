@@ -221,14 +221,21 @@ public class PanelGeneral extends JFrame implements JDBCTableSelectedListener, C
 			tabbedPane.setSelectedIndex(4);
 
 			if(panelMDMConnection.isDatabaseData()) {
-				Thread th = new Thread(new ThreadExportData((StoredFluigDataProfileVO) panelMDMConnection.getAllData(), tableVO, jdbcConnectionVO));
-				th.start();
+//				for(int i=0; i<(tableVO.getTotalRecords() > 1000 ? 15 : 1); i++) {
+					Thread th = new Thread(new ThreadExportData((StoredFluigDataProfileVO) panelMDMConnection.getAllData(), tableVO, jdbcConnectionVO));
+					th.start();
+//				}
 			}
 			else {
 				String connectionName = panelSendFileFluigData.getFilenamePath();
 				List<String> filesToSend = FileConsume.getInstance(connectionName).getFilesToSend();
+				int maxThreads = 10;
 
-				for(int i=0; i<3; i++) {
+				if(filesToSend.size() < 20) {
+					maxThreads = 1;
+				}
+
+				for(int i=0; i<maxThreads; i++) {
 					for (String string : filesToSend) {
 						Thread th = new Thread(new ThreadExportData((StoredFluigDataProfileVO) panelMDMConnection.getAllData(), connectionName, string));
 						th.start();

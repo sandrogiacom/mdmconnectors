@@ -347,8 +347,6 @@ public class ThreadExportData implements Runnable {
 
 		MDMRestConnection connection = MDMRestConnectionFactory.getConnection(mdmServerURL);
 
-		System.out.println("tableVO: " + tableVO.getFields());
-
 		if(!this.justExportJSonData) {
 			this.sendSchema();
 
@@ -384,11 +382,9 @@ public class ThreadExportData implements Runnable {
 				CommandPostStaging staging = new CommandPostStagingC(tenantId, datasourceId, tableVO.getInternalName(), lote.getData());
 
 				JsonArray arr = new JsonArray();
-				for(int i=0; i<100; i++) {
+				for(int i=0; i<(lote.getData().size() > 100 ? 100 : lote.getData().size()); i++) {
 					arr.add(lote.getData().get(i));
 				}
-
-				System.out.println(arr);
 
 				try {
 					connection.executeCommand(staging);
