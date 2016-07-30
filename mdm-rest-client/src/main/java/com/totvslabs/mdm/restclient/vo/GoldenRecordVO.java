@@ -1,15 +1,23 @@
 package com.totvslabs.mdm.restclient.vo;
 
+import java.util.List;
 import java.util.Map;
 
 public class GoldenRecordVO {
 	private String mdmEntityTemplateId;
     private Map<String, Object> mdmGoldenFieldAndValues;
+    private List<GoldenRecordCrossWalkVO> mdmCrosswalk;
     private Integer mdmCounterForEntity;
     private String mdmProfileTitle;
     private String mdmId;
     private String mdmElasticsearchMappingType;
 
+	public List<GoldenRecordCrossWalkVO> getMdmCrosswalk() {
+		return mdmCrosswalk;
+	}
+	public void setMdmCrosswalk(List<GoldenRecordCrossWalkVO> mdmCrosswalk) {
+		this.mdmCrosswalk = mdmCrosswalk;
+	}
 	public String getMdmEntityTemplateId() {
 		return mdmEntityTemplateId;
 	}

@@ -8,7 +8,6 @@ public class StoredFluigDataProfileVO extends StoredAbstractVO {
 	private String datasourceID = "0b672ec08cbc11e5991b0242ac110002";
 	private String username = "admin@totvslabs.com";
 	private String password = "Foobar1!";
-	private String consumerID = "819f0980819211e5991b0242ac110002";
 
 	@Override
 	public void cleanFields() {
@@ -18,7 +17,6 @@ public class StoredFluigDataProfileVO extends StoredAbstractVO {
 		datasourceID = null;
 		username = null;
 		password = null;
-		consumerID = null;
 	}
 	@Override
 	public Boolean validate() {
@@ -69,11 +67,5 @@ public class StoredFluigDataProfileVO extends StoredAbstractVO {
 	}
 	public void setPassword(String password) {
 		this.password = password;
-	}
-	public String getConsumerID() {
-		return this.consumerID;
-	}
-	public void setConsumerID(String consumerID) {
-		this.consumerID = consumerID;
 	}
 }

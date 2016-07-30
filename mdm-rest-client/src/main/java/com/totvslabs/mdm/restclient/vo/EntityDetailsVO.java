@@ -3,13 +3,17 @@ package com.totvslabs.mdm.restclient.vo;
 import java.util.List;
 import java.util.Map;
 
-public class DataConsumerDetailsVO {
+public class EntityDetailsVO {
 	private String mdmEntityConsumed;
 	private Map<String, String> mdmEntityName;
 	private List<String> mdmFieldsConsumed;
 	private Integer mdmLastCounterConsumed;
 	private Integer mdmNumOfPendingRecords;
+	private String mdmSchemaName;
 
+	public String getMdmSchemaName() {
+		return this.mdmSchemaName;
+	}
 	public String getMdmEntityConsumed() {
 		return mdmEntityConsumed;
 	}

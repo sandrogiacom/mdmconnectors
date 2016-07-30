@@ -4,13 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class DataConsumerVO extends GenericVO {
+public class ApplicationVO extends GenericVO {
 	private String mdmName;
+	private Map<String, String> mdmLabel;
 	private Map<String, String> mdmDescription;
 	private List<String> mdmEntitiesConsumed = new ArrayList<String>();
-	private Map<String, DataConsumerDetailsVO> mdmEntityDetails;
+	private Map<String, EntityDetailsVO> mdmEntityDetails;
 	private String mdmElasticsearchMappingType;
 
+	public Map<String, String> getMdmLabel() {
+		return this.mdmLabel;
+	}
 	public String getMdmName() {
 		return mdmName;
 	}
@@ -32,11 +36,11 @@ public class DataConsumerVO extends GenericVO {
 	public void setMdmElasticsearchMappingType(String mdmElasticsearchMappingType) {
 		this.mdmElasticsearchMappingType = mdmElasticsearchMappingType;
 	}
-	public Map<String, DataConsumerDetailsVO> getMdmEntityDetails() {
+	public Map<String, EntityDetailsVO> getMdmEntityDetails() {
 		return mdmEntityDetails;
 	}
 	public void setMdmEntityDetails(
-			Map<String, DataConsumerDetailsVO> mdmEntityDetails) {
+			Map<String, EntityDetailsVO> mdmEntityDetails) {
 		this.mdmEntityDetails = mdmEntityDetails;
 	}
 }

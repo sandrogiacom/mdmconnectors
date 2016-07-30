@@ -2,12 +2,18 @@ package com.totvslabs.mdm.restclient.vo;
 
 import java.util.Map;
 
-
 public class DataModelVO extends GenericVO {
 	private String mdmName;
 	private Map<String, String> mdmLabel;
 	private Map<String, String> mdmDescription;
+	private Map<String, FieldsVO> mdmFieldsFull;
 
+	public Map<String, FieldsVO> getMdmFieldsFull() {
+		return mdmFieldsFull;
+	}
+	public void setMdmFieldsFull(Map<String, FieldsVO> mdmFieldsFull) {
+		this.mdmFieldsFull = mdmFieldsFull;
+	}
 	public String getMdmName() {
 		return mdmName;
 	}

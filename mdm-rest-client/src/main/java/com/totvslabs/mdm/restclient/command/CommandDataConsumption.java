@@ -91,6 +91,10 @@ public class CommandDataConsumption extends AuthenticatedCommand {
 		return null;
 	}
 
+	public void setPageSize(int pageSize) {
+		this.pageSize = pageSize;
+	}
+
 	public String getEntityType() {
 		return this.entityType;
 	}

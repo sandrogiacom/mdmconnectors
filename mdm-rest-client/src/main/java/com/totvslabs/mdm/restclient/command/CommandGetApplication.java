@@ -3,23 +3,23 @@ package com.totvslabs.mdm.restclient.command;
 import java.util.Map;
 
 import com.totvslabs.mdm.restclient.MDMRestConnectionTypeEnum;
+import com.totvslabs.mdm.restclient.vo.ApplicationVO;
 import com.totvslabs.mdm.restclient.vo.CommandTypeEnum;
-import com.totvslabs.mdm.restclient.vo.DataConsumerVO;
 
 /**
- * Command to get existent Data Consumers
+ * Command to get existent Application
  * @author TOTVS Labs
  *
  */
-public class CommandGetDataConsumers extends AuthenticatedCommand {
-	private String dataConsumerId;
+public class CommandGetApplication extends AuthenticatedCommand {
+	private String applicationId;
 
 	/**
 	 * Create command based on the consumer id
 	 * @param dataConsumerId
 	 */
-	public CommandGetDataConsumers(String dataConsumerId) {
-		this.dataConsumerId = dataConsumerId;
+	public CommandGetApplication(String applicationId) {
+		this.applicationId = applicationId;
 	}
 
 	@Override
@@ -39,12 +39,12 @@ public class CommandGetDataConsumers extends AuthenticatedCommand {
 
 	@Override
 	public String getCommandURL() {
-		return "api/v1/dataConsumers/" + dataConsumerId;
+		return "api/v1/applications/" + applicationId;
 	}
 
 	@Override
-	public Class<DataConsumerVO> getResponseType() {
-		return DataConsumerVO.class;
+	public Class<ApplicationVO> getResponseType() {
+		return ApplicationVO.class;
 	}
 
 	@Override

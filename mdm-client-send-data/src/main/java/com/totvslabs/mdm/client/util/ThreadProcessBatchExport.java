@@ -10,10 +10,10 @@ import com.totvslabs.mdm.client.pojo.StoredFluigDataProfileVO;
 import com.totvslabs.mdm.restclient.MDMRestAuthentication;
 import com.totvslabs.mdm.restclient.MDMRestConnectionFactory;
 import com.totvslabs.mdm.restclient.MDMRestConnectionTypeEnum;
-import com.totvslabs.mdm.restclient.command.CommandGetDataConsumers;
+import com.totvslabs.mdm.restclient.command.CommandGetApplication;
 import com.totvslabs.mdm.restclient.command.CommandGetDataModel;
 import com.totvslabs.mdm.restclient.command.CommandGetField;
-import com.totvslabs.mdm.restclient.vo.DataConsumerVO;
+import com.totvslabs.mdm.restclient.vo.ApplicationVO;
 import com.totvslabs.mdm.restclient.vo.DataModelVO;
 import com.totvslabs.mdm.restclient.vo.EnvelopeVO;
 import com.totvslabs.mdm.restclient.vo.FieldsVO;
@@ -33,18 +33,18 @@ public class ThreadProcessBatchExport implements Runnable {
 		MDMRestAuthentication.getInstance(MDMRestConnectionTypeEnum.NORMAL, fluigProfile.getServerURL(), fluigProfile.getDomain(), fluigProfile.getDatasourceID(), fluigProfile.getUsername(), fluigProfile.getPassword());
 		MDMRestConnectionFactory.getConnection(fluigProfile.getServerURL());
 
-		MDMRestAuthentication.getInstance(MDMRestConnectionTypeEnum.CONSUME, fluigProfile.getServerURL(), fluigProfile.getDomain(), fluigProfile.getConsumerID(), fluigProfile.getUsername(), fluigProfile.getPassword());
+		MDMRestAuthentication.getInstance(MDMRestConnectionTypeEnum.CONSUME, fluigProfile.getServerURL(), fluigProfile.getDomain(), fluigProfile.getDatasourceID(), fluigProfile.getUsername(), fluigProfile.getPassword());
 		MDMRestConnectionFactory.getConnection(fluigProfile.getServerURL());
 
-		CommandGetDataConsumers consumer = new CommandGetDataConsumers(fluigProfile.getConsumerID());
+		CommandGetApplication consumer = new CommandGetApplication(fluigProfile.getDatasourceID());
 		EnvelopeVO executeCommand = MDMRestConnectionFactory.getConnection(fluigProfile.getServerURL()).executeCommand(consumer);
 
 		List<GenericVO> hits = executeCommand.getHits();
 		List<FDEntityVO> entitiesObj = new ArrayList<FDEntityVO>();
 
 		if (hits != null && !hits.isEmpty()) {
-			if(hits.get(0) instanceof DataConsumerVO) {
-				List<String> entities = ((DataConsumerVO) hits.get(0)).getMdmEntitiesConsumed();
+			if(hits.get(0) instanceof ApplicationVO) {
+				List<String> entities = ((ApplicationVO) hits.get(0)).getMdmEntitiesConsumed();
 
 				if(entities != null) {
 					for (String string : entities) {
@@ -56,7 +56,7 @@ public class ThreadProcessBatchExport implements Runnable {
 						FDEntityVO entity = new FDEntityVO();
 						entity.setDescription(((DataModelVO) executeCommandGetDataModel.getHits().get(0)).getMdmLabel().get(next));
 						entity.setName(((DataModelVO) executeCommandGetDataModel.getHits().get(0)).getMdmName());
-						entity.setFieldsDetail(((DataConsumerVO) hits.get(0)).getMdmEntityDetails().get(string));
+						entity.setFieldsDetail(((ApplicationVO) hits.get(0)).getMdmEntityDetails().get(string));
 						entity.setEntityId(string);
 
 						if(entity.getName().equalsIgnoreCase("mdmcustomer")) {
